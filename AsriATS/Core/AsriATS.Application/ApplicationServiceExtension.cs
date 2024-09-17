@@ -9,6 +9,7 @@ namespace AsriATS.Application
         public static void ConfigureApplication(this IServiceCollection services)
         {
             services.AddScoped<IRoleService, RoleService>();
+            services.AddScoped<IAuthService, AuthService>();
         }
     }
 }
