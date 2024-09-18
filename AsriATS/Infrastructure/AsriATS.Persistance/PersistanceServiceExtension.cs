@@ -1,4 +1,6 @@
+using AsriATS.Application.Persistance;
 using AsriATS.Domain.Entities;
+using AsriATS.Persistance.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,6 +15,8 @@ namespace AsriATS.Persistance
             services.AddDbContext<AppDbContext>(opt => {
                 opt.UseNpgsql(connection);
             });
+
+            services.AddScoped<ICompanyRepository, CompanyRepository>();
         }
 
         public static void ConfigureIdentity(this IServiceCollection services)
