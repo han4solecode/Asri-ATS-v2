@@ -4,6 +4,9 @@ namespace AsriATS.Domain.Entities
 {
     public class CompanyRequest
     {
+        [Key]
+        public int CompanyRequestId { get; set; }
+
         [Required]
         public string Email { get; set; } = null!;
 
