@@ -1,4 +1,5 @@
 ﻿using AsriATS.Application.Contracts;
+using AsriATS.Application.DTOs;
 using AsriATS.Application.DTOs.Register;
 using AsriATS.Domain.Entities;
 using Microsoft.AspNetCore.Identity;
@@ -70,6 +71,15 @@ namespace AsriATS.Application.Services
                 Status = "Success",
                 Message = "Applicant Created successfully"
             };
+        }
+
+        public async Task<BaseResponseDto> RegisterHRManagerAsync(RegisterHRManagerRequestDto registerHRManagerRequest)
+        {
+            // TODO
+            // get data from approved company request for its id
+            // register new user as a HR Manager with specific company id
+
+            throw new NotImplementedException();
         }
     }
 }

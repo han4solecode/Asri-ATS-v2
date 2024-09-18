@@ -12,6 +12,6 @@ namespace AsriATS.Application.Contracts
     {
         Task<RegisterResponseDto> RegisterApplicantAsync(RegisterRequestDto register);
 
-        Task<BaseResponseDto> RegisterCompanyAsync(RegisterCompanyRequestDto registerCompanyRequest);
+        Task<BaseResponseDto> RegisterHRManagerAsync(RegisterHRManagerRequestDto registerHRManagerRequest);
     }
 }
