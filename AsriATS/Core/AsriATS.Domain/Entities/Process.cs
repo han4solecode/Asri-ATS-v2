@@ -18,13 +18,12 @@ namespace AsriATS.Domain.Entities
         [ForeignKey("WorkflowSequence")]
         public int CurrentStepId { get; set; }
         public virtual WorkflowSequence WorkflowSequence { get; set; }
-        [ForeignKey("Request")]
-        public int RequestId { get; set; }
-        public virtual Request Request { get; set; }
         public DateTime RequestDate { get; set; }
         public virtual ICollection<WorkflowAction> WorkflowActions { get; set; }
 
         // navigation to CompanyRequest
         public virtual CompanyRequest? CompanyRequestNavigation { get; set; }
+        // navigation to RecrutierRegistrationRequest
+        public virtual RecruiterRegistrationRequest? RecruiterRegistrationRequestNavigation { get; set; }
     }
 }

@@ -31,10 +31,10 @@ namespace AsriATS.Persistance
         public DbSet<Workflow> Workflows { get; set; }
         public DbSet<Process> Processes { get; set; }
         public DbSet<WorkflowSequence> WorkflowSequences { get; set; }
-        public DbSet<Request> Requests { get; set; }
         public DbSet<WorkflowAction> WorkflowActions { get; set; }
         public DbSet<NextStepRule> NextStepsRules { get; set; }
         public DbSet<CompanyRequest> CompanyRequests { get; set; }
+        public DbSet<RecruiterRegistrationRequest> RecruiterRegistrationRequests { get; set; }
 
         public DbSet<Company> Companies { get; set; }
 
@@ -59,11 +59,14 @@ namespace AsriATS.Persistance
                      .WithMany(r => r.Processes)
                      .HasForeignKey(p => p.RequesterId)
                      .HasConstraintName("FK_Process_Requester");
+            });
 
-                entity.HasOne(p => p.Request)
-                     .WithOne(r => r.Process)
-                     .HasForeignKey<Process>(p => p.RequestId)
-                     .HasConstraintName("FK_Process_Request");
+            modelBuilder.Entity<RecruiterRegistrationRequest>(entity =>
+            {
+                entity.HasOne(rr => rr.ProcessIdNavigation)
+                     .WithOne()
+                     .HasForeignKey<RecruiterRegistrationRequest>(rr => rr.ProcessId)
+                     .HasConstraintName("FK_Process_Recruiter_Registration_Request");
             });
             
             modelBuilder.Entity<WorkflowSequence>(entity =>
