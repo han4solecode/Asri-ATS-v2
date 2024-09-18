@@ -64,7 +64,7 @@ namespace AsriATS.Persistance
             modelBuilder.Entity<RecruiterRegistrationRequest>(entity =>
             {
                 entity.HasOne(rr => rr.ProcessIdNavigation)
-                     .WithOne()
+                     .WithOne(p => p.RecruiterRegistrationRequestNavigation)
                      .HasForeignKey<RecruiterRegistrationRequest>(rr => rr.ProcessId)
                      .HasConstraintName("FK_Recruiter_Registration_Request_Process");
 
