@@ -1,4 +1,5 @@
-﻿using AsriATS.Application.DTOs.Register;
+﻿using AsriATS.Application.DTOs;
+using AsriATS.Application.DTOs.Register;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,5 +11,7 @@ namespace AsriATS.Application.Contracts
     public interface IAuthService
     {
         Task<RegisterResponseDto> RegisterApplicantAsync(RegisterRequestDto register);
+
+        Task<BaseResponseDto> RegisterCompanyAsync(RegisterCompanyRequestDto registerCompanyRequest);
     }
 }
