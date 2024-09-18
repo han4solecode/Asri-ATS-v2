@@ -27,6 +27,15 @@ namespace AsriATS.Application.Services
 
         public async Task<BaseResponseDto> CompanyRegisterRequestAsync(CompanyRegisterRequestDto companyRegisterRequest)
         {
+            // TODO
+            // 1. retrieve company registration workflow id
+            // 2. retrieve NextStepId from Workflow Sequence 
+            // 3. create new Process
+            // 4. create new WorkflowAction with anon requesterId
+            // 5. create new CompanyRequest
+            // 6. retrieve next role user from Workflow Sequence
+            // 7. send email to actors?
+
             throw new NotImplementedException();
         }
 
