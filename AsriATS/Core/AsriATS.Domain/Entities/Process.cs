@@ -23,5 +23,8 @@ namespace AsriATS.Domain.Entities
         public virtual Request Request { get; set; }
         public DateTime RequestDate { get; set; }
         public virtual ICollection<WorkflowAction> WorkflowActions { get; set; }
+
+        // navigation to CompanyRequest
+        public virtual CompanyRequest? CompanyRequestNavigation { get; set; }
     }
 }
