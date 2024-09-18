@@ -5,6 +5,6 @@ namespace AsriATS.Application.Contracts
 {
     public interface IWorkflowService
     {
-        Task<BaseResponseDto> CreateWorkflowAsync(WorkflowRequest request);
+        Task<BaseResponseDto> CreateWorkflowAsync(WorkflowRequestDto request);
     }
 }

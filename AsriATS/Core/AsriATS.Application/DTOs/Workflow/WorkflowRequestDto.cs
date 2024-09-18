@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace AsriATS.Application.DTOs.Workflow
 {
-    public class WorkflowRequest
+    public class WorkflowRequestDto
     {
-        public string WorkflowName { get; set; }
-        public string Description { get; set; }
+        public string WorkflowName { get; set; } = null!;
+        public string Description { get; set; } = null!;
     }
 }

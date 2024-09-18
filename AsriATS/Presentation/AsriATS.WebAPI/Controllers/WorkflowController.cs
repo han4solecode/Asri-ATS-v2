@@ -17,7 +17,7 @@ namespace AsriATS.WebAPI.Controllers
 
         // [Authorize(Roles = "Administrator")]
         [HttpPost("create")]
-        public async Task<IActionResult> CreateWorkflow([FromBody] WorkflowRequest request)
+        public async Task<IActionResult> CreateWorkflow([FromBody] WorkflowRequestDto request)
         {
             var res = await _workflowService.CreateWorkflowAsync(request);
 

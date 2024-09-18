@@ -14,7 +14,7 @@ namespace AsriATS.Application.Services
             _workflowRepository = workflowRepository;
         }
 
-        public async Task<BaseResponseDto> CreateWorkflowAsync(WorkflowRequest request)
+        public async Task<BaseResponseDto> CreateWorkflowAsync(WorkflowRequestDto request)
         {
             var newWorkflow = new Workflow
             {
