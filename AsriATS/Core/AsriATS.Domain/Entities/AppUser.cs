@@ -19,6 +19,11 @@ namespace AsriATS.Domain.Entities
 
         [Required]
         public string Sex { get; set; }
+
+        // refresh token
+        public string? RefreshToken { get; set; }
+        public DateTime? RefreshTokenExpiryTime { get; set; }
+
         public virtual ICollection<WorkflowAction> WorkflowActions { get; set; } = new List<WorkflowAction>();
         public virtual ICollection<Process> Processes { get; set; } = new List<Process>();
 
