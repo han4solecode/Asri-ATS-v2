@@ -8,11 +8,11 @@ namespace AsriATS.WebAPI.Controllers
     [Route("api/[controller]")]
     public class NextStepRuleController : ControllerBase
     {
-        private readonly INextStepRuleService _nextStepRuleService;
+        private readonly IWorkflowService _workflowService;
 
-        public NextStepRuleController(INextStepRuleService nextStepRuleService)
+        public NextStepRuleController(IWorkflowService nextStepRuleService)
         {
-            _nextStepRuleService = nextStepRuleService;
+            _workflowService = nextStepRuleService;
         }
 
         // [Authorize(Roles = "Administrator")]
@@ -22,7 +22,7 @@ namespace AsriATS.WebAPI.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var res = await _nextStepRuleService.CreateNextStepRuleAsync(request);
+            var res = await _workflowService.CreateNextStepRuleAsync(request);
 
             if (res.Status == "Error")
             {

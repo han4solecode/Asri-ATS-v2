@@ -8,11 +8,11 @@ namespace AsriATS.WebAPI.Controllers
     [Route("api/[controller]")]
     public class WorkflowSequenceController : ControllerBase
     {
-        private readonly IWorkflowSequenceService _workflowSequenceService;
+        private readonly IWorkflowService _workflowService;
 
-        public WorkflowSequenceController(IWorkflowSequenceService workflowSequenceService)
+        public WorkflowSequenceController(IWorkflowService workflowService)
         {
-            _workflowSequenceService = workflowSequenceService;
+            _workflowService = workflowService;
         }
 
         // [Authorize(Roles = "Administrator")]
@@ -22,7 +22,7 @@ namespace AsriATS.WebAPI.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var res = await _workflowSequenceService.CreateWorkflowSequenceAsync(request);
+            var res = await _workflowService.CreateWorkflowSequenceAsync(request);
 
             if (res.Status == "Error")
             {
