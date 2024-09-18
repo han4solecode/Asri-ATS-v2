@@ -13,6 +13,6 @@ namespace AsriATS.Domain.Entities
         public string Address { get; set; } = null!;
 
         // collection navigation to AppUser
-        public ICollection<AppUser> AppUsers { get; set; } = [];
+        public virtual ICollection<AppUser> AppUsers { get; set; } = [];
     }
 }
