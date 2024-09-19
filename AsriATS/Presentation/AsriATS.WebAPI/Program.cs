@@ -1,5 +1,6 @@
 
 using AsriATS.Application;
+using AsriATS.Application.Options;
 using AsriATS.Persistance;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -38,6 +39,9 @@ public class Program
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["JWT:SigningKey"]!)),
             };
         });
+
+        // MailSettings options
+        builder.Services.Configure<MailOptions>(builder.Configuration.GetSection(MailOptions.MailSettings));
 
         builder.Services.AddControllers();
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
