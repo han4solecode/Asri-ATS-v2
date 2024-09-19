@@ -305,6 +305,7 @@ namespace AsriATS.Application.Services
             return true;
         }
 
+        // Method for view HR or Recruiter in same company
         public async Task<List<UserResponseDto>> GetUsersInSameCompanyAsync()
         {
             // Get the username of the currently logged-in user

@@ -18,6 +18,7 @@ namespace AsriATS.WebAPI.Controllers
             _userService = userService;
         }
 
+        [Authorize(Roles = "Administrator, HR Manager, Recruiter, Applicant")]
         [HttpPut("update-user")]
         public async Task<IActionResult> UpdateUser([FromBody] UpdateRequestDto update)
         {
@@ -61,6 +62,7 @@ namespace AsriATS.WebAPI.Controllers
             }
         }
 
+        [Authorize(Roles = "Administrator, HR Manager, Recruiter, Applicant")]
         //delete account for user roles hierarchy
         [HttpDelete("delete/{username}")]
         public async Task<IActionResult> DeleteUser(string username)

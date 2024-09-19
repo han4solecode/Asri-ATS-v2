@@ -59,8 +59,8 @@ public class Program
 
         app.UseHttpsRedirection();
 
-        app.UseAuthorization();
         app.UseAuthentication();
+        app.UseAuthorization();
 
         app.MapControllers();
 
