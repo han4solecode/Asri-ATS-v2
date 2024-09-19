@@ -11,6 +11,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Security.Claims;
+using Microsoft.EntityFrameworkCore;
+using AsriATS.Application.DTOs.User;
 
 namespace AsriATS.Application.Services
 {
@@ -301,6 +303,63 @@ namespace AsriATS.Application.Services
             }
 
             return true;
+        }
+
+        public async Task<List<UserResponseDto>> GetUsersInSameCompanyAsync()
+        {
+            // Get the username of the currently logged-in user
+            var currentUser = _httpContextAccessor.HttpContext?.User.Identity!.Name;
+
+            if (currentUser == null)
+            {
+                throw new UnauthorizedAccessException("User is not logged in.");
+            }
+
+            // Get the roles of the currently logged-in user
+            var currentUserRoles = _httpContextAccessor.HttpContext?.User.Claims
+                .Where(c => c.Type == ClaimTypes.Role)
+                .Select(c => c.Value)
+                .ToList();
+
+            // Check if the user is a Recruiter or HR Manager
+            if (!currentUserRoles.Contains("HR Manager") && !currentUserRoles.Contains("Recruiter"))
+            {
+                throw new UnauthorizedAccessException("Only HR Managers and Recruiters can view users within the same company.");
+            }
+
+            // Get the current user's details to retrieve their CompanyId
+            var currentUserObject = await _userManager.FindByNameAsync(currentUser);
+
+            if (currentUserObject == null)
+            {
+                throw new Exception("Current user not found.");
+            }
+
+            if (currentUserObject.CompanyId == null)
+            {
+                throw new Exception("Company ID not found for current user.");
+            }
+
+            // Fetch all users in the same company
+            var usersInSameCompany = await _userManager.Users
+                .Where(u => u.CompanyId == currentUserObject.CompanyId)
+                .ToListAsync();
+
+            var userResponseList = usersInSameCompany.Select(user => new UserResponseDto
+            {
+                userId = user.Id,
+                UserName = user.UserName,
+                Email = user.Email,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                PhoneNumber = user.PhoneNumber,
+                Address = user.Address,
+                Dob = user.Dob,
+                Sex = user.Sex,
+                CompanyId = user.CompanyId
+            }).ToList();
+
+            return userResponseList;
         }
 
         private void UpdateUserFields(AppUser user, UpdateRequestDto update)

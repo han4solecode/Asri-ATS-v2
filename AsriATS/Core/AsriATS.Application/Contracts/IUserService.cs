@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using AsriATS.Application.DTOs.User;
 
 namespace AsriATS.Application.Contracts
 {
@@ -14,5 +15,6 @@ namespace AsriATS.Application.Contracts
         Task<UpdateResponseDto> UpdateUserAsync(UpdateRequestDto update);
         Task<object> GetUserInfo();
         Task<bool> DeleteUserAsync(string userName);
+        Task<List<UserResponseDto>> GetUsersInSameCompanyAsync();
     }
 }

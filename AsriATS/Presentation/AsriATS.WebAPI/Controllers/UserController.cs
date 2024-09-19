@@ -86,5 +86,23 @@ namespace AsriATS.WebAPI.Controllers
                 return BadRequest(new { Status = "Error", Message = ex.Message });
             }
         }
+
+        [HttpGet("company")]
+        public async Task<IActionResult> GetUserSameCompany()
+        {
+            try
+            {
+                var user = await _userService.GetUsersInSameCompanyAsync();
+                return Ok(user);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Unauthorized("User not logged in.");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
     }
 }
