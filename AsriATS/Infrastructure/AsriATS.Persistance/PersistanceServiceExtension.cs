@@ -21,6 +21,7 @@ namespace AsriATS.Persistance
             services.AddScoped<IWorkflowSequenceRepository, WorkflowSequenceRepository>();
             services.AddScoped<INextStepRuleRepository, NextStepRuleRepository>();
             services.AddScoped<ICompanyRequestRepository, CompanyRequestRepository>();
+            services.AddScoped<IRecruiterRegistrationRequestRepository, RecruiterRegistrationRequestRepository>();
         }
 
         public static void ConfigureIdentity(this IServiceCollection services)

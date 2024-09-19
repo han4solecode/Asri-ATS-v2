@@ -24,6 +24,6 @@ namespace AsriATS.Domain.Entities
         // navigation to CompanyRequest
         // public virtual CompanyRequest? CompanyRequestNavigation { get; set; }
         // navigation to RecrutierRegistrationRequest
-        public virtual RecruiterRegistrationRequest? RecruiterRegistrationRequestNavigation { get; set; }
+        //public virtual RecruiterRegistrationRequest? RecruiterRegistrationRequestNavigation { get; set; }
     }
 }
