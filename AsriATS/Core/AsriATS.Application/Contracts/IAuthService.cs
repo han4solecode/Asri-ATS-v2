@@ -1,4 +1,5 @@
 ﻿using AsriATS.Application.DTOs;
+using AsriATS.Application.DTOs.ChangePassword;
 using AsriATS.Application.DTOs.Login;
 using AsriATS.Application.DTOs.RefreshToken;
 using AsriATS.Application.DTOs.Register;
@@ -19,6 +20,7 @@ namespace AsriATS.Application.Contracts
 
         Task<RefreshTokenResponseDto> RefreshAccessTokenAsync(string refreshToken);
         Task<LoginResponseDto> LoginAsync(LoginRequestDto login);
-        Task<UpdateResponseDto> UpdateApplicantAsync(UpdateRequestDto update); 
+        Task<UpdateResponseDto> UpdateApplicantAsync(UpdateRequestDto update);
+        Task<BaseResponseDto> ChangePasswordAsync(ChangePasswordRequestDto request);
     }
 }

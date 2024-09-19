@@ -93,43 +93,5 @@ namespace AsriATS.Application.Services
 
             return user;
         }
-
-        // change password
-        public async Task<BaseResponseDto> ChangePasswordAsync(ChangePasswordRequestDto request)
-        {
-            var users = _httpContextAccessor.HttpContext?.User.Identity!.Name;
-            // Find the applicant by username (or you could use user ID)
-            var user = await _userManager.FindByNameAsync(users);
-
-            if (user == null)
-            {
-                return new BaseResponseDto
-                {
-                    Status = "Error",
-                    Message = "User not found!"
-                };
-            }
-
-            // Generate a password reset token
-            var resetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
-
-            // Change the user's password
-            var result = await _userManager.ResetPasswordAsync(user, resetToken, request.NewPassword);
-
-            if (!result.Succeeded)
-            {
-                return new BaseResponseDto
-                {
-                    Status = "Error",
-                    Message = "Password change failed! Please check the details and try again."
-                };
-            }
-
-            return new BaseResponseDto
-            {
-                Status = "Success",
-                Message = "Password changed successfully."
-            };
-        }
     }
 }

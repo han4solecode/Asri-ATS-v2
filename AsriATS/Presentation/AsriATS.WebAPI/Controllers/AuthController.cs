@@ -1,7 +1,9 @@
 ﻿using AsriATS.Application.Contracts;
+using AsriATS.Application.DTOs.ChangePassword;
 using AsriATS.Application.DTOs.Login;
 using AsriATS.Application.DTOs.Register;
 using AsriATS.Application.DTOs.Update;
+using AsriATS.Application.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -67,6 +69,19 @@ namespace AsriATS.WebAPI.Controllers
             }
 
             return Ok(res);
+        }
+
+        //change password
+        [HttpPost("ChangePassword")]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequestDto change)
+        {
+            var result = await _authService.ChangePasswordAsync(change);
+            if (result.Status == "Error")
+            {
+                return BadRequest(result.Message);
+            }
+
+            return Ok(result.Message);
         }
     }
 }

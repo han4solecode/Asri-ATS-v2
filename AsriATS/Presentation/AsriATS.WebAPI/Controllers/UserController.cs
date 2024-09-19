@@ -42,17 +42,5 @@ namespace AsriATS.WebAPI.Controllers
                 return BadRequest(ex.Message);
             }
         }
-
-        [HttpPost("ChangePassword")]
-        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequestDto change)
-        {
-            var result = await _userService.ChangePasswordAsync(change);
-            if (result.Status == "Error")
-            {
-                return BadRequest(result.Message);
-            }
-
-            return Ok(result.Message);
-        }
     }
 }

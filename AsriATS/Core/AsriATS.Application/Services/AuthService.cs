@@ -1,10 +1,12 @@
 ﻿using AsriATS.Application.Contracts;
 using AsriATS.Application.DTOs;
+using AsriATS.Application.DTOs.ChangePassword;
 using AsriATS.Application.DTOs.Login;
 using AsriATS.Application.DTOs.RefreshToken;
 using AsriATS.Application.DTOs.Register;
 using AsriATS.Application.DTOs.Update;
 using AsriATS.Domain.Entities;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -25,12 +27,14 @@ namespace AsriATS.Application.Services
         private readonly UserManager<AppUser> _userManager;
         private readonly RoleManager<AppRole> _roleManager;
         private readonly IConfiguration _configuration;
+        private readonly IHttpContextAccessor _httpContextAccessor;
     
-        public AuthService(UserManager<AppUser> userManager, RoleManager<AppRole> roleManager, IConfiguration configuration)
+        public AuthService(UserManager<AppUser> userManager, RoleManager<AppRole> roleManager, IConfiguration configuration, IHttpContextAccessor httpContextAccessor)
         {
             _userManager = userManager;
             _roleManager = roleManager;
             _configuration = configuration;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         public async Task<RegisterResponseDto> RegisterApplicantAsync(RegisterRequestDto register)
@@ -274,5 +278,42 @@ namespace AsriATS.Application.Services
             };
         }
 
+        // change password
+        public async Task<BaseResponseDto> ChangePasswordAsync(ChangePasswordRequestDto request)
+        {
+            var users = _httpContextAccessor.HttpContext?.User.Identity!.Name;
+            // Find the applicant by username (or you could use user ID)
+            var user = await _userManager.FindByNameAsync(users);
+
+            if (user == null)
+            {
+                return new BaseResponseDto
+                {
+                    Status = "Error",
+                    Message = "User not found!"
+                };
+            }
+
+            // Generate a password reset token
+            var resetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
+
+            // Change the user's password
+            var result = await _userManager.ResetPasswordAsync(user, resetToken, request.NewPassword);
+
+            if (!result.Succeeded)
+            {
+                return new BaseResponseDto
+                {
+                    Status = "Error",
+                    Message = "Password change failed! Please check the details and try again."
+                };
+            }
+
+            return new BaseResponseDto
+            {
+                Status = "Success",
+                Message = "Password changed successfully."
+            };
+        }
     }
 }
