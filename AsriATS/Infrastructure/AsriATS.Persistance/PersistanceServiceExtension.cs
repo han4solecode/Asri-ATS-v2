@@ -1,6 +1,7 @@
 using AsriATS.Application.Persistance;
 using AsriATS.Domain.Entities;
 using AsriATS.Persistance.Repositories;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -32,7 +33,8 @@ namespace AsriATS.Persistance
                 opt.Password.RequireUppercase = true;
                 opt.Password.RequireNonAlphanumeric = false;
                 opt.Password.RequiredLength = 8;
-            }).AddEntityFrameworkStores<AppDbContext>();
+            }).AddEntityFrameworkStores<AppDbContext>()
+            .AddDefaultTokenProviders();
         }
     }
 }

@@ -34,5 +34,10 @@ namespace AsriATS.Application.Services
         {
             throw new NotImplementedException();
         }
+
+        public Task<BaseResponseDto> ReviewCompanyRegisterRequest(CompanyRegisterReviewDto companyRegisterReview)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
