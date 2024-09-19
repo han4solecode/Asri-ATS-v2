@@ -27,14 +27,14 @@ namespace AsriATS.Persistance.Repositories
 
         public async Task<IEnumerable<CompanyRequest>> GetAllAsync()
         {
-            var companyRequests = await _context.CompanyRequests.Include(cr => cr.ProcessIdNavigation).ToListAsync();
+            var companyRequests = await _context.CompanyRequests.ToListAsync();
 
             return companyRequests;
         }
 
         public async Task<CompanyRequest?> GetByIdAsync(int id)
         {
-            var companyRequest = await _context.CompanyRequests.Include(cr => cr.ProcessIdNavigation).FirstOrDefaultAsync();
+            var companyRequest = await _context.CompanyRequests.FirstOrDefaultAsync();
 
             return companyRequest;
         }
