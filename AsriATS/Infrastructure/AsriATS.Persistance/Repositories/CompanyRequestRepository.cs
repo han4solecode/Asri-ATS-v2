@@ -34,7 +34,7 @@ namespace AsriATS.Persistance.Repositories
 
         public async Task<CompanyRequest?> GetByIdAsync(int id)
         {
-            var companyRequest = await _context.CompanyRequests.FirstOrDefaultAsync();
+            var companyRequest = await _context.CompanyRequests.FindAsync(id);
 
             return companyRequest;
         }
