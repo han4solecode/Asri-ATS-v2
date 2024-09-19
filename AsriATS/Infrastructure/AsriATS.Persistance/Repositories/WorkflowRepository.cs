@@ -44,6 +44,13 @@ namespace AsriATS.Persistance.Repositories
             return workflow;
         }
 
+        public async Task<Workflow?> GetWorkflowByNameAsync(string workflowName)
+        {
+            var workflow = await _context.Workflows.Where(w => w.WorkflowName == workflowName).SingleOrDefaultAsync();
+
+            return workflow;
+        }
+
         public async Task UpdateAsync(Workflow entity)
         {
             _context.Workflows.Update(entity);

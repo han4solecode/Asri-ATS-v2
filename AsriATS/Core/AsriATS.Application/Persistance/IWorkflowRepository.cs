@@ -5,6 +5,6 @@ namespace AsriATS.Application.Persistance
 {
     public interface IWorkflowRepository : IBaseRepository<Workflow>
     {
-
+        Task<Workflow?> GetWorkflowByNameAsync(string workflowName);
     }
 }
