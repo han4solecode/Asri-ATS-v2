@@ -7,5 +7,6 @@ namespace AsriATS.Application.Contracts
     {
         Task<BaseResponseDto> SubmitRecruiterRegistrationRequest(RecruiterRegistrationRequestDto request);
         Task<RecruiterRegistrationRequestResponseDto> ReviewRecruiterRegistrationRequest(int id);
+        Task<BaseResponseDto> ApprovalRecruiterRegistrationRequest(int id, string action);
     }
 }

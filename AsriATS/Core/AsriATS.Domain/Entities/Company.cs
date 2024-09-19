@@ -14,5 +14,6 @@ namespace AsriATS.Domain.Entities
 
         // collection navigation to AppUser
         public virtual ICollection<AppUser> AppUsers { get; set; } = [];
+        public virtual ICollection<RecruiterRegistrationRequest> RecruiterRegistrationRequests { get; set; } = [];
     }
 }

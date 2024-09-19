@@ -64,9 +64,9 @@ namespace AsriATS.Persistance
             modelBuilder.Entity<RecruiterRegistrationRequest>(entity =>
             {
                 entity.HasOne(rr => rr.CompanyIdNavigation)
-                     .WithOne()
-                     .HasForeignKey<RecruiterRegistrationRequest>(rr => rr.CompanyId)
-                     .HasConstraintName("FK_Recruiter_Registration_Request_Company");
+                      .WithMany(c => c.RecruiterRegistrationRequests)
+                      .HasForeignKey(rr => rr.CompanyId)
+                      .HasConstraintName("FK_Recruiter_Registration_Request_Company");
             });
 
             modelBuilder.Entity<WorkflowSequence>(entity =>

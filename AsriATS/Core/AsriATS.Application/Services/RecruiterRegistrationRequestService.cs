@@ -4,7 +4,7 @@ using AsriATS.Application.Persistance;
 using AsriATS.Domain.Entities;
 using AsriATS.Application.Contracts;
 using AsriATS.Application.DTOs.Register;
-using Org.BouncyCastle.Asn1.Ocsp;
+using Microsoft.AspNetCore.Identity;
 
 namespace AsriATS.Application.Services
 {
@@ -12,15 +12,20 @@ namespace AsriATS.Application.Services
     {
         private readonly IRecruiterRegistrationRequestRepository _recruiterRegistrationRequestRepository;
         private readonly ICompanyRepository _companyRepository;
-        public RecruiterRegistrationRequestService(IRecruiterRegistrationRequestRepository recruiterRegistrationRequestRepository, ICompanyRepository companyRepository)
+        private readonly UserManager<AppUser> _userManager;
+        private readonly RoleManager<AppRole> _roleManager;
+        private static readonly Random Random = new Random();
+        public RecruiterRegistrationRequestService(IRecruiterRegistrationRequestRepository recruiterRegistrationRequestRepository, ICompanyRepository companyRepository, UserManager<AppUser> userManager, RoleManager<AppRole> roleManager)
         {
             _recruiterRegistrationRequestRepository = recruiterRegistrationRequestRepository;
             _companyRepository = companyRepository;
+            _userManager = userManager;
+            _roleManager = roleManager;
         }
         public async Task<BaseResponseDto> SubmitRecruiterRegistrationRequest(RecruiterRegistrationRequestDto request)
         {
             var company = await _companyRepository.GetByIdAsync(request.CompanyId);
-            if (company == null) 
+            if (company == null)
             {
                 return new RegisterResponseDto
                 {
@@ -30,8 +35,12 @@ namespace AsriATS.Application.Services
             }
             var newRecruiterRequest = new RecruiterRegistrationRequest
             {
+                PhoneNumber = request.PhoneNumber,
+                FirstName = request.FirstName,
+                LastName = request.LastName,
+                Dob = request.Dob,
+                Sex = request.Sex,
                 Email = request.Email,
-                Name = request.Name,
                 Address = request.Address,
                 CompanyId = request.CompanyId,
                 StartDate = DateTime.UtcNow
@@ -60,11 +69,126 @@ namespace AsriATS.Application.Services
                 Status = "Success",
                 Message = "Recruiter Registration Request retrieved",
                 Email = recruiterRegistrationRequest.Email,
-                Name = recruiterRegistrationRequest.Name,
+                FirstName = recruiterRegistrationRequest.FirstName,
+                LastName = recruiterRegistrationRequest.LastName,
+                PhoneNumber = recruiterRegistrationRequest.PhoneNumber,
+                Dob = recruiterRegistrationRequest.Dob,
+                Sex = recruiterRegistrationRequest.Sex,
                 Address = recruiterRegistrationRequest.Address,
                 CompanyId = recruiterRegistrationRequest.CompanyId,
             };
             return recruiterRegistrationRequesResponseDto;
+        }
+        public async Task<BaseResponseDto> ApprovalRecruiterRegistrationRequest(int id, string action)
+        {
+            var recruiterRequest = await _recruiterRegistrationRequestRepository.GetByIdAsync(id);
+            if (recruiterRequest == null)
+            {
+                return new BaseResponseDto
+                {
+                    Status = "Error",
+                    Message = "Recruiter Registration Request is not found"
+                };
+            }
+            if (action == "Approved")
+            {
+                recruiterRequest.IsApproved = true;
+                recruiterRequest.EndDate = DateTime.UtcNow;
+                await _recruiterRegistrationRequestRepository.UpdateAsync(recruiterRequest);
+
+                var userExist = await _userManager.FindByEmailAsync(recruiterRequest.Email);
+
+                if (userExist != null)
+                {
+                    return new BaseResponseDto
+                    {
+                        Status = "Error",
+                        Message = "User already exist!"
+                    };
+                }
+
+                var newUser = new AppUser
+                {
+                    UserName = recruiterRequest.Email,
+                    Email = recruiterRequest.Email,
+                    SecurityStamp = Guid.NewGuid().ToString(),
+                    PhoneNumber = recruiterRequest.PhoneNumber,
+                    FirstName = recruiterRequest.FirstName,
+                    LastName = recruiterRequest.LastName,
+                    Address = recruiterRequest.Address,
+                    Dob = recruiterRequest.Dob,
+                    Sex = recruiterRequest.Sex,
+                    CompanyId = recruiterRequest.CompanyId,
+                };
+
+                string password = GeneratePassword();
+
+                var result = await _userManager.CreateAsync(newUser, password);
+
+                if (!result.Succeeded)
+                {
+                    return new BaseResponseDto
+                    {
+                        Status = "Error",
+                        Message = "User registration failed! Please check user details and try again."
+                    };
+                }
+
+                if (await _roleManager.RoleExistsAsync("Recruiter"))
+                {
+                    await _userManager.AddToRoleAsync(newUser, "Recruiter");
+                }
+
+                // send email notification to new user to give the newly created credential (username and password)
+
+                return new BaseResponseDto
+                {
+                    Status = "Success",
+                    Message = "Recruiter Registration Request approved successfully"
+                };
+            }
+            else if (action == "Rejected")
+            {
+                recruiterRequest.IsApproved = false;
+                recruiterRequest.EndDate = DateTime.UtcNow;
+                await _recruiterRegistrationRequestRepository.UpdateAsync(recruiterRequest);
+
+                return new BaseResponseDto
+                {
+                    Status = "Success",
+                    Message = "Recruiter Registration Request rejected successfully"
+                };
+            }
+            return new BaseResponseDto
+            {
+                Status = "Error",
+                Message = "Recruiter Registration Approval request is error"
+            };
+        }
+
+        private static string GeneratePassword(int length = 8)
+        {
+            if (length < 8)
+            {
+                throw new ArgumentException("Password must be at least 8 characters long.");
+            }
+
+            const string upperCase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            const string lowerCase = "abcdefghijklmnopqrstuvwxyz";
+            const string digits = "0123456789";
+
+            char[] password = new char[length];
+            password[0] = upperCase[Random.Next(upperCase.Length)];
+            password[1] = lowerCase[Random.Next(lowerCase.Length)];
+            password[2] = digits[Random.Next(digits.Length)];
+
+            string allChars = upperCase + lowerCase + digits;
+            for (int i = 3; i < length; i++)
+            {
+                password[i] = allChars[Random.Next(allChars.Length)];
+            }
+
+            return new string(password.OrderBy(_ => Random.Next()).ToArray());
         }
     }
 }

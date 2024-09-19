@@ -42,5 +42,17 @@ namespace AsriATS.WebAPI.Controllers
             }
             return Ok(recruiterRegistrationRequest);
         }
+        // [Authorize(Roles = "HR Manager")]
+        [HttpPost("review-request/{id}")]
+        public async Task<IActionResult> ApprovalRecruiterRegistrationRequest(int id, [FromBody] string action)
+        {
+            var res = await _recruiterRegistrationRequestService.ApprovalRecruiterRegistrationRequest(id, action);
+
+            if (res.Status == "Error")
+            {
+                return BadRequest(res.Message);
+            }
+            return Ok(res);
+        }
     }
 }

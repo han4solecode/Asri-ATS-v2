@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace AsriATS.Domain.Entities
 {
@@ -14,9 +9,18 @@ namespace AsriATS.Domain.Entities
         public int RecruiterRegistrationRequestId { get; set; }
         [Required]
         public string Email { get; set; } = null!;
+        [Required]
+        public string FirstName { get; set; }
 
         [Required]
-        public string Name { get; set; } = null!;
+        public string LastName { get; set; }
+        [Required]
+        public DateOnly Dob { get; set; }
+
+        [Required]
+        public string Sex { get; set; }
+        [Required]
+        public string PhoneNumber { get; set; }
         [Required]
         public string Address { get; set; } = null!;
         [ForeignKey("Company")]

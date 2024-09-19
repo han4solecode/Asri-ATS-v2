@@ -14,10 +14,19 @@ namespace AsriATS.Application.DTOs.RecruiterRegistrationRequest
         public string Email { get; set; } = null!;
 
         [Required]
-        public string Name { get; set; } = null!;
-
-        [Required]
         public string Address { get; set; } = null!;
         public int CompanyId { get; set; }
+        [Required]
+        public string FirstName { get; set; }
+
+        [Required]
+        public string LastName { get; set; }
+        [Required]
+        public DateOnly Dob { get; set; }
+
+        [Required]
+        public string Sex { get; set; }
+        [Required]
+        public string PhoneNumber { get; set; }
     }
 }
