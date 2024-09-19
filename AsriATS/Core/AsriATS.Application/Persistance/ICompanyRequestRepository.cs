@@ -5,6 +5,6 @@ namespace AsriATS.Application.Persistance
 {
     public interface ICompanyRequestRepository : IBaseRepository<CompanyRequest>
     {
-        
+        Task<IEnumerable<CompanyRequest>> GetAllToBeReviewedAsync();
     }
 }
