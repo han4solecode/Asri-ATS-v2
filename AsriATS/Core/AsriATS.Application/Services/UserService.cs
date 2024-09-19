@@ -60,6 +60,18 @@ namespace AsriATS.Application.Services
                 };
             }
 
+            // Get the currently logged-in user object to check their CompanyId
+            var currentUserObject = await _userManager.FindByNameAsync(currentUser);
+
+            if (currentUserObject == null)
+            {
+                return new UpdateResponseDto
+                {
+                    Status = "Error",
+                    Message = "Current user not found!"
+                };
+            }
+
             // Check if the current user has the rights to update the target user
             if (currentUserRoles.Contains("Administrator"))
             {
@@ -68,17 +80,34 @@ namespace AsriATS.Application.Services
             }
             else if (currentUserRoles.Contains("HR Manager"))
             {
-                if (update.Username == currentUser || await _userManager.IsInRoleAsync(userToUpdate, "Recruiter"))
+                if (update.Username == currentUser ||
+                    (await _userManager.IsInRoleAsync(userToUpdate, "Recruiter") && currentUserObject.CompanyId == userToUpdate.CompanyId))
                 {
-                    // HR Manager can update their own details or those of recruiters
+                    // HR Manager can update their own details or those of recruiters within the same company
                     UpdateUserFields(userToUpdate, update);
+                }
+                else if (await _userManager.IsInRoleAsync(userToUpdate, "HR Manager"))
+                {
+                    // HR Manager can update another HR Manager only if they belong to the same company
+                    if (currentUserObject.CompanyId == userToUpdate.CompanyId)
+                    {
+                        UpdateUserFields(userToUpdate, update);
+                    }
+                    else
+                    {
+                        return new UpdateResponseDto
+                        {
+                            Status = "Error",
+                            Message = "HR Manager can only update another HR Manager from the same company."
+                        };
+                    }
                 }
                 else
                 {
                     return new UpdateResponseDto
                     {
                         Status = "Error",
-                        Message = "HR Manager can only update their own account or recruiters."
+                        Message = "HR Manager can only update their own account or recruiters from the same company."
                     };
                 }
             }
@@ -207,29 +236,46 @@ namespace AsriATS.Application.Services
                 throw new Exception("User not found.");
             }
 
+            // Get the currently logged-in user object
+            var currentUserObject = await _userManager.FindByNameAsync(currentUser);
+
+            if (currentUserObject == null)
+            {
+                throw new Exception("Current user not found.");
+            }
+
             // Ensure user can only delete their own account or has proper permissions
             if (currentUserRoles.Contains("Administrator"))
             {
-                // Administrator can delete anyone
+                // Administrator can delete anyone, regardless of company
                 await _userManager.DeleteAsync(userToDelete);
             }
             else if (currentUserRoles.Contains("HR Manager"))
             {
-                if (userName == currentUser || await _userManager.IsInRoleAsync(userToDelete, "Recruiter"))
+                // HR Manager can delete their own account or recruiter accounts if they belong to the same company
+                if (userName == currentUser ||
+                    (await _userManager.IsInRoleAsync(userToDelete, "Recruiter") && currentUserObject.CompanyId == userToDelete.CompanyId))
                 {
-                    // HR Manager can delete their own account or recruiter accounts
+                    await _userManager.DeleteAsync(userToDelete);
+                }
+                else if (await _userManager.IsInRoleAsync(userToDelete, "HR Manager"))
+                {
+                    if (currentUserObject.CompanyId != userToDelete.CompanyId)
+                    {
+                        throw new UnauthorizedAccessException("HR Manager can only delete another HR Manager from the same company.");
+                    }
                     await _userManager.DeleteAsync(userToDelete);
                 }
                 else
                 {
-                    throw new UnauthorizedAccessException("HR Manager can only delete their own account or recruiters.");
+                    throw new UnauthorizedAccessException("HR Manager can only delete their own account or recruiters from the same company.");
                 }
             }
             else if (currentUserRoles.Contains("Recruiter"))
             {
+                // Recruiter can only delete their own account and cannot delete anyone else
                 if (userName == currentUser)
                 {
-                    // Recruiter can only delete their own account
                     await _userManager.DeleteAsync(userToDelete);
                 }
                 else
@@ -239,9 +285,9 @@ namespace AsriATS.Application.Services
             }
             else if (currentUserRoles.Contains("Applicant"))
             {
+                // Applicant can only delete their own account
                 if (userName == currentUser)
                 {
-                    // Applicant can only delete their own account
                     await _userManager.DeleteAsync(userToDelete);
                 }
                 else
