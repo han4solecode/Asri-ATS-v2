@@ -11,10 +11,27 @@ namespace AsriATS.Domain.Entities
         public string Email { get; set; } = null!;
 
         [Required]
-        public string Name { get; set; } = null!;
+        public string CompanyName { get; set; } = null!;
 
         [Required]
-        public string Address { get; set; } = null!;
+        public string CompanyAddress { get; set; } = null!;
+
+        [Required]
+        public string FirstName { get; set; } = null!;
+
+        [Required]
+        public string LastName { get; set; } = null!;
+
+        [Required]
+        public string UserAddress { get; set; } = null!;
+
+        [Required]
+        public DateOnly Dob { get; set; }
+
+        [Required]
+        public string Sex { get; set; } = null!;
+
+        public bool? IsApproved { get; set; }
 
         // reference to Process
         // public int ProcessId { get; set; }
