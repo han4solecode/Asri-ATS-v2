@@ -162,7 +162,24 @@ namespace AsriATS.Application.Services
                 throw new Exception("User not found.");
             }
 
-            return user;
+            // Get the roles associated with the user
+            var roles = await _userManager.GetRolesAsync(user);
+
+            // Return the user information along with roles
+            return new
+            {
+                userId = user.Id,
+                UserName = user.UserName,
+                Email = user.Email,
+                Password  = user.SecurityStamp,
+                PhoneNumber = user.PhoneNumber,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                Address = user.Address,
+                Dob = user.Dob,
+                Sex = user.Sex,
+                Roles = roles
+            };
         }
 
         // delete user based on login and user roles
