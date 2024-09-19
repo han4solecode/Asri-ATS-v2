@@ -21,8 +21,26 @@ namespace AsriATS.WebAPI.Controllers
         [HttpPut("update-user")]
         public async Task<IActionResult> UpdateUser([FromBody] UpdateRequestDto update)
         {
-            var res = await _userService.UpdateUserAsync(update);
-            return Ok(res);
+            try
+            {
+                var result = await _userService.UpdateUserAsync(update);
+                if (result.Status == "Success")
+                {
+                    return Ok(result);
+                }
+                else
+                {
+                    return BadRequest(result);
+                }
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(new { Status = "Error", Message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Status = "Error", Message = ex.Message });
+            }
         }
 
         [HttpGet("user-info")]
@@ -40,6 +58,32 @@ namespace AsriATS.WebAPI.Controllers
             catch (Exception ex)
             {
                 return BadRequest(ex.Message);
+            }
+        }
+
+        //delete account for user roles hierarchy
+        [HttpDelete("delete/{username}")]
+        public async Task<IActionResult> DeleteUser(string username)
+        {
+            try
+            {
+                var result = await _userService.DeleteUserAsync(username);
+                if (result)
+                {
+                    return Ok(new { Status = "Success", Message = "User deleted successfully." });
+                }
+                else
+                {
+                    return BadRequest(new { Status = "Error", Message = "Failed to delete user." });
+                }
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(new { Status = "Error", Message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Status = "Error", Message = ex.Message });
             }
         }
     }

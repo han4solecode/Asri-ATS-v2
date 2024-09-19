@@ -13,5 +13,6 @@ namespace AsriATS.Application.Contracts
     {
         Task<UpdateResponseDto> UpdateUserAsync(UpdateRequestDto update);
         Task<object> GetUserInfo();
+        Task<bool> DeleteUserAsync(string userName);
     }
 }
