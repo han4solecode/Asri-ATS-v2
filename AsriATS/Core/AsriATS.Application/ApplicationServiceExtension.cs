@@ -13,6 +13,7 @@ namespace AsriATS.Application
             services.AddScoped<IWorkflowService, WorkflowService>();
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IRecruiterRegistrationRequestService, RecruiterRegistrationRequestService>();
+            services.AddScoped<ICompanyService, CompanyService>();
         }
     }
 }
