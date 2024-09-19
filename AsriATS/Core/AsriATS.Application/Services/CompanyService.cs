@@ -180,6 +180,13 @@ namespace AsriATS.Application.Services
             }
         }
 
+        public async Task<IEnumerable<CompanyRequest>> GetAllCompanyRegisterRequest()
+        {
+            var crToBeReviewed = await _companyRequestRepository.GetAllToBeReviewedAsync();
+
+            return crToBeReviewed;
+        }
+
         private static string GeneratePassword(int length)
         {
             char[] chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890".ToCharArray();
