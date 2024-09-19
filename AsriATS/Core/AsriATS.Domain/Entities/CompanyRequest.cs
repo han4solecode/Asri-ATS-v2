@@ -8,6 +8,7 @@ namespace AsriATS.Domain.Entities
         public int CompanyRequestId { get; set; }
 
         [Required]
+        [EmailAddress]
         public string Email { get; set; } = null!;
 
         [Required]
@@ -24,6 +25,10 @@ namespace AsriATS.Domain.Entities
 
         [Required]
         public string UserAddress { get; set; } = null!;
+
+        [Required]
+        [Phone]
+        public string PhoneNumber { get; set; } = null!;
 
         [Required]
         public DateOnly Dob { get; set; }
