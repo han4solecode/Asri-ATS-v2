@@ -32,6 +32,13 @@ namespace AsriATS.Persistance.Repositories
             return companyRequests;
         }
 
+        public async Task<IEnumerable<CompanyRequest>> GetAllToBeReviewedAsync()
+        {
+            var crToBeReviewed = await _context.CompanyRequests.Where(cr => cr.IsApproved == null).ToListAsync();
+
+            return crToBeReviewed;
+        }
+
         public async Task<CompanyRequest?> GetByIdAsync(int id)
         {
             var companyRequest = await _context.CompanyRequests.FindAsync(id);
