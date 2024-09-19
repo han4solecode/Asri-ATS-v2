@@ -201,10 +201,5 @@ namespace AsriATS.Application.Services
 
             return result.ToString();
         }
-
-        public Task<BaseResponseDto> ReviewCompanyRegisterRequest(CompanyRegisterReviewDto companyRegisterReview)
-        {
-            throw new NotImplementedException();
-        }
     }
 }
