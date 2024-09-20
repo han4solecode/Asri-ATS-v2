@@ -136,7 +136,8 @@ namespace AsriATS.Application.Services
                     LastName = cr.LastName,
                     Address = cr.UserAddress,
                     Dob = cr.Dob,
-                    Sex = cr.Sex
+                    Sex = cr.Sex,
+                    CompanyId = newCompany.CompanyId
                 };
 
                 var password = GeneratePassword(12);
