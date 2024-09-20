@@ -74,6 +74,34 @@ namespace AsriATS.Application.Services
                 };
             }
 
+            // Ensure new username is not already taken
+            if (!string.IsNullOrEmpty(update.Username) && update.Username != userToUpdate.UserName)
+            {
+                var existingUserByUsername = await _userManager.FindByNameAsync(update.Username);
+                if (existingUserByUsername != null)
+                {
+                    return new UpdateResponseDto
+                    {
+                        Status = "Error",
+                        Message = "Username is already taken!"
+                    };
+                }
+            }
+
+            // Ensure new email is not already taken
+            if (!string.IsNullOrEmpty(update.Email) && update.Email != userToUpdate.Email)
+            {
+                var existingUserByEmail = await _userManager.FindByEmailAsync(update.Email);
+                if (existingUserByEmail != null)
+                {
+                    return new UpdateResponseDto
+                    {
+                        Status = "Error",
+                        Message = "Email is already taken!"
+                    };
+                }
+            }
+
             // Check if the current user has the rights to update the target user
             if (currentUserRoles.Contains("Administrator"))
             {
