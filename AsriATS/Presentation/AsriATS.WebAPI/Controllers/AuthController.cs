@@ -37,6 +37,23 @@ namespace AsriATS.WebAPI.Controllers
             return Ok(res);
         }
 
+        //Create User and assign to a spesific role
+        //[Authorize(Roles = "Administrator")]
+        [HttpPost("create-user")]
+        public async Task<IActionResult> CreateUser([FromBody] RegisterUserRequestDto register, string rolename)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+            var res = await _authService.RegisterUserAsync(register, rolename);
+            if (res.Status == "Error")
+            {
+                return BadRequest(res.Message);
+            }
+            return Ok(res);
+        }
+
         //update or manage own applicant data
         //[Authorize(Roles = "Applicant, Administrator")]
         [HttpPut("update")]

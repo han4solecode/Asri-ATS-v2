@@ -85,6 +85,58 @@ namespace AsriATS.Application.Services
             };
         }
 
+        // Register user and add a spesific roles to the user
+        public async Task<RegisterResponseDto> RegisterUserAsync(RegisterUserRequestDto register, string rolename)
+        {
+            var userExist = await _userManager.FindByNameAsync(register.Username);
+
+            if (userExist != null)
+            {
+                return new RegisterResponseDto
+                {
+                    Status = "Error",
+                    Message = "User already exist!"
+                };
+            }
+
+            var user = new AppUser
+            {
+                UserName = register.Username,
+                Email = register.Email,
+                SecurityStamp = Guid.NewGuid().ToString(),
+                PhoneNumber = register.PhoneNumber,
+                FirstName = register.Firstname,
+                LastName = register.Lastname,
+                Address = register.Address,
+                Dob = register.Dob,
+                Sex = register.Sex,
+                CompanyId = register.CompanyId
+            };
+
+            var res = await _userManager.CreateAsync(user, register.Password);
+
+            if (!res.Succeeded)
+            {
+                return new RegisterResponseDto
+                {
+                    Status = "Error",
+                    Message = "User registration failed! Please check user details and try again."
+                };
+            }
+
+            // add a spesific role to user 
+            if (await _roleManager.RoleExistsAsync(rolename))
+            {
+                await _userManager.AddToRoleAsync(user, rolename);
+            }
+
+            return new RegisterResponseDto
+            {
+                Status = "Success",
+                Message = "Applicant Created successfully"
+            };
+        }
+
         public async Task<BaseResponseDto> RegisterHRManagerAsync(RegisterHRManagerRequestDto registerHRManagerRequest)
         {
             // TODO

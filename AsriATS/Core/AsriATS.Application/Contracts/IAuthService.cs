@@ -15,7 +15,7 @@ namespace AsriATS.Application.Contracts
     public interface IAuthService
     {
         Task<RegisterResponseDto> RegisterApplicantAsync(RegisterRequestDto register);
-
+        Task<RegisterResponseDto> RegisterUserAsync(RegisterUserRequestDto register, string rolename);
         Task<BaseResponseDto> RegisterHRManagerAsync(RegisterHRManagerRequestDto registerHRManagerRequest);
 
         Task<RefreshTokenResponseDto> RefreshAccessTokenAsync(string refreshToken);
