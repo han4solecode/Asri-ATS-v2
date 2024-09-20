@@ -363,6 +363,24 @@ namespace AsriATS.Application.Services
             return userResponseList;
         }
 
+        public async Task<IEnumerable<object>> GetAllUserInfoAsync()
+        {
+            var userInfos = await _userManager.Users.Include(u => u.CompanyIdNavigation).Select(u => new {
+                UserId = u.Id,
+                UserName = u.UserName,
+                Email = u.Email,
+                FirstName = u.FirstName,
+                LastName = u.LastName,
+                PhoneNumber = u.PhoneNumber,
+                Address = u.Address,
+                Dob = u.Dob,
+                Sex = u.Sex,
+                Company = u.CompanyIdNavigation!.Name
+            }).ToListAsync();
+
+            return userInfos;
+        }
+
         private void UpdateUserFields(AppUser user, UpdateRequestDto update)
         {
             // Update the fields that are allowed to be modified
