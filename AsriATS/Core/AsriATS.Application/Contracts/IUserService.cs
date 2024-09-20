@@ -16,5 +16,6 @@ namespace AsriATS.Application.Contracts
         Task<object> GetUserInfo();
         Task<bool> DeleteUserAsync(string userName);
         Task<List<UserResponseDto>> GetUsersInSameCompanyAsync();
+        Task<IEnumerable<object>> GetAllUserInfo();
     }
 }
