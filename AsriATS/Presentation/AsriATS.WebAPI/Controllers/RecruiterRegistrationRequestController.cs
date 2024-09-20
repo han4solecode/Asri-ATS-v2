@@ -1,7 +1,5 @@
 ﻿using AsriATS.Application.Contracts;
-using AsriATS.Application.DTOs.NextStepRule;
 using AsriATS.Application.DTOs.RecruiterRegistrationRequest;
-using AsriATS.Application.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AsriATS.WebAPI.Controllers
@@ -53,6 +51,15 @@ namespace AsriATS.WebAPI.Controllers
                 return BadRequest(res.Message);
             }
             return Ok(res);
+        }
+        // [Authorize(Roles = "HR Manager")]
+
+        [HttpGet("recruiter-regist-request")]
+        public async Task<IActionResult> GetAllRecruiterRegistrationRequest()
+        {
+            var cr = await _recruiterRegistrationRequestService.GetAllUnreviewedRecruiterRegistrationRequest();
+
+            return Ok(cr);
         }
     }
 }

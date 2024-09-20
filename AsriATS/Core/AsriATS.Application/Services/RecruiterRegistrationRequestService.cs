@@ -33,6 +33,27 @@ namespace AsriATS.Application.Services
                     Message = "Company is not registered!"
                 };
             }
+
+            var userExist = await _userManager.FindByEmailAsync(request.Email);
+
+            if (userExist != null)
+            {
+                return new BaseResponseDto
+                {
+                    Status = "Error",
+                    Message = "User already exist!"
+                };
+            }
+            var emailRequestExist = await _recruiterRegistrationRequestRepository.FindByEmailAsync(request.Email);
+
+            if (emailRequestExist != null)
+            {
+                return new BaseResponseDto
+                {
+                    Status = "Error",
+                    Message = "Email has been used for request before"
+                };
+            }
             var newRecruiterRequest = new RecruiterRegistrationRequest
             {
                 PhoneNumber = request.PhoneNumber,
@@ -96,17 +117,6 @@ namespace AsriATS.Application.Services
                 recruiterRequest.EndDate = DateTime.UtcNow;
                 await _recruiterRegistrationRequestRepository.UpdateAsync(recruiterRequest);
 
-                var userExist = await _userManager.FindByEmailAsync(recruiterRequest.Email);
-
-                if (userExist != null)
-                {
-                    return new BaseResponseDto
-                    {
-                        Status = "Error",
-                        Message = "User already exist!"
-                    };
-                }
-
                 var newUser = new AppUser
                 {
                     UserName = recruiterRequest.Email,
@@ -165,6 +175,29 @@ namespace AsriATS.Application.Services
                 Message = "Recruiter Registration Approval request is error"
             };
         }
+
+        public async Task<IEnumerable<AllRecruiterRegistrationRequestDto>> GetAllUnreviewedRecruiterRegistrationRequest()
+        {
+            var rrToBeReviewed = await _recruiterRegistrationRequestRepository.GetAllToBeReviewedAsync();
+
+            var rrToBeReviewedDto = rrToBeReviewed.Select(rr => new AllRecruiterRegistrationRequestDto
+            {
+                RecruiterRegistrationRequestId = rr.RecruiterRegistrationRequestId,
+                Email = rr.Email,
+                FirstName = rr.FirstName,
+                LastName = rr.LastName,
+                PhoneNumber = rr.PhoneNumber,
+                Dob = rr.Dob,
+                Sex = rr.Sex,
+                Address = rr.Address,
+                CompanyId = rr.CompanyId,
+                IsApproved = rr.IsApproved,
+            }).ToList();
+
+            return rrToBeReviewedDto;
+        }
+
+
 
         private static string GeneratePassword(int length = 8)
         {

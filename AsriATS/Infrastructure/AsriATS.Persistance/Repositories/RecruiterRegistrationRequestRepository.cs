@@ -44,5 +44,19 @@ namespace AsriATS.Persistance.Repositories
             _context.RecruiterRegistrationRequests.Update(entity);
             await _context.SaveChangesAsync();
         }
+
+        public async Task<IEnumerable<RecruiterRegistrationRequest>> GetAllToBeReviewedAsync()
+        {
+            var recruiterRegistrationRequests = await _context.RecruiterRegistrationRequests.Where(rr => rr.IsApproved == null).ToListAsync();
+
+            return recruiterRegistrationRequests;
+        }
+
+        public async Task<RecruiterRegistrationRequest?> FindByEmailAsync(string email)
+        {
+            var recruiterRegistrationRequest = await _context.RecruiterRegistrationRequests.FirstOrDefaultAsync(rr => rr.Email == email);
+
+            return recruiterRegistrationRequest;
+        }
     }
 }
