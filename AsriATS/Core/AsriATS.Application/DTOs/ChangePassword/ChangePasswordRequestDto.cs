@@ -8,7 +8,6 @@ namespace AsriATS.Application.DTOs.ChangePassword
 {
     public class ChangePasswordRequestDto
     {
-        public string Username { get; set; }
         public string NewPassword { get; set; }
     }
 }
