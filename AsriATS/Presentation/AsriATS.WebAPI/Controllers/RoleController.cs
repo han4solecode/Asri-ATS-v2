@@ -100,5 +100,43 @@ namespace AsriATS.WebAPI.Controllers
 
             return Ok(res);
         }
+
+        [Authorize(Roles = "Recruiter, HR Manager")]
+        [HttpPost("change")]
+        public async Task<IActionResult> RoleChangeRequest([FromBody] string requestedRole)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var res = await _roleService.RoleChangeRequestAsync(requestedRole);
+
+            if (res.Status == "Error")
+            {
+                return BadRequest(res.Message);
+            }
+
+            return Ok(res);
+        }
+
+        [Authorize(Roles = "Administrator")]
+        [HttpPost("review-request")]
+        public async Task<IActionResult> ReviewRoleChangeRequest([FromBody] RoleChangeReviewDto roleChangeReview)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var res = await _roleService.ReviewRoleChangeRequest(roleChangeReview);
+
+            if (res.Status == "Error")
+            {
+                return BadRequest(res.Message);
+            }
+
+            return Ok(res);
+        }
     }
 }
