@@ -10,7 +10,7 @@ namespace AsriATS.WebAPI.Controllers
     {
         private readonly ICompanyService _companyService;
         private readonly IUserService _userService;
-        pribate readonly IRoleService _roleService;
+        private readonly IRoleService _roleService;
 
         public DashboardController(ICompanyService companyService, IUserService userService, IRoleService roleService)
         {
