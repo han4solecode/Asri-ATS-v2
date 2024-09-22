@@ -32,6 +32,13 @@ namespace AsriATS.Persistance.Repositories
             return roleChangeRequests;
         }
 
+        public async Task<IEnumerable<RoleChangeRequest>> GetAllToBeReviewedAsync()
+        {
+            var roleChangeRequests = await _context.RoleChangeRequests.Where(x => x.IsApproved == null).ToListAsync();
+
+            return roleChangeRequests;
+        }
+
         public async Task<RoleChangeRequest?> GetByIdAsync(int id)
         {
             var roleChangeRequest = await _context.RoleChangeRequests.FindAsync(id);

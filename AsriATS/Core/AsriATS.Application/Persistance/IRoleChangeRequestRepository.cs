@@ -5,6 +5,6 @@ namespace AsriATS.Application.Persistance
 {
     public interface IRoleChangeRequestRepository : IBaseRepository<RoleChangeRequest>
     {
-        
+        Task<IEnumerable<RoleChangeRequest>> GetAllToBeReviewedAsync();
     }
 }
