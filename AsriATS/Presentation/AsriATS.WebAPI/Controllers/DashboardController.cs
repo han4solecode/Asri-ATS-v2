@@ -10,11 +10,13 @@ namespace AsriATS.WebAPI.Controllers
     {
         private readonly ICompanyService _companyService;
         private readonly IUserService _userService;
+        pribate readonly IRoleService _roleService;
 
-        public DashboardController(ICompanyService companyService, IUserService userService)
+        public DashboardController(ICompanyService companyService, IUserService userService, IRoleService roleService)
         {
             _companyService = companyService;
             _userService = userService;
+            _roleService = roleService;
         }
         
         [Authorize(Roles = "Administrator")]
@@ -33,6 +35,15 @@ namespace AsriATS.WebAPI.Controllers
             var users = await _userService.GetAllUserInfoAsync();
 
             return Ok(users);
+        }
+
+        [Authorize(Roles = "Administrator")]
+        [HttpGet("role-change-request")]
+        public async Task<IActionResult> GetAllRoleChangeRequest()
+        {
+            var rcr = await _roleService.GetAllRoleChangeRequest();
+
+            return Ok(rcr);
         }
     }
 }
