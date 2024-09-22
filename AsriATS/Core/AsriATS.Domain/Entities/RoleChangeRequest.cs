@@ -13,6 +13,10 @@ namespace AsriATS.Domain.Entities
         [ForeignKey("UserId")]
         public virtual AppUser UserIdNavigation { get; set; } = null!;
 
+        public string CurrentRole { get; set; } = null!;
+
+        public string RequestedRole { get; set; } = null!;
+
         public bool? IsApproved { get; set; }
     }
 }
