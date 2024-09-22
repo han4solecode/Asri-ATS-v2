@@ -30,5 +30,8 @@ namespace AsriATS.Domain.Entities
         // reference to Company
         public int? CompanyId { get; set; }
         public virtual Company? CompanyIdNavigation { get; set; }
+
+        // navigation to RoleChangeRequest
+        public virtual ICollection<RoleChangeRequest> RoleChangeRequests { get; set; } = [];
     }
 }
