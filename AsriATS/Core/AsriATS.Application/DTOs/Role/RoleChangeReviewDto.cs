@@ -1,6 +1,6 @@
 namespace AsriATS.Application.DTOs.Role
 {
-    public class RoleChangeRequestDto
+    public class RoleChangeReviewDto
     {
         public int RoleChangeRequestId { get; set; }
 
