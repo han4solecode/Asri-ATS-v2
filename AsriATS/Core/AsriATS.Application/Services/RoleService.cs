@@ -223,7 +223,7 @@ namespace AsriATS.Application.Services
             }
         }
 
-        public async Task<BaseResponseDto> ReviewRoleChangeRequest(RoleChangeRequestDto roleChangeRequest)
+        public async Task<BaseResponseDto> ReviewRoleChangeRequest(RoleChangeReviewDto roleChangeRequest)
         {
             var request = await _roleChangeRequestRepository.GetByIdAsync(roleChangeRequest.RoleChangeRequestId);
 
@@ -270,7 +270,7 @@ namespace AsriATS.Application.Services
                 await _roleChangeRequestRepository.UpdateAsync(request);
 
                 // send email to user.Email
-                
+
 
                 return new BaseResponseDto
                 {
