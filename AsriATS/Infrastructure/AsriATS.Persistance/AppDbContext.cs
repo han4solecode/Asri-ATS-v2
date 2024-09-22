@@ -34,6 +34,7 @@ namespace AsriATS.Persistance
         public DbSet<WorkflowAction> WorkflowActions { get; set; }
         public DbSet<NextStepRule> NextStepsRules { get; set; }
         public DbSet<CompanyRequest> CompanyRequests { get; set; }
+        public DbSet<RoleChangeRequest> RoleChangeRequests { get; set; }
         public DbSet<RecruiterRegistrationRequest> RecruiterRegistrationRequests { get; set; }
 
         public DbSet<Company> Companies { get; set; }
