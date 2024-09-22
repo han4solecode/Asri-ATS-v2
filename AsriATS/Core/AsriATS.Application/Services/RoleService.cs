@@ -1,7 +1,9 @@
 using AsriATS.Application.Contracts;
 using AsriATS.Application.DTOs;
 using AsriATS.Application.DTOs.Role;
+using AsriATS.Application.Persistance;
 using AsriATS.Domain.Entities;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 
 namespace AsriATS.Application.Services
@@ -10,11 +12,15 @@ namespace AsriATS.Application.Services
     {
         private readonly UserManager<AppUser> _userManager;
         private readonly RoleManager<AppRole> _roleManager;
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IRoleChangeRequestRepository _roleChangeRequestRepository;
 
-        public RoleService(UserManager<AppUser> userManager, RoleManager<AppRole> roleManager)
+        public RoleService(UserManager<AppUser> userManager, RoleManager<AppRole> roleManager, IHttpContextAccessor httpContextAccessor, IRoleChangeRequestRepository roleChangeRequestRepository)
         {
             _userManager = userManager;
             _roleManager = roleManager;
+            _httpContextAccessor = httpContextAccessor;
+            _roleChangeRequestRepository = roleChangeRequestRepository;
         }
 
         public async Task<BaseResponseDto> AssignRoleAsync(RoleAssignRequestDto roleAssignRequest)
@@ -157,6 +163,55 @@ namespace AsriATS.Application.Services
                 Status = "Success",
                 Message = "Role updated successfully"
             };
+        }
+
+        public async Task<BaseResponseDto> RoleChangeRequestAsync()
+        {
+            var userName = _httpContextAccessor.HttpContext!.User.Identity!.Name;
+            var user = await _userManager.FindByNameAsync(userName!);
+
+            try
+            {
+                var newRoleChangeRequest = new RoleChangeRequest
+                {
+                    UserId = user!.Id
+                };
+
+                var rcr = await _roleChangeRequestRepository.GetAllAsync();
+
+                if (rcr.Where(x => x.IsApproved == null).Any(x => x.UserId == user.Id))
+                {
+                    return new BaseResponseDto
+                    {
+                        Status = "Error",
+                        Message = "Already requested a role change request. Please wait"
+                    };
+                }
+
+                await _roleChangeRequestRepository.CreateAsync(newRoleChangeRequest);
+
+                // send email notification to user.Email and admin
+
+                
+                return new BaseResponseDto
+                {
+                    Status = "Success",
+                    Message = "Role Change Requested Successfuly"
+                };
+            }
+            catch (System.Exception)
+            {
+                return new BaseResponseDto
+                {
+                    Status = "Error",
+                    Message = "Role Change Request Error"
+                };
+            }
+        }
+
+        public Task<BaseResponseDto> ReviewRoleChangeRequest()
+        {
+            throw new NotImplementedException();
         }
     }
 }
