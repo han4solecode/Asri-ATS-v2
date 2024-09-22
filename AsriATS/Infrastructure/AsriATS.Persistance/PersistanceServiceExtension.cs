@@ -23,6 +23,7 @@ namespace AsriATS.Persistance
             services.AddScoped<INextStepRuleRepository, NextStepRuleRepository>();
             services.AddScoped<ICompanyRequestRepository, CompanyRequestRepository>();
             services.AddScoped<IRecruiterRegistrationRequestRepository, RecruiterRegistrationRequestRepository>();
+            services.AddScoped<IRoleChangeRequestRepository, RoleChangeRequestRepository>();
         }
 
         public static void ConfigureIdentity(this IServiceCollection services)
