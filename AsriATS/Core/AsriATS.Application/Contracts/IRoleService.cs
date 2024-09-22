@@ -15,8 +15,8 @@ namespace AsriATS.Application.Contracts
 
         Task<BaseResponseDto> RevokeRoleAsync(RoleAssignRequestDto roleRevokeRequest);
 
-        Task<BaseResponseDto> RoleChangeRequestAsync();
+        Task<BaseResponseDto> RoleChangeRequestAsync(string requestedRole);
 
-        Task<BaseResponseDto> ReviewRoleChangeRequest();
+        Task<BaseResponseDto> ReviewRoleChangeRequest(RoleChangeRequestDto roleChangeRequest);
     }
 }

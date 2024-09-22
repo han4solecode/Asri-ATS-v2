@@ -165,16 +165,30 @@ namespace AsriATS.Application.Services
             };
         }
 
-        public async Task<BaseResponseDto> RoleChangeRequestAsync()
+        public async Task<BaseResponseDto> RoleChangeRequestAsync(string requestedRole)
         {
             var userName = _httpContextAccessor.HttpContext!.User.Identity!.Name;
             var user = await _userManager.FindByNameAsync(userName!);
+
+            // check user role. if role == requestedRole, return error
+            var userRole = await _userManager.GetRolesAsync(user!);
+
+            if (userRole.Contains(requestedRole))
+            {
+                return new BaseResponseDto
+                {
+                    Status = "Error",
+                    Message = $"User already in {requestedRole} role"
+                };
+            }
 
             try
             {
                 var newRoleChangeRequest = new RoleChangeRequest
                 {
-                    UserId = user!.Id
+                    UserId = user!.Id,
+                    CurrentRole = userRole.Single(),
+                    RequestedRole = requestedRole
                 };
 
                 var rcr = await _roleChangeRequestRepository.GetAllAsync();
@@ -209,9 +223,69 @@ namespace AsriATS.Application.Services
             }
         }
 
-        public Task<BaseResponseDto> ReviewRoleChangeRequest()
+        public async Task<BaseResponseDto> ReviewRoleChangeRequest(RoleChangeRequestDto roleChangeRequest)
         {
-            throw new NotImplementedException();
+            var request = await _roleChangeRequestRepository.GetByIdAsync(roleChangeRequest.RoleChangeRequestId);
+
+            if (request == null)
+            {
+                return new BaseResponseDto
+                {
+                    Status = "Error",
+                    Message = "Role change request does not exist"
+                };
+            }
+
+            if (roleChangeRequest.Action == "Approved")
+            {
+                // update request
+                request.IsApproved = true;
+                await _roleChangeRequestRepository.UpdateAsync(request);
+
+                // get requester AppUser
+                var user = await _userManager.FindByIdAsync(request.UserId);
+
+                // get user current role
+                var userRole = request.CurrentRole;
+
+                // revoke role
+                await _userManager.RemoveFromRoleAsync(user!, userRole);
+
+                // assign new role
+                await _userManager.AddToRoleAsync(user!, request.RequestedRole);
+
+                // send email to user.Email
+
+
+                return new BaseResponseDto
+                {
+                    Status = "Success",
+                    Message = "Role change request approved successfuly"
+                };
+            }
+            else if (roleChangeRequest.Action == "Rejected")
+            {
+                // update request
+                request.IsApproved = true;
+                await _roleChangeRequestRepository.UpdateAsync(request);
+
+                // send email to user.Email
+                
+
+                return new BaseResponseDto
+                {
+                    Status = "Success",
+                    Message = "Role change request rejeted sucessfuly"
+                };
+            }
+            else
+            {
+                return new BaseResponseDto
+                {
+                    Status = "Error",
+                    Message = "Action not available"
+                };
+            }
         }
     }
 }
