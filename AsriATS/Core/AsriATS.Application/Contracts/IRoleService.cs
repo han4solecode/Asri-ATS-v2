@@ -1,5 +1,6 @@
 using AsriATS.Application.DTOs;
 using AsriATS.Application.DTOs.Role;
+using AsriATS.Domain.Entities;
 
 namespace AsriATS.Application.Contracts
 {
@@ -18,5 +19,7 @@ namespace AsriATS.Application.Contracts
         Task<BaseResponseDto> RoleChangeRequestAsync(string requestedRole);
 
         Task<BaseResponseDto> ReviewRoleChangeRequest(RoleChangeReviewDto roleChangeRequest);
+
+        Task<IEnumerable<RoleChangeRequest>> GetAllRoleChangeRequest();
     }
 }

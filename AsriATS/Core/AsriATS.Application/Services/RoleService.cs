@@ -287,5 +287,12 @@ namespace AsriATS.Application.Services
                 };
             }
         }
+
+        public async Task<IEnumerable<RoleChangeRequest>> GetAllRoleChangeRequest()
+        {
+            var roleChangeRequests = await _roleChangeRequestRepository.GetAllToBeReviewedAsync();
+
+            return roleChangeRequests;
+        }
     }
 }
