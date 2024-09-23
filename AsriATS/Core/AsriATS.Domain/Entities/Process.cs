@@ -21,9 +21,7 @@ namespace AsriATS.Domain.Entities
         public DateTime RequestDate { get; set; }
         public virtual ICollection<WorkflowAction> WorkflowActions { get; set; }
 
-        // navigation to CompanyRequest
-        // public virtual CompanyRequest? CompanyRequestNavigation { get; set; }
-        // navigation to RecrutierRegistrationRequest
-        //public virtual RecruiterRegistrationRequest? RecruiterRegistrationRequestNavigation { get; set; }
+        // navigation to JobPostRequest
+        public virtual JobPostRequest? JobPostRequestNavigation { get; set; }
     }
 }
