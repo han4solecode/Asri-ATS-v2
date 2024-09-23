@@ -36,6 +36,7 @@ namespace AsriATS.Persistance
         public DbSet<CompanyRequest> CompanyRequests { get; set; }
         public DbSet<RoleChangeRequest> RoleChangeRequests { get; set; }
         public DbSet<RecruiterRegistrationRequest> RecruiterRegistrationRequests { get; set; }
+        public DbSet<JobPostRequest> JobPostRequests { get; set; }
 
         public DbSet<Company> Companies { get; set; }
 
