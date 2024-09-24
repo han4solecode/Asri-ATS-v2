@@ -59,7 +59,7 @@ namespace AsriATS.Application.Services
                 RequesterId = user.Id,
                 WorkflowId = workflow.WorkflowId,
                 RequestType = "Job Post",
-                Status = "Pending",
+                Status = "Pending Approval",
                 RequestDate = DateTime.UtcNow,
                 CurrentStepId = nextStepId.NextStepId,
             };
