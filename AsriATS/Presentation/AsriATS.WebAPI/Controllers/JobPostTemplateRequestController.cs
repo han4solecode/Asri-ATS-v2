@@ -1,5 +1,6 @@
 ﻿using AsriATS.Application.Contracts;
 using AsriATS.Application.DTOs.JobPostRequest;
+using AsriATS.Application.DTOs.JobPostTemplateRequest;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -16,7 +17,7 @@ namespace AsriATS.WebAPI.Controllers
         }
         [Authorize(Roles = "Recruiter")]
         [HttpPost("create")]
-        public async Task<IActionResult> CreateJobPostRequest([FromBody] JobPostRequestDto request)
+        public async Task<IActionResult> CreateJobPostRequest([FromBody] JobPostTemplateRequestDto request)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
