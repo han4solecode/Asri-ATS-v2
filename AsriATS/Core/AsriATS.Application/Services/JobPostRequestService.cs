@@ -23,10 +23,11 @@ namespace AsriATS.Application.Services
         private readonly IWorkflowActionRepository _workflowActionRepository;
         private readonly UserManager<AppUser> _userManager;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IJobPostRepository _jobPostRepository;
 
         public JobPostRequestService(ICompanyRepository companyRepository, IJobPostRequestRepository jobPostRequestRepository, INextStepRuleRepository nextStepRuleRepository,
             IWorkflowSequenceRepository workflowSequenceRepository, IProcessRepository processRepository, IWorkflowRepository workflowRepository, IWorkflowActionRepository
-            workflowActionRepository, UserManager<AppUser> userManager, IHttpContextAccessor httpContextAccessor)
+            workflowActionRepository, UserManager<AppUser> userManager, IHttpContextAccessor httpContextAccessor, IJobPostRepository jobPostRepository)
         {
             _companyRepository = companyRepository;
             _jobPostRequestRepository = jobPostRequestRepository;
@@ -37,6 +38,7 @@ namespace AsriATS.Application.Services
             _workflowActionRepository = workflowActionRepository;
             _userManager = userManager;
             _httpContextAccessor = httpContextAccessor;
+            _jobPostRepository = jobPostRepository;
         }
 
         public async Task<BaseResponseDto> SubmitJobPostRequest(JobPostRequestDto request)
@@ -161,6 +163,26 @@ namespace AsriATS.Application.Services
             process.Status = $"{reviewRequest.Action} by {userRole}";
             process.CurrentStepId = nextStepId;
             await _processRepository.UpdateAsync(process);
+
+            // if approved, create new JobPost
+            if (reviewRequest.Action == "Approved")
+            {
+                var requests = await _jobPostRequestRepository.GetAllAsync();
+                var reqData = requests.Where(r => r.ProcessId == process.ProcessId).Single();
+                var newJobPost = new JobPost
+                {
+                    JobTitle = reqData.JobTitle,
+                    CompanyId = reqData.CompanyId,
+                    Description = reqData.Description,
+                    Requirements = reqData.Requirements,
+                    Location = reqData.Location,
+                    MinSalary = reqData.MinSalary,
+                    MaxSalary = reqData.MaxSalary,
+                    EmploymentType = reqData.EmploymentType,
+                };
+
+                await _jobPostRepository.CreateAsync(newJobPost);
+            }
 
             // send email to other actors
             // get other actors email
