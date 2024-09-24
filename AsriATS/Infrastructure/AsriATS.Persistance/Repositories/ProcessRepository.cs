@@ -35,7 +35,8 @@ namespace AsriATS.Persistance.Repositories
 
         public async Task<Process?> GetByIdAsync(int id)
         {
-            var process = await _context.Processes.FindAsync(id);
+            // var process = await _context.Processes.FindAsync(id);
+            var process = await _context.Processes.Include(p => p.WorkflowSequence).ThenInclude(ws => ws.Role).Include(p => p.Requester).SingleOrDefaultAsync(p => p.ProcessId == id);
 
             return process;
         }
