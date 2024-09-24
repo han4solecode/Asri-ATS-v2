@@ -16,6 +16,7 @@ namespace AsriATS.Application
             services.AddScoped<ICompanyService, CompanyService>();
             services.AddTransient<IEmailService, EmailService>();
             services.AddScoped<IJobPostRequestService, JobPostRequestService>();
+            services.AddScoped<IJobPostService, JobPostService>();
         }
     }
 }
