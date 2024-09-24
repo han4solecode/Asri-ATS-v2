@@ -5,6 +5,6 @@ namespace AsriATS.Application.Persistance
 {
     public interface IJobPostRepository : IBaseRepository<JobPost>
     {
-
+        IQueryable<JobPost> SeachJobPostAsync();
     }
 }
