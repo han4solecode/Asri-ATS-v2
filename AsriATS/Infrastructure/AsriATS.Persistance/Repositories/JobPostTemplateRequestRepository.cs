@@ -15,35 +15,34 @@ namespace AsriATS.Persistance.Repositories
 
         public async Task CreateAsync(JobPostTemplateRequest entity)
         {
-            await _context.JobTemplateRequests.AddAsync(entity);
+            await _context.JobPostTemplateRequests.AddAsync(entity);
             await _context.SaveChangesAsync();
         }
 
         public async Task DeleteAsync(JobPostTemplateRequest entity)
         {
-            _context.JobTemplateRequests.Remove(entity);
+            _context.JobPostTemplateRequests.Remove(entity);
             await _context.SaveChangesAsync();
         }
 
         public async Task<IEnumerable<JobPostTemplateRequest>> GetAllAsync()
         {
-            var jobTemplateRequests = await _context.JobTemplateRequests.ToListAsync();
+            var jobPostTemplateRequests = await _context.JobPostTemplateRequests.ToListAsync();
 
-            return jobTemplateRequests;
+            return jobPostTemplateRequests;
         }
 
         public async Task<JobPostTemplateRequest?> GetByIdAsync(int id)
         {
-            var jobTemplateRequest = await _context.JobTemplateRequests.FindAsync(id);
+            var jobPostTemplateRequest = await _context.JobPostTemplateRequests.FindAsync(id);
 
-            return jobTemplateRequest;
+            return jobPostTemplateRequest;
         }
 
         public async Task UpdateAsync(JobPostTemplateRequest entity)
         {
-            _context.JobTemplateRequests.Update(entity);
+            _context.JobPostTemplateRequests.Update(entity);
             await _context.SaveChangesAsync();
         }
-
     }
 }
