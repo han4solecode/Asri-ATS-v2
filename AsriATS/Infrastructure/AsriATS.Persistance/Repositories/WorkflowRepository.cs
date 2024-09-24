@@ -1,11 +1,7 @@
 ﻿using AsriATS.Application.Persistance;
 using AsriATS.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Linq.Expressions;
 
 namespace AsriATS.Persistance.Repositories
 {
@@ -44,11 +40,9 @@ namespace AsriATS.Persistance.Repositories
             return workflow;
         }
 
-        public async Task<Workflow?> GetWorkflowByNameAsync(string workflowName)
+        public async Task<Workflow?> GetFirstOrDefaultAsync(Expression<Func<Workflow, bool>> expression)
         {
-            var workflow = await _context.Workflows.Where(w => w.WorkflowName == workflowName).SingleOrDefaultAsync();
-
-            return workflow;
+            return await _context.Workflows.FirstOrDefaultAsync(expression);
         }
 
         public async Task UpdateAsync(Workflow entity)

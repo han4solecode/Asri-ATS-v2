@@ -1,15 +1,11 @@
 ﻿using AsriATS.Application.Persistance.Common;
 using AsriATS.Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Linq.Expressions;
 
 namespace AsriATS.Application.Persistance
 {
     public interface INextStepRuleRepository : IBaseRepository<NextStepRule>
     {
-
+        Task<NextStepRule?> GetFirstOrDefaultAsync(Expression<Func<NextStepRule, bool>> expression);
     }
 }

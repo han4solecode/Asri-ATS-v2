@@ -1,7 +1,6 @@
 using AsriATS.Domain.Entities;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 
 namespace AsriATS.Persistance
 {
@@ -45,12 +44,6 @@ namespace AsriATS.Persistance
         {
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<WorkflowSequence>()
-                .HasOne(ws => ws.Role)
-                .WithOne()
-                .HasForeignKey<WorkflowSequence>(ws => ws.RequiredRole)
-                .OnDelete(DeleteBehavior.Cascade);
-
             modelBuilder.Entity<Process>(entity =>
             {
                 entity.HasOne(p => p.Workflow)
@@ -77,6 +70,11 @@ namespace AsriATS.Persistance
                 entity.HasOne(wfs => wfs.Workflow).WithMany(w => w.WorkflowSequences)
                      .HasForeignKey(wfs => wfs.WorkflowId)
                      .HasConstraintName("workflow_sequence_id_workflow_fkey");
+
+                entity.HasOne(wfs => wfs.Role).WithMany()
+                     .HasForeignKey(wfs => wfs.RequiredRole)
+                     .HasConstraintName("workflow_sequence_id_Role_fkey")
+                     .OnDelete(DeleteBehavior.Cascade);
             });
             modelBuilder.Entity<WorkflowAction>(entity =>
             {

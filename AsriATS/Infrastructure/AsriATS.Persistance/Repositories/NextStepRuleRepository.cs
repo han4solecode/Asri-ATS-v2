@@ -1,11 +1,7 @@
 ﻿using AsriATS.Application.Persistance;
 using AsriATS.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Linq.Expressions;
 
 namespace AsriATS.Persistance.Repositories
 {
@@ -48,6 +44,10 @@ namespace AsriATS.Persistance.Repositories
         {
             _context.NextStepsRules.Update(entity);
             await _context.SaveChangesAsync();
+        }
+        public async Task<NextStepRule?> GetFirstOrDefaultAsync(Expression<Func<NextStepRule, bool>> expression)
+        {
+            return await _context.NextStepsRules.FirstOrDefaultAsync(expression);
         }
     }
 }

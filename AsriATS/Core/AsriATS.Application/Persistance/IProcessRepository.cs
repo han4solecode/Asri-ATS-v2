@@ -4,8 +4,8 @@ using System.Linq.Expressions;
 
 namespace AsriATS.Application.Persistance
 {
-    public interface IWorkflowRepository : IBaseRepository<Workflow>
+    public interface IProcessRepository : IBaseRepository<Process>
     {
-        Task<Workflow?> GetFirstOrDefaultAsync(Expression<Func<Workflow, bool>> expression);
+        Task<Process?> GetFirstOrDefaultAsync(Expression<Func<Process, bool>> expression);
     }
 }
