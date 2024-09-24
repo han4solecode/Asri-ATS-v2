@@ -1,5 +1,6 @@
 ﻿using AsriATS.Application.Contracts;
 using AsriATS.Application.DTOs.JobPostRequest;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AsriATS.WebAPI.Controllers
@@ -13,7 +14,7 @@ namespace AsriATS.WebAPI.Controllers
         {
             _jobPostRequestService = jobPostRequestService;
         }
-
+        [Authorize(Roles = "Recruiter")]
         [HttpPost("create")]
         public async Task<IActionResult> CreateJobPostRequest([FromBody] JobPostRequestDto request)
         {
