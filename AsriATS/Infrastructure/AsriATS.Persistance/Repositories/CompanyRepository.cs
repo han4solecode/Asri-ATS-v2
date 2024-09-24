@@ -44,5 +44,11 @@ namespace AsriATS.Persistance.Repositories
             _context.Companies.Update(entity);
             await _context.SaveChangesAsync();
         }
+
+        public IQueryable<Company> SearchCompanyAsync()
+        {
+            return _context.Companies.AsQueryable();
+        }
+
     }
 }

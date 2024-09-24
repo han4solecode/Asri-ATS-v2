@@ -5,6 +5,6 @@ namespace AsriATS.Application.Persistance
 {
     public interface ICompanyRepository : IBaseRepository<Company>
     {
-        
+        IQueryable<Company> SearchCompanyAsync();
     }
 }
