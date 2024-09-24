@@ -28,6 +28,7 @@ namespace AsriATS.Persistance
             services.AddScoped<IJobPostRequestRepository, JobPostRequestRepository>();
             services.AddScoped<IProcessRepository, ProcessRepository>();
             services.AddScoped<IWorkflowActionRepository, WorkflowActionRepository>();
+            services.AddScoped<IJobTemplateRequestRepository, JobPostTemplateRequestRepository>();
         }
 
         public static void ConfigureIdentity(this IServiceCollection services)
