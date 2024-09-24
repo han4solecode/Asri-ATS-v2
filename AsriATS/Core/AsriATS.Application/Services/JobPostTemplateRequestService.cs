@@ -5,6 +5,7 @@ using AsriATS.Application.Persistance;
 using AsriATS.Domain.Entities;
 using Microsoft.AspNetCore.Identity;
 using AsriATS.Application.DTOs.Register;
+using AsriATS.Application.DTOs.JobPostTemplateRequest;
 
 namespace AsriATS.Application.Services
 {
@@ -20,7 +21,7 @@ namespace AsriATS.Application.Services
             _userManager = userManager;
         }
 
-        public async Task<BaseResponseDto> SubmitJobTemplateRequest(JobPostRequestDto request)
+        public async Task<BaseResponseDto> SubmitJobTemplateRequest(JobPostTemplateRequestDto request)
         {
             var company = await _companyRepository.GetByIdAsync(request.CompanyId);
             if (company == null)
