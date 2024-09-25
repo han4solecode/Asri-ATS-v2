@@ -32,6 +32,13 @@ namespace AsriATS.Persistance.Repositories
             return jobPostRequests;
         }
 
+        public async Task<IEnumerable<JobPostRequest>> GetAllToBeReviewedASync(int companyId)
+        {
+            var jobPostRequest = await _context.JobPostRequests.Where(r => r.CompanyId == companyId).ToListAsync();
+
+            return jobPostRequest;
+        }
+
         public async Task<JobPostRequest?> GetByIdAsync(int id)
         {
             var jobPostRequest = await _context.JobPostRequests.FindAsync(id);
