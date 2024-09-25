@@ -11,12 +11,14 @@ namespace AsriATS.WebAPI.Controllers
         private readonly ICompanyService _companyService;
         private readonly IUserService _userService;
         private readonly IRoleService _roleService;
+        private readonly IJobPostRequestService _jobPostRequestService;
 
-        public DashboardController(ICompanyService companyService, IUserService userService, IRoleService roleService)
+        public DashboardController(ICompanyService companyService, IUserService userService, IRoleService roleService, IJobPostRequestService jobPostRequestService)
         {
             _companyService = companyService;
             _userService = userService;
             _roleService = roleService;
+            _jobPostRequestService = jobPostRequestService;
         }
         
         [Authorize(Roles = "Administrator")]
@@ -44,6 +46,15 @@ namespace AsriATS.WebAPI.Controllers
             var rcr = await _roleService.GetAllRoleChangeRequest();
 
             return Ok(rcr);
+        }
+
+        [Authorize(Roles = "HR Manager")]
+        [HttpGet("job-post-request")]
+        public async Task<IActionResult> GetAllJobPostRequestToReview()
+        {
+            var request = await _jobPostRequestService.GetJobPostRequestToReview();
+
+            return Ok(request);
         }
     }
 }
