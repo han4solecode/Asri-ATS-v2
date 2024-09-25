@@ -12,5 +12,7 @@ namespace AsriATS.Application.Contracts
         Task<IEnumerable<JobPostTemplateRequest>> GetAllJobPostTemplateRequestToReview();
 
         Task<BaseResponseDto> ReviewJobPostTemplateRequest(JobPostTemplateReviewDto jobPostTemplateReview);
+
+        Task<JobPostTemplateRequestResponseDto> GetJobPostTemplateRequest(int id);
     }
 }

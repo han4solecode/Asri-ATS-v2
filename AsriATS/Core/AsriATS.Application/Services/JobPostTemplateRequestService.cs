@@ -6,6 +6,7 @@ using AsriATS.Domain.Entities;
 using Microsoft.AspNetCore.Identity;
 using AsriATS.Application.DTOs.Register;
 using AsriATS.Application.DTOs.JobPostTemplateRequest;
+using System.ComponentModel.DataAnnotations;
 
 namespace AsriATS.Application.Services
 {
@@ -133,6 +134,32 @@ namespace AsriATS.Application.Services
                     Message = "Request review error"
                 };
             }
+        }
+        public async Task<JobPostTemplateRequestResponseDto> GetJobPostTemplateRequest(int id)
+        {
+            var jobPostTemplateRequest = await _jobTemplateRequestRepository.GetByIdAsync(id);
+            if (jobPostTemplateRequest == null)
+            {
+                return new JobPostTemplateRequestResponseDto
+                {
+                    Status = "Error",
+                    Message = "Job post template request review is not found"
+                };
+            }
+            var jobPostTemplateRequestDto = new JobPostTemplateRequestResponseDto
+            {
+                JobTitle = jobPostTemplateRequest.JobTitle,
+                CompanyId = jobPostTemplateRequest.CompanyId,
+                Description = jobPostTemplateRequest.Description,
+                Requirements = jobPostTemplateRequest.Requirements,
+                Location = jobPostTemplateRequest.Location,
+                MinSalary = jobPostTemplateRequest.MinSalary,
+                MaxSalary = jobPostTemplateRequest.MaxSalary,
+                EmploymentType = jobPostTemplateRequest.EmploymentType,
+                Status = "Success",
+                Message = "Job post template request get successfuly"
+            };
+            return jobPostTemplateRequestDto;
         }
     }
 }
