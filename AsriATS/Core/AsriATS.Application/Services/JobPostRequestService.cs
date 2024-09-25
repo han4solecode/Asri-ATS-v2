@@ -359,13 +359,19 @@ namespace AsriATS.Application.Services
                 };
             }
 
-            // Check the current status of the process
-            if (process.Status != "Modification by HR Manager") // or any other status that allows modification
+            // Retrieve the required role as an ID
+            var requiredRoleId = process.WorkflowSequence.RequiredRole;
+
+            // Retrieve the actual role name from the database (using RoleManager or any custom role repository)
+            var requiredRole = await _roleManager.FindByIdAsync(requiredRoleId);
+
+            // Compare the user's role with the required role name
+            if (!requiredRole.Name.Equals(userRole, StringComparison.OrdinalIgnoreCase))
             {
                 return new BaseResponseDto
                 {
                     Status = "Error",
-                    Message = "Modification not allowed for the current process status"
+                    Message = $"Modification not allowed for the current process status. Required role: {requiredRole.Name}"
                 };
             }
 
