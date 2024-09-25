@@ -200,7 +200,7 @@ namespace AsriATS.Application.Services
                 };
             }
 
-            if (process.Requester.CompanyId != user!.CompanyId)
+            if (process.Requester.CompanyId != user!.CompanyId || process.WorkflowSequence.Role.Name != userRole)
             {
                 return new BaseResponseDto
                 {
