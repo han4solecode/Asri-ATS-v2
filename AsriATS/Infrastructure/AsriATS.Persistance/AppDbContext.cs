@@ -40,6 +40,7 @@ namespace AsriATS.Persistance
         public DbSet<Company> Companies { get; set; }
         public DbSet<JobPost> JobPosts { get; set; }
         public DbSet<JobPostTemplateRequest> JobPostTemplateRequests { get; set; }
+        public DbSet<JobPostTemplate> JobPostTemplates { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
