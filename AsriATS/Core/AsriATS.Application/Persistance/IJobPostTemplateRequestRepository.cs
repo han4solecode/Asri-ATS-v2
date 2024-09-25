@@ -5,6 +5,7 @@ namespace AsriATS.Application.Persistance
 {
     public interface IJobTemplateRequestRepository : IBaseRepository<JobPostTemplateRequest>
     {
+        Task<IEnumerable<JobPostTemplateRequest>> GetAllToBeReviewed();
 
     }
 }
