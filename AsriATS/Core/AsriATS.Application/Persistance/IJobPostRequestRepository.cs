@@ -5,6 +5,6 @@ namespace AsriATS.Application.Persistance
 {
     public interface IJobPostRequestRepository : IBaseRepository<JobPostRequest>
     {
-        Task<IEnumerable<JobPostRequest>> GetAllToBeReviewedASync(int companyId);
+        Task<IEnumerable<JobPostRequest>> GetAllToBeReviewedAsync(int companyId, string userRoleId);
     }
 }

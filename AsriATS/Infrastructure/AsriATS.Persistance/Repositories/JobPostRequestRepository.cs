@@ -32,9 +32,9 @@ namespace AsriATS.Persistance.Repositories
             return jobPostRequests;
         }
 
-        public async Task<IEnumerable<JobPostRequest>> GetAllToBeReviewedASync(int companyId)
+        public async Task<IEnumerable<JobPostRequest>> GetAllToBeReviewedAsync(int companyId, string userRoleId)
         {
-            var jobPostRequest = await _context.JobPostRequests.Where(r => r.CompanyId == companyId).ToListAsync();
+            var jobPostRequest = await _context.JobPostRequests.Include(r => r.ProcessIdNavigation).ThenInclude(p => p.WorkflowSequence).Include(r => r.ProcessIdNavigation).ThenInclude(p => p.Requester).Where(r => r.CompanyId == companyId && r.ProcessIdNavigation.WorkflowSequence.RequiredRole == userRoleId).ToListAsync();
 
             return jobPostRequest;
         }
