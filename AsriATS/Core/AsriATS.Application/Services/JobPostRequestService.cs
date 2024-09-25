@@ -24,10 +24,11 @@ namespace AsriATS.Application.Services
         private readonly UserManager<AppUser> _userManager;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IJobPostRepository _jobPostRepository;
+        private readonly RoleManager<AppRole> _roleManager;
 
         public JobPostRequestService(ICompanyRepository companyRepository, IJobPostRequestRepository jobPostRequestRepository, INextStepRuleRepository nextStepRuleRepository,
             IWorkflowSequenceRepository workflowSequenceRepository, IProcessRepository processRepository, IWorkflowRepository workflowRepository, IWorkflowActionRepository
-            workflowActionRepository, UserManager<AppUser> userManager, IHttpContextAccessor httpContextAccessor, IJobPostRepository jobPostRepository)
+            workflowActionRepository, UserManager<AppUser> userManager, IHttpContextAccessor httpContextAccessor, IJobPostRepository jobPostRepository, RoleManager<AppRole> roleManager)
         {
             _companyRepository = companyRepository;
             _jobPostRequestRepository = jobPostRequestRepository;
@@ -39,6 +40,7 @@ namespace AsriATS.Application.Services
             _userManager = userManager;
             _httpContextAccessor = httpContextAccessor;
             _jobPostRepository = jobPostRepository;
+            _roleManager = roleManager;
         }
 
         public async Task<BaseResponseDto> SubmitJobPostRequest(JobPostRequestDto request)
@@ -292,6 +294,36 @@ namespace AsriATS.Application.Services
                 Status = "Success",
                 Message = "Request Reviewed Sucessfuly"
             };
+        }
+
+        public async Task<IEnumerable<object>> GetJobPostRequestToReview()
+        {
+            // get user and role from httpcontextaccessor
+            var userName = _httpContextAccessor.HttpContext!.User.Identity!.Name;
+            var user = await _userManager.FindByNameAsync(userName!);
+            var userRoles = await _userManager.GetRolesAsync(user!);
+            var userRole = userRoles.Single();
+
+            var role = await _roleManager.FindByNameAsync(userRole);
+            var roleId = role!.Id;
+
+            // retrieve job post requests
+            var requests = await _jobPostRequestRepository.GetAllToBeReviewedAsync(user!.CompanyId!.Value, roleId);
+
+            var a = requests.Select(r => new {
+                ProcessId = r.ProcessId,
+                Requester = $"{r.ProcessIdNavigation.Requester.FirstName} {r.ProcessIdNavigation.Requester.LastName}",
+                JobTitle = r.JobTitle,
+                Description = r.Description,
+                Requirements = r.Requirements,
+                Location = r.Location,
+                MinSalary = r.MinSalary,
+                MaxSalary = r.MaxSalary,
+                EmployementType = r.EmploymentType
+            }).ToList();
+
+            return a;
+
         }
     }
 }
