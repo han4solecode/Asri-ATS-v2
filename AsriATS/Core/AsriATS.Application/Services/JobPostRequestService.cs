@@ -58,14 +58,6 @@ namespace AsriATS.Application.Services
 
             // Get the current logged-in user
             var userName = _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.Name);
-            if (string.IsNullOrEmpty(userName))
-            {
-                return new BaseResponseDto
-                {
-                    Status = "Error",
-                    Message = "User not authenticated!"
-                };
-            }
 
             // Get the user information from UserManager
             var user = await _userManager.FindByNameAsync(userName);
@@ -325,6 +317,113 @@ namespace AsriATS.Application.Services
 
             return a;
 
+        }
+
+        // Method for updated the request after need modification approval
+        public async Task<BaseResponseDto> UpdateJobPostRequest(UpdateJobPostRequestDto requestDto)
+        {
+            // Get user from HttpContextAccessor
+            var userName = _httpContextAccessor.HttpContext!.User.Identity!.Name;
+            var user = await _userManager.FindByNameAsync(userName!);
+            var userRoles = await _userManager.GetRolesAsync(user!);
+            var userRole = userRoles.Single();
+
+            var process = await _processRepository.GetByIdAsync(requestDto.ProcessId);
+
+            if (process == null)
+            {
+                return new BaseResponseDto
+                {
+                    Status = "Error",
+                    Message = "Process does not exist"
+                };
+            }
+
+            // Check if the process requires modification
+            if (process.WorkflowSequence.RequiredRole == null)
+            {
+                return new BaseResponseDto
+                {
+                    Status = "Error",
+                    Message = "Process already finished"
+                };
+            }
+
+            // Check if the user is authorized to review requests from their company
+            if (process.Requester.CompanyId != user!.CompanyId)
+            {
+                return new BaseResponseDto
+                {
+                    Status = "Error",
+                    Message = "Unauthorized to review request"
+                };
+            }
+
+            // Check the current status of the process
+            if (process.Status != "Modification by HR Manager") // or any other status that allows modification
+            {
+                return new BaseResponseDto
+                {
+                    Status = "Error",
+                    Message = "Modification not allowed for the current process status"
+                };
+            }
+
+            // Retrieve the existing job post request using the ProcessId
+            var jobPostRequest = await _jobPostRequestRepository.GetFirstOrDefaultAsync(jpr => jpr.ProcessId == process.ProcessId);
+
+            if (jobPostRequest == null)
+            {
+                return new BaseResponseDto
+                {
+                    Status = "Error",
+                    Message = "Job post request does not exist"
+                };
+            }
+
+            // Update the job post request with the new data
+            jobPostRequest.JobTitle = requestDto.JobTitle; // Update fields as necessary
+            jobPostRequest.Description = requestDto.Description;
+            jobPostRequest.Requirements = requestDto.Requirements;
+            jobPostRequest.Location = requestDto.Location;
+            jobPostRequest.MinSalary = requestDto.MinSalary;
+            jobPostRequest.MaxSalary = requestDto.MaxSalary;
+            jobPostRequest.EmploymentType = requestDto.EmploymentType;
+
+            // Save the updated job post request
+            await _jobPostRequestRepository.UpdateAsync(jobPostRequest);
+
+            // Create a new workflow action for the update
+            var newWorkflowAction = new WorkflowAction
+            {
+                ProcessId = process.ProcessId,
+                StepId = process.CurrentStepId,
+                ActorId = user.Id,
+                Action = "Update",
+                ActionDate = DateTime.UtcNow,
+                Comments = requestDto.Comments // Assuming you want to capture comments
+            };
+
+            await _workflowActionRepository.CreateAsync(newWorkflowAction);
+
+            // Send the process back for review by HR or next step
+            // Get the next step ID
+            // get nextStepId
+            var nextStepRule = await _nextStepRuleRepository.GetFirstOrDefaultAsync(nsr => nsr.CurrentStepId == process.CurrentStepId && nsr.ConditionValue == newWorkflowAction.Action);
+            var nextStepId = nextStepRule!.NextStepId;
+
+            // update process
+            process.Status = $"{newWorkflowAction.Action} by {userRole}";
+            process.CurrentStepId = nextStepId;
+            await _processRepository.UpdateAsync(process);
+
+            // add some email notification here
+
+            return new BaseResponseDto
+            {
+                Status = "Success",
+                Message = "Job post request updated successfully and sent for review."
+            };
         }
     }
 }

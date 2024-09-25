@@ -50,5 +50,24 @@ namespace AsriATS.WebAPI.Controllers
 
             return Ok(res);
         }
+
+        [Authorize(Roles = "Recruiter")]
+        [HttpPut("update")]
+        public async Task<IActionResult> UpdateJobPostRequest([FromBody] UpdateJobPostRequestDto updateJob)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var res = await _jobPostRequestService.UpdateJobPostRequest(updateJob);
+
+            if (res.Status == "Error")
+            {
+                return BadRequest(res.Message);
+            }
+
+            return Ok(res);
+        }
     }
 }
