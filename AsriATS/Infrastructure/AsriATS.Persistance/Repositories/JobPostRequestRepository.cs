@@ -1,6 +1,7 @@
 ﻿using AsriATS.Application.Persistance;
 using AsriATS.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 
 namespace AsriATS.Persistance.Repositories
 {
@@ -50,6 +51,11 @@ namespace AsriATS.Persistance.Repositories
         {
             _context.JobPostRequests.Update(entity);
             await _context.SaveChangesAsync();
+        }
+
+        public async Task<JobPostRequest?> GetFirstOrDefaultAsync(Expression<Func<JobPostRequest, bool>> expression)
+        {
+            return await _context.JobPostRequests.FirstOrDefaultAsync(expression);
         }
     }
 }

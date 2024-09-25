@@ -11,5 +11,7 @@ namespace AsriATS.Application.Contracts
         Task<BaseResponseDto> ReviewJobPostRequest(ReviewRequestDto reviewRequest);
 
         Task<IEnumerable<object>> GetJobPostRequestToReview();
+
+        Task<BaseResponseDto> UpdateJobPostRequest(UpdateJobPostRequestDto requestDto);
     }
 }
