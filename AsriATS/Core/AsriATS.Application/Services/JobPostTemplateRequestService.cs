@@ -53,5 +53,12 @@ namespace AsriATS.Application.Services
                 Message = "Job Template Request created successfully"
             };
         }
+
+        public async Task<IEnumerable<JobPostTemplateRequest>> GetAllJobPostTemplateRequestToReview()
+        {
+            var jobPostTemplateRequestToReview = await _jobTemplateRequestRepository.GetAllToBeReviewed();
+
+            return jobPostTemplateRequestToReview;
+        }
     }
 }
