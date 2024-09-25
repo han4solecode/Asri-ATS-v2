@@ -26,9 +26,15 @@ namespace AsriATS.Application.Services
         {
             var jobs = await _jobPostRepository.GetAllAsync();
 
-            // Apply default values for pagination if not provided
-            var pageSize = pagination?.PageSize ?? 10;  // Default page size to 10 if not provided
-            var pageNumber = pagination?.PageNumber ?? 1;  // Default page number to 1 if not provided
+            // If pagination is null or neither pageSize nor pageNumber is provided, return all jobs
+            if (pagination == null || (pagination.PageSize == null && pagination.PageNumber == null))
+            {
+                return jobs; // Return all job posts without pagination
+            }
+
+            // Apply default values for pagination if only one of pageSize or pageNumber is provided
+            var pageSize = pagination.PageSize ?? 10;  // Default page size to 10 if not provided
+            var pageNumber = pagination.PageNumber ?? 1;  // Default page number to 1 if not provided
 
             // Ensure pageSize and pageNumber are valid
             pageSize = Math.Max(1, pageSize);  // Ensure page size is at least 1
@@ -36,13 +42,13 @@ namespace AsriATS.Application.Services
 
             var skipNumber = (pageNumber - 1) * pageSize;
 
-            // Execute the query asynchronously using ToListAsync()
+            // Return the paginated result
             return jobs.Skip(skipNumber).Take(pageSize);
         }
 
         public async Task<IEnumerable<JobPost>> SearchJobPostAsync(QueryObject queryObject, Pagination pagination)
         {
-            // Get the job posts query as an IEnumerable
+            // Get the job posts and companies
             var jobs = _jobPostRepository.SearchJobPostAsync().ToList();
             var company = _companyRepository.SearchCompanyAsync().ToList();
 
@@ -59,9 +65,14 @@ namespace AsriATS.Application.Services
                 (string.IsNullOrEmpty(queryObject.EmploymentType) || j.EmploymentType.ToLower().Contains(queryObject.EmploymentType.ToLower()))
                 ).ToList();
 
-                company = company.Where(c =>
-                (string.IsNullOrEmpty(queryObject.CompanyName) || c.Name.ToLower().Contains(queryObject.CompanyName.ToLower()))
-                ).ToList();
+                // Filter companies based on the queryObject.CompanyName and get the matching company IDs
+                var matchingCompanyIds = company
+                    .Where(c => string.IsNullOrEmpty(queryObject.CompanyName) || c.Name.ToLower().Contains(queryObject.CompanyName.ToLower()))
+                    .Select(c => c.CompanyId)
+                    .ToList();
+
+                // Further filter jobs to match the company IDs
+                jobs = jobs.Where(j => matchingCompanyIds.Contains(j.CompanyId)).ToList();
             }
             else
             {
@@ -88,21 +99,33 @@ namespace AsriATS.Application.Services
                     if (!string.IsNullOrEmpty(queryObject.EmploymentType))
                         jobs = jobs.Where(j => j.EmploymentType.ToLower().Contains(queryObject.EmploymentType.ToLower())).ToList();
 
+                    // Filter company by name and get matching CompanyIds
                     if (!string.IsNullOrEmpty(queryObject.CompanyName))
-                        company = company.Where(c => c.Name.ToLower().Contains(queryObject.CompanyName.ToLower())).ToList();
+                    {
+                        var matchingCompanyIds = company
+                            .Where(c => c.Name.ToLower().Contains(queryObject.CompanyName.ToLower()))
+                            .Select(c => c.CompanyId)
+                            .ToList();
+
+                        // Filter jobs based on CompanyId
+                        jobs = jobs.Where(j => matchingCompanyIds.Contains(j.CompanyId)).ToList();
+                    }
                 }
             }
 
-            // Apply default values for pagination if not provided
-            var pageSize = pagination?.PageSize ?? 10;  // Default page size to 10 if not provided
-            var pageNumber = pagination?.PageNumber ?? 1;  // Default page number to 1 if not provided
+            // If pagination is null or neither pageSize nor pageNumber is provided, return all jobs
+            if (pagination == null || (pagination.PageSize == null && pagination.PageNumber == null))
+            {
+                return jobs; // Return all job posts without pagination
+            }
+
+            // Apply default values for pagination if only one of pageSize or pageNumber is provided
+            var pageSize = pagination.PageSize ?? 10;  // Default page size to 10 if not provided
+            var pageNumber = pagination.PageNumber ?? 1;  // Default page number to 1 if not provided
 
             // Ensure pageSize and pageNumber are valid
             pageSize = Math.Max(1, pageSize);  // Ensure page size is at least 1
             pageNumber = Math.Max(1, pageNumber);  // Ensure page number is at least 1
-
-            // Apply ordering
-            jobs = jobs.OrderBy(j => j.JobTitle).ToList();
 
             var skipNumber = (pageNumber - 1) * pageSize;
 

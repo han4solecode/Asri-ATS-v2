@@ -56,14 +56,6 @@ namespace AsriATS.Application.Services
 
             // Get the current logged-in user
             var userName = _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.Name);
-            if (string.IsNullOrEmpty(userName))
-            {
-                return new BaseResponseDto
-                {
-                    Status = "Error",
-                    Message = "User not authenticated!"
-                };
-            }
 
             // Get the user information from UserManager
             var user = await _userManager.FindByNameAsync(userName);
