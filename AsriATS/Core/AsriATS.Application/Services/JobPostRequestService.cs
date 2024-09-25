@@ -43,6 +43,7 @@ namespace AsriATS.Application.Services
 
         public async Task<BaseResponseDto> SubmitJobPostRequest(JobPostRequestDto request)
         {
+            // Retrieve the company from the repository using the provided CompanyId
             var company = await _companyRepository.GetByIdAsync(request.CompanyId);
             if (company == null)
             {
@@ -52,13 +53,82 @@ namespace AsriATS.Application.Services
                     Message = "Company is not registered!"
                 };
             }
+
+            // Get the current logged-in user
             var userName = _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.Name);
+            if (string.IsNullOrEmpty(userName))
+            {
+                return new BaseResponseDto
+                {
+                    Status = "Error",
+                    Message = "User not authenticated!"
+                };
+            }
+
+            // Get the user information from UserManager
             var user = await _userManager.FindByNameAsync(userName);
+            if (user == null)
+            {
+                return new BaseResponseDto
+                {
+                    Status = "Error",
+                    Message = "User not found!"
+                };
+            }
 
+            // Check if the user (recruiter) has a valid CompanyId and is part of the same company
+            if (!user.CompanyId.HasValue)
+            {
+                return new BaseResponseDto
+                {
+                    Status = "Error",
+                    Message = "User is not associated with any company."
+                };
+            }
+
+            var recruiterCompany = await _companyRepository.GetByIdAsync(user.CompanyId.Value);
+            if (recruiterCompany == null || recruiterCompany.CompanyId != request.CompanyId)
+            {
+                return new BaseResponseDto
+                {
+                    Status = "Error",
+                    Message = "You are not authorized to submit job posts for this company."
+                };
+            }
+
+            // Get the workflow for job post requests
             var workflow = await _workflowRepository.GetFirstOrDefaultAsync(w => w.WorkflowName == "Job Post Request");
-            var currentStepId = await _workflowSequenceRepository.GetFirstOrDefaultAsync(wfs => wfs.WorkflowId == workflow.WorkflowId);
-            var nextStepId = await _nextStepRuleRepository.GetFirstOrDefaultAsync(n => n.CurrentStepId == currentStepId.StepId);
+            if (workflow == null)
+            {
+                return new BaseResponseDto
+                {
+                    Status = "Error",
+                    Message = "Workflow for job post request not found!"
+                };
+            }
 
+            // Get the current step and next step in the workflow
+            var currentStepId = await _workflowSequenceRepository.GetFirstOrDefaultAsync(wfs => wfs.WorkflowId == workflow.WorkflowId);
+            if (currentStepId == null)
+            {
+                return new BaseResponseDto
+                {
+                    Status = "Error",
+                    Message = "Current workflow step not found!"
+                };
+            }
+
+            var nextStepId = await _nextStepRuleRepository.GetFirstOrDefaultAsync(n => n.CurrentStepId == currentStepId.StepId);
+            if (nextStepId == null)
+            {
+                return new BaseResponseDto
+                {
+                    Status = "Error",
+                    Message = "Next step in the workflow not found!"
+                };
+            }
+
+            // Create a new process for the job post request
             var newProcess = new Process
             {
                 RequesterId = user.Id,
@@ -71,6 +141,7 @@ namespace AsriATS.Application.Services
 
             await _processRepository.CreateAsync(newProcess);
 
+            // Create a new job post request
             var newJobPostRequest = new JobPostRequest
             {
                 JobTitle = request.JobTitle,
@@ -86,6 +157,7 @@ namespace AsriATS.Application.Services
 
             await _jobPostRequestRepository.CreateAsync(newJobPostRequest);
 
+            // Record the workflow action
             var newWorkflowAction = new WorkflowAction
             {
                 ProcessId = newProcess.ProcessId,
@@ -101,7 +173,7 @@ namespace AsriATS.Application.Services
             return new BaseResponseDto
             {
                 Status = "Success",
-                Message = "Submitted post job request success"
+                Message = "Submitted job post request successfully"
             };
         }
 
