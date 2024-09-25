@@ -200,7 +200,7 @@ namespace AsriATS.Application.Services
                 };
             }
 
-            if (process.Requester.CompanyId != user!.CompanyId)
+            if (process.Requester.CompanyId != user!.CompanyId || process.WorkflowSequence.Role.Name != userRole)
             {
                 return new BaseResponseDto
                 {
@@ -306,6 +306,7 @@ namespace AsriATS.Application.Services
             var a = requests.Select(r => new {
                 ProcessId = r.ProcessId,
                 Requester = $"{r.ProcessIdNavigation.Requester.FirstName} {r.ProcessIdNavigation.Requester.LastName}",
+                RequestDate = r.ProcessIdNavigation.RequestDate,
                 JobTitle = r.JobTitle,
                 Description = r.Description,
                 Requirements = r.Requirements,
