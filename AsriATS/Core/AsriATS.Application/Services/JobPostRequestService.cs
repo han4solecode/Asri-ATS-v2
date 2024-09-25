@@ -269,7 +269,8 @@ namespace AsriATS.Application.Services
 
             // check if there is any next actor available
             // if exist, add actor email to actorEmails
-            if (process.WorkflowSequence.RequiredRole != null)
+            var updatedProcess = await _processRepository.GetByIdAsync(process.ProcessId);
+            if (updatedProcess!.WorkflowSequence.RequiredRole != null)
             {
                 var nextActorRoleName = process.WorkflowSequence.Role.Name;
                 var users = await _userManager.GetUsersInRoleAsync(nextActorRoleName!);
