@@ -25,7 +25,7 @@ namespace AsriATS.WebAPI.Controllers
         [HttpGet("search")]
         public async Task<IActionResult> SearchJobs([FromQuery]QueryObject queryObject, [FromQuery]Pagination pagination)
         {
-            var result = await _jobPostService.SeachJobPostAsync(queryObject, pagination);
+            var result = await _jobPostService.SearchJobPostAsync(queryObject, pagination);
             return Ok(result);
         }
     }

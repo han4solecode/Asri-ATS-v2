@@ -11,6 +11,6 @@ namespace AsriATS.Application.Contracts
     public interface IJobPostService
     {
         Task<IEnumerable<JobPost>> GetAllJobPostAsync(Pagination pagination);
-        Task<IEnumerable<JobPost>> SeachJobPostAsync(QueryObject queryObject, Pagination pagination);
+        Task<IEnumerable<JobPost>> SearchJobPostAsync(QueryObject queryObject, Pagination pagination);
     }
 }

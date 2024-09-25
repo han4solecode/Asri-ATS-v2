@@ -45,7 +45,7 @@ namespace AsriATS.Persistance.Repositories
             await _context.SaveChangesAsync();
         }
 
-        public IQueryable<JobPost> SeachJobPostAsync()
+        public IQueryable<JobPost> SearchJobPostAsync()
         {
             return _context.JobPosts.AsQueryable();
         }
