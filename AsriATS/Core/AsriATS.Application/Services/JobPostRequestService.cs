@@ -432,5 +432,32 @@ namespace AsriATS.Application.Services
                 Message = "Job post request updated successfully and sent for review."
             };
         }
+
+        public async Task<JobPostRequestResponseDto> GetJobPostRequest(int id)
+        {
+            var jobPostRequest = await _jobPostRequestRepository.GetByIdAsync(id);
+            if (jobPostRequest == null)
+            {
+                return new JobPostRequestResponseDto
+                {
+                    Status = "Error",
+                    Message = "Job post request is not found"
+                };
+            }
+            var jobPostRequestDto = new JobPostRequestResponseDto
+            {
+                JobTitle = jobPostRequest.JobTitle,
+                CompanyId = jobPostRequest.CompanyId,
+                Description = jobPostRequest.Description,
+                Requirements = jobPostRequest.Requirements,
+                Location = jobPostRequest.Location,
+                MinSalary = jobPostRequest.MinSalary,
+                MaxSalary = jobPostRequest.MaxSalary,
+                EmploymentType = jobPostRequest.EmploymentType,
+                Status = "Success",
+                Message = "Job post request get successfuly"
+            };
+            return jobPostRequestDto;
+        }
     }
 }

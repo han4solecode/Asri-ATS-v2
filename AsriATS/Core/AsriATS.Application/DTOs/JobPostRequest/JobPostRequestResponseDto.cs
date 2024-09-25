@@ -1,7 +1,7 @@
 ﻿
-namespace AsriATS.Application.DTOs.JobPostTemplateRequest
+namespace AsriATS.Application.DTOs.JobPostRequest
 {
-    public class JobPostTemplateRequestResponseDto : BaseResponseDto
+    public class JobPostRequestResponseDto : BaseResponseDto
     {
         public string? JobTitle { get; set; }
 

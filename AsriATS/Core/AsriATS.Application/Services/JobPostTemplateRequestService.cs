@@ -1,12 +1,10 @@
 ﻿using AsriATS.Application.Contracts;
-using AsriATS.Application.DTOs.JobPostRequest;
 using AsriATS.Application.DTOs;
 using AsriATS.Application.Persistance;
 using AsriATS.Domain.Entities;
 using Microsoft.AspNetCore.Identity;
 using AsriATS.Application.DTOs.Register;
 using AsriATS.Application.DTOs.JobPostTemplateRequest;
-using System.ComponentModel.DataAnnotations;
 
 namespace AsriATS.Application.Services
 {
@@ -143,7 +141,7 @@ namespace AsriATS.Application.Services
                 return new JobPostTemplateRequestResponseDto
                 {
                     Status = "Error",
-                    Message = "Job post template request review is not found"
+                    Message = "Job post template request is not found"
                 };
             }
             var jobPostTemplateRequestDto = new JobPostTemplateRequestResponseDto
