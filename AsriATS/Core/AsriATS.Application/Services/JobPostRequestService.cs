@@ -313,7 +313,9 @@ namespace AsriATS.Application.Services
                 Location = r.Location,
                 MinSalary = r.MinSalary,
                 MaxSalary = r.MaxSalary,
-                EmployementType = r.EmploymentType
+                EmployementType = r.EmploymentType,
+                Status = r.ProcessIdNavigation.Status,
+                Comments = r.ProcessIdNavigation.WorkflowActions.Select(wa => wa.Comments).Last()
             }).ToList();
 
             return a;
