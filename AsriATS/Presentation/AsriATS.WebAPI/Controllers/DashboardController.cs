@@ -50,7 +50,7 @@ namespace AsriATS.WebAPI.Controllers
             return Ok(rcr);
         }
 
-        [Authorize(Roles = "HR Manager")]
+        [Authorize(Roles = "HR Manager, Recruiter")]
         [HttpGet("job-post-request")]
         public async Task<IActionResult> GetAllJobPostRequestToReview()
         {
