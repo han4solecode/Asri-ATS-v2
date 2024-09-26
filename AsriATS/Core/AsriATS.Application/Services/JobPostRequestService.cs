@@ -9,6 +9,7 @@ using System.Security.Claims;
 using AsriATS.Application.DTOs.Register;
 using AsriATS.Application.DTOs.Request;
 using AsriATS.Application.DTOs.Email;
+using Org.BouncyCastle.Asn1.Ocsp;
 
 namespace AsriATS.Application.Services
 {
@@ -487,17 +488,36 @@ namespace AsriATS.Application.Services
                 var users = await _userManager.GetUsersInRoleAsync(nextActorRoleName!);
                 var nextActorEmails = users.Where(a => a.CompanyId == user.CompanyId).Select(a => a.Email).ToList();
                 actorEmails.AddRange(nextActorEmails);
+
+                var nextActors = users
+                        .Where(u => nextActorEmails.Contains(u.Email))
+                        .Select(u => new { u.Email, u.FirstName })
+                        .ToList();
+
+                var htmlTemplate = System.IO.File.ReadAllText(@"./Templates/EmailTemplates/UpdateJobPostRequest.html");
+                htmlTemplate = htmlTemplate.Replace("{{JobTitle}}", requestDto.JobTitle);
+                htmlTemplate = htmlTemplate.Replace("{{Description}}", requestDto.Description);
+                htmlTemplate = htmlTemplate.Replace("{{Requirements}}", requestDto.Requirements);
+                htmlTemplate = htmlTemplate.Replace("{{Location}}", requestDto.Location);
+                htmlTemplate = htmlTemplate.Replace("{{MinSallary}}", requestDto.MinSalary.ToString());
+                htmlTemplate = htmlTemplate.Replace("{{MaxSallary}}", requestDto.MaxSalary.ToString());
+                htmlTemplate = htmlTemplate.Replace("{{EmploymentType}}", requestDto.EmploymentType);
+                htmlTemplate = htmlTemplate.Replace("{{RecruiterName}}", $"{user.FirstName} {user.LastName}");
+
+                foreach (var nextActor in nextActors)
+                {
+                    var personalizedHtmlTemplate = htmlTemplate.Replace("{{Name}}", nextActor.FirstName);
+
+                    var mailData = new EmailDataDto
+                    {
+                        EmailSubject = "Post job request submitted to HR Review",
+                        EmailBody = personalizedHtmlTemplate,
+                        EmailToIds = new List<string> { nextActor.Email } // Send to each individual actor
+                    };
+
+                    var emailResult = _emailService.SendEmailAsync(mailData);
+                }
             }
-
-            // add send email template and notification here
-
-            var mail = new EmailDataDto
-            {
-                EmailToIds = new List<string> { requesterEmail },
-                EmailCCIds = actorEmails!,
-                EmailSubject = "Job Post Request",
-                EmailBody = "Email Body"
-            };
 
             return new BaseResponseDto
             {
