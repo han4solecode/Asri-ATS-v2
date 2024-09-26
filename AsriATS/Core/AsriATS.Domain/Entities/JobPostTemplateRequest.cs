@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -32,7 +33,9 @@ namespace AsriATS.Domain.Entities
 
         public string EmploymentType { get; set; } = null!;
         public bool? IsApproved { get; set; }
+
         public string RequesterId { get; set; } = null!;
+        [ForeignKey("RequesterId")]
         public virtual AppUser RequesterIdNavigation { get; set; } = null!;
     }
 }
