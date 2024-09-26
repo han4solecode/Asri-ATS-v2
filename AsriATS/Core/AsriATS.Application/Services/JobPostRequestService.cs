@@ -274,11 +274,12 @@ namespace AsriATS.Application.Services
             process.CurrentStepId = nextStepId;
             await _processRepository.UpdateAsync(process);
 
+            var requests = await _jobPostRequestRepository.GetAllAsync();
+            var reqData = requests.Where(r => r.ProcessId == process.ProcessId).Single();
+
             // if approved, create new JobPost
             if (reviewRequest.Action == "Approved")
             {
-                var requests = await _jobPostRequestRepository.GetAllAsync();
-                var reqData = requests.Where(r => r.ProcessId == process.ProcessId).Single();
                 var newJobPost = new JobPost
                 {
                     JobTitle = reqData.JobTitle,
@@ -317,14 +318,29 @@ namespace AsriATS.Application.Services
 
             // send email notification
             // TODO: email template
+            var emailTemplate = File.ReadAllText(@"./EmailTemplates/ReviewJobPostRequest");
+
+            emailTemplate = emailTemplate.Replace("{{Name}}", $"{process.Requester.FirstName} {process.Requester.LastName}");
+            emailTemplate = emailTemplate.Replace("{{UserID}}", process.RequesterId);
+            emailTemplate = emailTemplate.Replace("{{Email}}", requesterEmail);
+            emailTemplate = emailTemplate.Replace("{{JobTitle}}", reqData.JobTitle);
+            emailTemplate = emailTemplate.Replace("{{Description}}", reqData.Description);
+            emailTemplate = emailTemplate.Replace("{{Requirements}}", reqData.Requirements);
+            emailTemplate = emailTemplate.Replace("{{Location}}", reqData.Location);
+            emailTemplate = emailTemplate.Replace("{{SalaryRange}}", $"{reqData.MinSalary} - {reqData.MaxSalary}");
+            emailTemplate = emailTemplate.Replace("{{EmploymentType}}", reqData.EmploymentType);
+            emailTemplate = emailTemplate.Replace("{{Status}}", process.Status);
+            emailTemplate = emailTemplate.Replace("{{Comments}}", process.WorkflowActions.Select(wa => wa.Comments).Last());
 
             var mail = new EmailDataDto
             {
                 EmailToIds = [requesterEmail],
                 EmailCCIds = actorEmails!,
                 EmailSubject = "Job Post Request",
-                EmailBody = "Email Body" // TODO
+                EmailBody = emailTemplate
             };
+
+            await _emailService.SendEmailAsync(mail);
 
             return new BaseResponseDto
             {
@@ -347,7 +363,8 @@ namespace AsriATS.Application.Services
             // retrieve job post requests
             var requests = await _jobPostRequestRepository.GetAllToBeReviewedAsync(user!.CompanyId!.Value, roleId);
 
-            var a = requests.Select(r => new {
+            var a = requests.Select(r => new
+            {
                 ProcessId = r.ProcessId,
                 Requester = $"{r.ProcessIdNavigation.Requester.FirstName} {r.ProcessIdNavigation.Requester.LastName}",
                 RequestDate = r.ProcessIdNavigation.RequestDate,
@@ -363,7 +380,6 @@ namespace AsriATS.Application.Services
             }).ToList();
 
             return a;
-
         }
 
         // Method for updated the request after need modification approval
@@ -511,7 +527,7 @@ namespace AsriATS.Application.Services
                     {
                         EmailSubject = "Post job request submitted to HR Review",
                         EmailBody = personalizedHtmlTemplate,
-                        EmailToIds =  actorEmails  // Send to each individual actor
+                        EmailToIds = actorEmails  // Send to each individual actor
                     };
 
                     var emailResult = _emailService.SendEmailAsync(mailData);
