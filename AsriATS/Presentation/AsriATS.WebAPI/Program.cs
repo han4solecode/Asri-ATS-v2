@@ -19,7 +19,6 @@ public class Program
         builder.Services.ConfigurePersistance(builder.Configuration);
         builder.Services.ConfigureApplication();
         builder.Services.ConfigureIdentity();
-        builder.Services.Configure<MailSettings>(builder.Configuration.GetSection("MailSettings"));
 
         var configuration = builder.Configuration;
 
