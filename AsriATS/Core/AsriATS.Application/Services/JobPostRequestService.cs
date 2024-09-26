@@ -25,10 +25,12 @@ namespace AsriATS.Application.Services
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IJobPostRepository _jobPostRepository;
         private readonly RoleManager<AppRole> _roleManager;
+        private readonly IEmailService _emailService;
 
         public JobPostRequestService(ICompanyRepository companyRepository, IJobPostRequestRepository jobPostRequestRepository, INextStepRuleRepository nextStepRuleRepository,
             IWorkflowSequenceRepository workflowSequenceRepository, IProcessRepository processRepository, IWorkflowRepository workflowRepository, IWorkflowActionRepository
-            workflowActionRepository, UserManager<AppUser> userManager, IHttpContextAccessor httpContextAccessor, IJobPostRepository jobPostRepository, RoleManager<AppRole> roleManager)
+            workflowActionRepository, UserManager<AppUser> userManager, IHttpContextAccessor httpContextAccessor, IJobPostRepository jobPostRepository, RoleManager<AppRole> roleManager,
+            IEmailService emailService)
         {
             _companyRepository = companyRepository;
             _jobPostRequestRepository = jobPostRequestRepository;
@@ -41,6 +43,7 @@ namespace AsriATS.Application.Services
             _httpContextAccessor = httpContextAccessor;
             _jobPostRepository = jobPostRepository;
             _roleManager = roleManager;
+            _emailService = emailService;
         }
 
         public async Task<BaseResponseDto> SubmitJobPostRequest(JobPostRequestDto request)
@@ -163,6 +166,47 @@ namespace AsriATS.Application.Services
             };
 
             await _workflowActionRepository.CreateAsync(newWorkflowAction);
+
+            var actorEmails = new List<string>();
+            // get requester email
+            var requesterEmail = user.Email!;
+            actorEmails.Add(requesterEmail);
+
+            // check if there is any next actor available
+            // if exist, add actor email to actorEmails
+            var updatedProcess = await _processRepository.GetByIdAsync(newProcess.ProcessId);
+            if (updatedProcess!.WorkflowSequence.RequiredRole != null)
+            {
+                var nextActorRoleName = newProcess.WorkflowSequence.Role.Name;
+                var users = await _userManager.GetUsersInRoleAsync(nextActorRoleName!);
+                var nextActorEmails = users.Where(a => a.CompanyId == user.CompanyId).Select(a => new { a.Email, a.FirstName }).ToList();
+                // append nextActorEmails to actorEmails
+                actorEmails.AddRange(nextActorEmails.Select(a => a.Email));
+
+                var htmlTemplate = System.IO.File.ReadAllText(@"./Templates/EmailTemplates/RecruiterJobPostRequestToHR.html");
+                htmlTemplate = htmlTemplate.Replace("{{JobTitle}}", request.JobTitle);
+                htmlTemplate = htmlTemplate.Replace("{{Description}}", request.Description);
+                htmlTemplate = htmlTemplate.Replace("{{Requirements}}", request.Requirements);
+                htmlTemplate = htmlTemplate.Replace("{{Location}}", request.Location);
+                htmlTemplate = htmlTemplate.Replace("{{MinSallary}}", request.MinSalary.ToString());
+                htmlTemplate = htmlTemplate.Replace("{{MaxSallary}}", request.MaxSalary.ToString());
+                htmlTemplate = htmlTemplate.Replace("{{EmploymentType}}", request.EmploymentType);
+                htmlTemplate = htmlTemplate.Replace("{{RecruiterName}}", $"{user.FirstName} {user.LastName}");
+
+                foreach (var name in nextActorEmails)
+                {
+                    htmlTemplate = htmlTemplate.Replace("{{Name}}", $"{name.FirstName}");
+                }
+
+                var mailData = new EmailDataDto
+                {
+                    EmailSubject = "Post job request submitted to HR Review",
+                    EmailBody = htmlTemplate,
+                    EmailToIds = actorEmails
+                };
+
+                var emailResult = _emailService.SendEmailAsync(mailData);
+            }
 
             return new BaseResponseDto
             {
