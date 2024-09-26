@@ -3,7 +3,6 @@ using AsriATS.Application.DTOs.ChangePassword;
 using AsriATS.Application.DTOs.Update;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Org.BouncyCastle.Asn1.Ocsp;
 
 namespace AsriATS.WebAPI.Controllers
 {

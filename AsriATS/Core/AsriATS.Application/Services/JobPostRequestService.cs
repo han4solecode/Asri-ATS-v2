@@ -9,7 +9,6 @@ using System.Security.Claims;
 using AsriATS.Application.DTOs.Register;
 using AsriATS.Application.DTOs.Request;
 using AsriATS.Application.DTOs.Email;
-using Org.BouncyCastle.Asn1.Ocsp;
 
 namespace AsriATS.Application.Services
 {
@@ -512,7 +511,7 @@ namespace AsriATS.Application.Services
                     {
                         EmailSubject = "Post job request submitted to HR Review",
                         EmailBody = personalizedHtmlTemplate,
-                        EmailToIds = new List<string> { nextActor.Email } // Send to each individual actor
+                        EmailToIds =  actorEmails  // Send to each individual actor
                     };
 
                     var emailResult = _emailService.SendEmailAsync(mailData);
