@@ -5,6 +5,8 @@ using AsriATS.Domain.Entities;
 using Microsoft.AspNetCore.Identity;
 using AsriATS.Application.DTOs.Register;
 using AsriATS.Application.DTOs.JobPostTemplateRequest;
+using Microsoft.AspNetCore.Http;
+using System.Security.Claims;
 
 namespace AsriATS.Application.Services
 {
@@ -14,13 +16,15 @@ namespace AsriATS.Application.Services
         private readonly ICompanyRepository _companyRepository;
         private readonly UserManager<AppUser> _userManager;
         private readonly IJobPostTemplateRepository _jobPostTemplateRepository;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public JobPostTemplateRequestService(IJobTemplateRequestRepository jobTemplateRequestRepository, ICompanyRepository companyRepository, UserManager<AppUser> userManager, IJobPostTemplateRepository jobPostTemplateRepository)
+        public JobPostTemplateRequestService(IJobTemplateRequestRepository jobTemplateRequestRepository, ICompanyRepository companyRepository, UserManager<AppUser> userManager, IJobPostTemplateRepository jobPostTemplateRepository, IHttpContextAccessor httpContextAccessor)
         {
             _jobTemplateRequestRepository = jobTemplateRequestRepository;
             _companyRepository = companyRepository;
             _userManager = userManager;
             _jobPostTemplateRepository = jobPostTemplateRepository;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         public async Task<BaseResponseDto> SubmitJobTemplateRequest(JobPostTemplateRequestDto request)
@@ -35,6 +39,29 @@ namespace AsriATS.Application.Services
                 };
             }
 
+            // Get the current logged-in user
+            var userName = _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.Name);
+
+            // Get the user information from UserManager
+            var user = await _userManager.FindByNameAsync(userName);
+            if (user == null)
+            {
+                return new BaseResponseDto
+                {
+                    Status = "Error",
+                    Message = "User not found!"
+                };
+            }
+
+            if (user.CompanyId != request.CompanyId)
+            {
+                return new BaseResponseDto
+                {
+                    Status = "Error",
+                    Message = "You are not authorized to submit job post template for this company."
+                };
+            }
+
             var newJobTemplateRequest = new JobPostTemplateRequest
             {
                 JobTitle = request.JobTitle,
@@ -44,7 +71,8 @@ namespace AsriATS.Application.Services
                 Location = request.Location,
                 MinSalary = request.MinSalary,
                 MaxSalary = request.MaxSalary,
-                EmploymentType = request.EmploymentType
+                EmploymentType = request.EmploymentType,
+                RequesterId = user.Id
             };
 
             await _jobTemplateRequestRepository.CreateAsync(newJobTemplateRequest);

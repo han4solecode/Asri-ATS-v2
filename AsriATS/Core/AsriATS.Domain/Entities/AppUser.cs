@@ -33,5 +33,11 @@ namespace AsriATS.Domain.Entities
 
         // navigation to RoleChangeRequest
         public virtual ICollection<RoleChangeRequest> RoleChangeRequests { get; set; } = [];
+
+        // navigation to JobPostTemplateRequest
+        public virtual ICollection<JobPostTemplateRequest> JobPostTemplateRequests { get; set; } = [];
+
+        // navigation to JobPostTemplate
+        public virtual ICollection<JobPostTemplate> JobPostTemplates { get; set; } = [];
     }
 }
