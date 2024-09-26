@@ -426,7 +426,34 @@ namespace AsriATS.Application.Services
             process.CurrentStepId = nextStepId;
             await _processRepository.UpdateAsync(process);
 
-            // add some email notification here
+            var workflowActions = await _workflowActionRepository.GetAllAsync();
+            var actorEmails = workflowActions
+                        .Where(a => a.ProcessId == process.ProcessId && a.Actor != null && !string.IsNullOrEmpty(a.Actor.Email))
+                        .Select(x => x.Actor.Email)
+                        .Distinct()
+                        .ToList();
+
+            var requesterEmail = process.Requester.Email;
+            actorEmails.Remove(requesterEmail);
+
+            var updatedProcess = await _processRepository.GetByIdAsync(process.ProcessId);
+            if (updatedProcess!.WorkflowSequence?.RequiredRole != null)
+            {
+                var nextActorRoleName = process.WorkflowSequence.Role.Name;
+                var users = await _userManager.GetUsersInRoleAsync(nextActorRoleName!);
+                var nextActorEmails = users.Where(a => a.CompanyId == user.CompanyId).Select(a => a.Email).ToList();
+                actorEmails.AddRange(nextActorEmails);
+            }
+
+            // add send email template and notification here
+
+            var mail = new EmailDataDto
+            {
+                EmailToIds = new List<string> { requesterEmail },
+                EmailCCIds = actorEmails!,
+                EmailSubject = "Job Post Request",
+                EmailBody = "Email Body"
+            };
 
             return new BaseResponseDto
             {
