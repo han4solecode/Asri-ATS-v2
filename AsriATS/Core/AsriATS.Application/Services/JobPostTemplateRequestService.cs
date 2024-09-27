@@ -7,7 +7,6 @@ using AsriATS.Application.DTOs.Register;
 using AsriATS.Application.DTOs.JobPostTemplateRequest;
 using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
-using Org.BouncyCastle.Asn1.Ocsp;
 
 namespace AsriATS.Application.Services
 {
