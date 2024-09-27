@@ -30,7 +30,6 @@ namespace AsriATS.Application.Services
             var result = jobTemplatePosts.Select(j => new
             {
                 JobTitle = j.JobTitle,
-                Requester = $"{j.RequesterIdNavigation.FirstName} {j.RequesterIdNavigation.LastName}",
                 CompanyName = j.CompanyIdNavigation.Name,
                 Description = j.Description,
                 Requirements = j.Requirements,

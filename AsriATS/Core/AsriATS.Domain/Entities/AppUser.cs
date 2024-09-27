@@ -36,8 +36,5 @@ namespace AsriATS.Domain.Entities
 
         // navigation to JobPostTemplateRequest
         public virtual ICollection<JobPostTemplateRequest> JobPostTemplateRequests { get; set; } = [];
-
-        // navigation to JobPostTemplate
-        public virtual ICollection<JobPostTemplate> JobPostTemplates { get; set; } = [];
     }
 }

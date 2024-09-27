@@ -130,7 +130,6 @@ namespace AsriATS.Application.Services
                     MinSalary = request.MinSalary,
                     MaxSalary = request.MaxSalary,
                     EmploymentType = request.EmploymentType,
-                    RequesterId = request.RequesterId,
                 };
 
                 await _jobPostTemplateRepository.CreateAsync(newJobPostTemplate);

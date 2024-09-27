@@ -27,9 +27,5 @@ namespace AsriATS.Domain.Entities
         public decimal MaxSalary { get; set; }
 
         public string EmploymentType { get; set; } = null!;
-
-        public string RequesterId { get; set; } = null!;
-        [ForeignKey("RequesterId")]
-        public virtual AppUser RequesterIdNavigation { get; set; } = null!;
     }
 }
