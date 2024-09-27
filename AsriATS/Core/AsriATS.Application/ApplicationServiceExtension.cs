@@ -18,6 +18,7 @@ namespace AsriATS.Application
             services.AddScoped<IJobPostRequestService, JobPostRequestService>();
             services.AddScoped<IJobPostService, JobPostService>();
             services.AddScoped<IJobPostTemplateRequestService, JobPostTemplateRequestService>();
+            services.AddScoped<IJobPostTemplateService, JobPostTemplateService>();
         }
     }
 }

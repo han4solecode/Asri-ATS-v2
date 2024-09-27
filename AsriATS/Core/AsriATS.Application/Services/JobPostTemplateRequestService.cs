@@ -7,6 +7,7 @@ using AsriATS.Application.DTOs.Register;
 using AsriATS.Application.DTOs.JobPostTemplateRequest;
 using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
+using Org.BouncyCastle.Asn1.Ocsp;
 
 namespace AsriATS.Application.Services
 {
@@ -129,7 +130,8 @@ namespace AsriATS.Application.Services
                     Location = request.Location,
                     MinSalary = request.MinSalary,
                     MaxSalary = request.MaxSalary,
-                    EmploymentType = request.EmploymentType
+                    EmploymentType = request.EmploymentType,
+                    RequesterId = request.RequesterId,
                 };
 
                 await _jobPostTemplateRepository.CreateAsync(newJobPostTemplate);
@@ -163,7 +165,22 @@ namespace AsriATS.Application.Services
         }
         public async Task<JobPostTemplateRequestResponseDto> GetJobPostTemplateRequest(int id)
         {
+            // Get the current logged-in user
+            var userName = _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.Name);
+
+            // Get the user information from UserManager
+            var user = await _userManager.FindByNameAsync(userName);
+            if (user == null)
+            {
+                return new JobPostTemplateRequestResponseDto
+                {
+                    Status = "Error",
+                    Message = "User not found!"
+                };
+            }
+
             var jobPostTemplateRequest = await _jobTemplateRequestRepository.GetByIdAsync(id);
+
             if (jobPostTemplateRequest == null)
             {
                 return new JobPostTemplateRequestResponseDto
@@ -172,10 +189,20 @@ namespace AsriATS.Application.Services
                     Message = "Job post template request is not found"
                 };
             }
+
+            if (user.CompanyId != jobPostTemplateRequest.CompanyId)
+            {
+                return new JobPostTemplateRequestResponseDto
+                {
+                    Status = "Error",
+                    Message = "You are not authorized to view job post template for this company."
+                };
+            }
+
             var jobPostTemplateRequestDto = new JobPostTemplateRequestResponseDto
             {
                 JobTitle = jobPostTemplateRequest.JobTitle,
-                CompanyId = jobPostTemplateRequest.CompanyId,
+                CompanyName = jobPostTemplateRequest.CompanyIdNavigation.Name,
                 Description = jobPostTemplateRequest.Description,
                 Requirements = jobPostTemplateRequest.Requirements,
                 Location = jobPostTemplateRequest.Location,
