@@ -26,5 +26,7 @@ namespace AsriATS.Domain.Entities
         public decimal MaxSalary { get; set; }
 
         public string EmploymentType { get; set; } = null!;
+
+        public virtual ICollection<ApplicationJob> ApplicationJobsNavigation { get; set; } = []!;
     }
 }

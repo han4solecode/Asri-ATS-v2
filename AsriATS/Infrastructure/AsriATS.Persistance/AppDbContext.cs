@@ -42,6 +42,9 @@ namespace AsriATS.Persistance
         public DbSet<JobPostTemplateRequest> JobPostTemplateRequests { get; set; }
         public DbSet<JobPostTemplate> JobPostTemplates { get; set; }
 
+        public DbSet<ApplicationJob> ApplicationJobs { get; set; }
+        public DbSet<SupportingDocument> SupportingDocuments { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -102,6 +105,34 @@ namespace AsriATS.Persistance
                      .HasConstraintName("next_step_rule_id_nextstep_fkey")
                      .OnDelete(DeleteBehavior.Restrict);
             });
+
+            // Define the relationship between ApplicationJob and JobPost (JobPostNavigation)
+            modelBuilder.Entity<ApplicationJob>()
+                .HasOne(aj => aj.JobPostNavigation) // Navigation property
+                .WithMany(jp => jp.ApplicationJobsNavigation) // Assuming one job post can have multiple applications
+                .HasForeignKey(aj => aj.JobPostId)
+                .OnDelete(DeleteBehavior.Cascade); // Optional, depending on deletion logic
+
+            // Define the relationship between ApplicationJob and Process (ProcessIdNavigation)
+            modelBuilder.Entity<ApplicationJob>()
+                .HasOne(aj => aj.ProcessIdNavigation) // Navigation property
+                .WithMany(p => p.ApplicationJobNavigation) // Assuming one process can have multiple applications
+                .HasForeignKey(aj => aj.ProcessId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Configure ApplicationJob and AppUser relationship
+            modelBuilder.Entity<ApplicationJob>()
+                .HasOne(a => a.UserIdNavigation)
+                .WithMany() // Assuming one user can have multiple jobs
+                .HasForeignKey(a => a.UserId)
+                .OnDelete(DeleteBehavior.Restrict); // Prevent user deletion from deleting related jobs
+
+            // Configure SupportingDocument and AppUser relationship
+            modelBuilder.Entity<SupportingDocument>()
+                .HasOne(d => d.UserIdNavigation)
+                .WithMany() // Assuming one user can upload multiple documents
+                .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.Restrict); // Prevent user deletion from deleting documents
         }
     }
 }
