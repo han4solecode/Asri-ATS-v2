@@ -111,6 +111,14 @@ namespace AsriATS.Application.Services
                     Message = "Recruiter Registration Request is not found"
                 };
             }
+            if (recruiterRequest.IsApproved != null)
+            {
+                return new RecruiterRegistrationRequestResponseDto
+                {
+                    Status = "Error",
+                    Message = "Recruiter Registration Request has been processed before"
+                };
+            }
             if (action == "Approved")
             {
                 recruiterRequest.IsApproved = true;
