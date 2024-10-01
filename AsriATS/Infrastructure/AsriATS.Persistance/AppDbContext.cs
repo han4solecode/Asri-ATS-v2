@@ -106,33 +106,42 @@ namespace AsriATS.Persistance
                      .OnDelete(DeleteBehavior.Restrict);
             });
 
-            // Define the relationship between ApplicationJob and JobPost (JobPostNavigation)
-            modelBuilder.Entity<ApplicationJob>()
-                .HasOne(aj => aj.JobPostNavigation) // Navigation property
-                .WithMany(jp => jp.ApplicationJobsNavigation) // Assuming one job post can have multiple applications
-                .HasForeignKey(aj => aj.JobPostId)
-                .OnDelete(DeleteBehavior.Cascade); // Optional, depending on deletion logic
+            // Configuring ApplicationJob relationships
+            modelBuilder.Entity<ApplicationJob>(entity =>
+            {
+                // Foreign key to AspNetUsers (User)
+                entity.HasOne(aj => aj.UserIdNavigation)
+                    .WithMany()
+                    .HasForeignKey(aj => aj.UserId)
+                    .OnDelete(DeleteBehavior.Restrict); 
 
-            // Define the relationship between ApplicationJob and Process (ProcessIdNavigation)
-            modelBuilder.Entity<ApplicationJob>()
-                .HasOne(aj => aj.ProcessIdNavigation) // Navigation property
-                .WithMany(p => p.ApplicationJobNavigation) // Assuming one process can have multiple applications
-                .HasForeignKey(aj => aj.ProcessId)
-                .OnDelete(DeleteBehavior.Cascade);
+                // Foreign key to JobPost
+                entity.HasOne(aj => aj.JobPostNavigation)
+                    .WithMany(jp => jp.ApplicationJobsNavigation) 
+                    .HasForeignKey(aj => aj.JobPostId)
+                    .OnDelete(DeleteBehavior.Cascade); // Cascade delete will remove the application if the job post is deleted
 
-            // Configure ApplicationJob and AppUser relationship
-            modelBuilder.Entity<ApplicationJob>()
-                .HasOne(a => a.UserIdNavigation)
-                .WithMany() // Assuming one user can have multiple jobs
-                .HasForeignKey(a => a.UserId)
-                .OnDelete(DeleteBehavior.Restrict); // Prevent user deletion from deleting related jobs
+                // Foreign key to Process
+                entity.HasOne(aj => aj.ProcessIdNavigation)
+                    .WithMany(p => p.ApplicationJobNavigation) 
+                    .HasForeignKey(aj => aj.ProcessId)
+                    .OnDelete(DeleteBehavior.Cascade); // Cascade delete will remove the application if the process is deleted
 
-            // Configure SupportingDocument and AppUser relationship
-            modelBuilder.Entity<SupportingDocument>()
-                .HasOne(d => d.UserIdNavigation)
-                .WithMany() // Assuming one user can upload multiple documents
-                .HasForeignKey(d => d.UserId)
-                .OnDelete(DeleteBehavior.Restrict); // Prevent user deletion from deleting documents
+                // Foreign key to SupportingDocuments (one-to-many relationship)
+                entity.HasMany(aj => aj.SupportingDocumentsIdNavigation)
+                    .WithMany(sd => sd.ApplicationJobNavigation) 
+                    .UsingEntity(j => j.ToTable("ApplicationJobSupportingDocuments")); // Configuring the join table for many-to-many
+            });
+
+            // Configuring SupportingDocument relationships
+            modelBuilder.Entity<SupportingDocument>(entity =>
+            {
+                // Foreign key to AspNetUsers (User)
+                entity.HasOne(sd => sd.UserIdNavigation)
+                    .WithMany()
+                    .HasForeignKey(sd => sd.UserId)
+                    .OnDelete(DeleteBehavior.Restrict); // Use Restrict to avoid cascading delete on users
+            });
         }
     }
 }

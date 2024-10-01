@@ -9,7 +9,7 @@ namespace AsriATS.Application.DTOs.ApplicationJob
     public class SupportingDocumentDto
     {
         public string? DocumentName { get; set; }
-        public string? DocumentUrl { get; set; }
-        public string? FileType { get; set; }
+        public string? FilePath { get; set; }
+        public DateTime UploadedDate { get; set; }
     }
 }

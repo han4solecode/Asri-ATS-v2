@@ -49,7 +49,7 @@ namespace AsriATS.Application.Services
             _documentSupportRepository = documentSupportRepository;
         }
 
-        public async Task<BaseResponseDto> SubmitApplicationJob(ApplicationJobDto request, List<IFormFile> supportingDocuments)
+        public async Task<BaseResponseDto> SubmitApplicationJob(ApplicationJobDto request, List<IFormFile> supportingDocuments = null)
         {
             // Get the current logged-in user
             var userName = _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.Name);
@@ -132,48 +132,47 @@ namespace AsriATS.Application.Services
                 Skills = request.Skills,
                 JobPostId = request.JobPostId,
                 ProcessId = newProcess.ProcessId,
+                SupportingDocumentsId = request.SupportingDocumentsId,
                 SupportingDocumentsIdNavigation = new List<SupportingDocument>() // Initialize the list of supporting documents
             };
 
-            // Save the ApplicationJob entity first to generate the ApplicationJobId
-            await _applicationJobRepository.CreateAsync(newApplicationJob);
-
-            // Create directory for uploads if it doesn't exist
-            var uploadPath = Path.Combine(Directory.GetCurrentDirectory(), "uploads");
-            if (!Directory.Exists(uploadPath))
+            // Add additional documents if provided
+            if (supportingDocuments != null)
             {
-                Directory.CreateDirectory(uploadPath);
-            }
-
-            // Save supporting documents
-            foreach (var document in supportingDocuments)
-            {
-                if (document != null && document.Length > 0)
+                var uploadPath = Path.Combine(Directory.GetCurrentDirectory(), "uploads");
+                if (!Directory.Exists(uploadPath))
                 {
-                    var fileName = Path.GetFileName(document.FileName);
-                    var fullPath = Path.Combine(uploadPath, fileName);
+                    Directory.CreateDirectory(uploadPath);
+                }
 
-                    using (var stream = new FileStream(fullPath, FileMode.Create))
+                foreach (var document in supportingDocuments)
+                {
+                    if (document != null && document.Length > 0)
                     {
-                        await document.CopyToAsync(stream);
+                        var fileName = Path.GetFileName(document.FileName);
+                        var fullPath = Path.Combine(uploadPath, fileName);
+
+                        using (var stream = new FileStream(fullPath, FileMode.Create))
+                        {
+                            await document.CopyToAsync(stream);
+                        }
+
+                        var supportingDocument = new SupportingDocument
+                        {
+                            DocumentName = fileName,
+                            FilePath = fullPath,
+                            UserId = user.Id,
+                            UploadedDate = DateTime.UtcNow
+                        };
+
+                        await _documentSupportRepository.CreateAsync(supportingDocument);
+                        newApplicationJob.SupportingDocumentsIdNavigation.Add(supportingDocument);
                     }
-
-                    var supportingDocument = new SupportingDocument
-                    {
-                        DocumentName = fileName,
-                        FilePath = fullPath,
-                        UserId = user.Id,
-                        UploadedDate = DateTime.UtcNow,
-                        ApplicationJobId = newApplicationJob.ApplicationJobId // Use the ApplicationJobId after saving
-                    };
-
-                    await _documentSupportRepository.CreateAsync(supportingDocument);
-                    newApplicationJob.SupportingDocumentsIdNavigation.Add(supportingDocument); // Add to the list
                 }
             }
 
-            // Update the ApplicationJob entity with associated documents
-            await _applicationJobRepository.UpdateAsync(newApplicationJob);
+            // Save the ApplicationJob entity
+            await _applicationJobRepository.CreateAsync(newApplicationJob);
 
             // Record the workflow action
             var newWorkflowAction = new WorkflowAction
@@ -197,45 +196,45 @@ namespace AsriATS.Application.Services
         public async Task<IEnumerable<object>> GetAllApplicationStatuses()
         {
             // Get user and roles from HttpContextAccessor
-    var userName = _httpContextAccessor.HttpContext!.User.Identity!.Name;
-    var user = await _userManager.FindByNameAsync(userName!);
-    var userRoles = await _userManager.GetRolesAsync(user!);
+            var userName = _httpContextAccessor.HttpContext!.User.Identity!.Name;
+            var user = await _userManager.FindByNameAsync(userName!);
+            var userRoles = await _userManager.GetRolesAsync(user!);
 
-    var applications = new List<ApplicationJob>();
+            var applications = new List<ApplicationJob>();
 
-    foreach (var role in userRoles)
-    {
-        if (role == "Applicant")
-        {
-            // Fetch all applications where the user is the applicant
-            var applicantApplications = await _applicationJobRepository.GetAllByApplicantAsync(user.Id);
-            applications.AddRange(applicantApplications);
-        }
-        else
-        {
-            // Ensure CompanyId has a value for non-applicant roles
-            if (!user.CompanyId.HasValue)
+            foreach (var role in userRoles)
             {
-                throw new InvalidOperationException("User does not have a company associated.");
+                if (role == "Applicant")
+                {
+                    // Fetch all applications where the user is the applicant
+                    var applicantApplications = await _applicationJobRepository.GetAllByApplicantAsync(user.Id);
+                    applications.AddRange(applicantApplications);
+                }
+                else
+                {
+                    // Ensure CompanyId has a value for non-applicant roles
+                    if (!user.CompanyId.HasValue)
+                    {
+                        throw new InvalidOperationException("User does not have a company associated.");
+                    }
+
+                    // Fetch applications linked to the user's company and role
+                    var roleApplications = await _applicationJobRepository.GetAllToStatusAsync(user.CompanyId.Value, role);
+                    applications.AddRange(roleApplications);
+                }
             }
 
-            // Fetch applications linked to the user's company and role
-            var roleApplications = await _applicationJobRepository.GetAllToStatusAsync(user.CompanyId.Value, role);
-            applications.AddRange(roleApplications);
-        }
-    }
+            // Project the results into a more user-friendly format
+            var applicationStatuses = applications.Select(app => new
+            {
+                ApplicationId = app.ApplicationJobId,
+                ApplicantName = $"{app.UserIdNavigation.FirstName} {app.UserIdNavigation.LastName}",
+                JobTitle = app.JobPostNavigation.JobTitle,
+                Status = app.ProcessIdNavigation.Status,
+                Comments = app.ProcessIdNavigation.WorkflowActions.Select(wa => wa.Comments).LastOrDefault() // Get last comment or null if none
+            }).ToList();
 
-    // Project the results into a more user-friendly format
-    var applicationStatuses = applications.Select(app => new
-    {
-        ApplicationId = app.ApplicationJobId,
-        ApplicantName = $"{app.UserIdNavigation.FirstName} {app.UserIdNavigation.LastName}",
-        JobTitle = app.JobPostNavigation.JobTitle,
-        Status = app.ProcessIdNavigation.Status,
-        Comments = app.ProcessIdNavigation.WorkflowActions.Select(wa => wa.Comments).LastOrDefault() // Get last comment or null if none
-    }).ToList();
-
-    return applicationStatuses;
+            return applicationStatuses;
         }
     }
 }
