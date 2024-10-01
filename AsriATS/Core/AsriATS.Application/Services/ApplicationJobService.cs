@@ -149,7 +149,9 @@ namespace AsriATS.Application.Services
                 {
                     if (document != null && document.Length > 0)
                     {
-                        var fileName = Path.GetFileName(document.FileName);
+                        // Generate a unique file name by prepending a GUID to the original file name
+                        var fileExtension = Path.GetExtension(document.FileName); // Get file extension
+                        var fileName = $"{Guid.NewGuid()}{fileExtension}"; // Prepend GUID to file name
                         var fullPath = Path.Combine(uploadPath, fileName);
 
                         using (var stream = new FileStream(fullPath, FileMode.Create))
@@ -159,7 +161,7 @@ namespace AsriATS.Application.Services
 
                         var supportingDocument = new SupportingDocument
                         {
-                            DocumentName = fileName,
+                            DocumentName = fileName, // Store the new GUID-prepended file name
                             FilePath = fullPath,
                             UserId = user.Id,
                             UploadedDate = DateTime.UtcNow
@@ -184,7 +186,7 @@ namespace AsriATS.Application.Services
                 ActionDate = DateTime.UtcNow,
                 Comments = "Submitted job application"
             };
-            await _workflowActionRepository.CreateAsync(newWorkflowAction);
+            await _workflowActionRepository.CreateAsync(newWorkflowAction);githu
 
             return new BaseResponseDto
             {
