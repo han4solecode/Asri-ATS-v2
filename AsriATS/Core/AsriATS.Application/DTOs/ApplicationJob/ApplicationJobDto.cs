@@ -14,6 +14,6 @@ namespace AsriATS.Application.DTOs.ApplicationJob
         public string? Education { get; set; }
         public string? Skills { get; set; }
         public int JobPostId { get; set; }
-        public int SupportingDocumentsId { get; set; }
+        public int? SupportingDocumentsId { get; set; }
     }
 }

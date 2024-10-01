@@ -31,7 +31,7 @@ namespace AsriATS.Domain.Entities
         public virtual JobPost JobPostNavigation { get; set; } = null!;
 
         // Navigation property for Supporting Documents
-        public int SupportingDocumentsId { get; set; }  
+        public int? SupportingDocumentsId { get; set; }  
         public virtual List<SupportingDocument?> SupportingDocumentsIdNavigation { get; set; } = null!;
 
         // foreign key to process
