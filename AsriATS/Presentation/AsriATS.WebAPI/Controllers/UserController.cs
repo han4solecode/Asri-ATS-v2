@@ -105,5 +105,24 @@ namespace AsriATS.WebAPI.Controllers
                 return BadRequest(ex.Message);
             }
         }
+
+        [Authorize(Roles = "Applicant")]
+        [HttpPost("upload-document")]
+        public async Task<IActionResult> UploadDocument([FromForm] IFormFile file)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var res = await _userService.UploadDocumentAsync(file);
+
+            if (res.Status == "Error")
+            {
+                return BadRequest(res.Message);
+            }
+
+            return Ok(res);
+        }
     }
 }
