@@ -238,5 +238,21 @@ namespace AsriATS.Application.Services
 
             return applicationStatuses;
         }
+
+        public async Task<IEnumerable<object>> GetAllSupportingDocuments()
+        {
+            var userName = _httpContextAccessor.HttpContext!.User.Identity!.Name;
+            var user = await _userManager.FindByNameAsync(userName!);
+
+            var docs = await _documentSupportRepository.GetAllAsync();
+
+            var userDocs = docs.Where(d => d.UserId == user!.Id).Select(x => new {
+                DocumentId = x.SupportingDocumentId,
+                DocumentName = x.DocumentName,
+                UploadedDate = x.UploadedDate
+            });
+
+            return userDocs;
+        }
     }
 }

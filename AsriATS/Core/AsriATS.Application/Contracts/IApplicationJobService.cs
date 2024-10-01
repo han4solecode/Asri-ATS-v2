@@ -13,5 +13,7 @@ namespace AsriATS.Application.Contracts
     {
         Task<BaseResponseDto> SubmitApplicationJob(ApplicationJobDto request, List<IFormFile> supportingDocuments);
         Task<IEnumerable<object>> GetAllApplicationStatuses();
+
+        Task<IEnumerable<object>> GetAllSupportingDocuments();
     }
 }
