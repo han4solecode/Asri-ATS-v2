@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using AsriATS.Application.DTOs.User;
+using Microsoft.AspNetCore.Http;
 
 namespace AsriATS.Application.Contracts
 {
@@ -17,5 +18,7 @@ namespace AsriATS.Application.Contracts
         Task<bool> DeleteUserAsync(string userName);
         Task<List<UserResponseDto>> GetUsersInSameCompanyAsync();
         Task<IEnumerable<object>> GetAllUserInfoAsync();
+
+        Task<BaseResponseDto> UploadDocumentAsync(IFormFile file);
     }
 }

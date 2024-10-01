@@ -13,20 +13,23 @@ using System.Threading.Tasks;
 using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
 using AsriATS.Application.DTOs.User;
+using AsriATS.Application.Persistance;
 
 namespace AsriATS.Application.Services
 {
-    public class UserService:IUserService
+    public class UserService : IUserService
     {
         private readonly UserManager<AppUser> _userManager;
         private readonly RoleManager<AppRole> _roleManager;
         public readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IDocumentSupportRepository _documentSupportRepository;
 
-        public UserService(UserManager<AppUser> userManager, RoleManager<AppRole> roleManager, IHttpContextAccessor httpContextAccessor)
+        public UserService(UserManager<AppUser> userManager, RoleManager<AppRole> roleManager, IHttpContextAccessor httpContextAccessor, IDocumentSupportRepository documentSupportRepository)
         {
             _userManager = userManager;
             _roleManager = roleManager;
             _httpContextAccessor = httpContextAccessor;
+            _documentSupportRepository = documentSupportRepository;
         }
 
         // update user based on login user and roles
@@ -230,7 +233,7 @@ namespace AsriATS.Application.Services
                 userId = user.Id,
                 UserName = user.UserName,
                 Email = user.Email,
-                Password  = user.SecurityStamp,
+                Password = user.SecurityStamp,
                 PhoneNumber = user.PhoneNumber,
                 FirstName = user.FirstName,
                 LastName = user.LastName,
@@ -393,7 +396,8 @@ namespace AsriATS.Application.Services
 
         public async Task<IEnumerable<object>> GetAllUserInfoAsync()
         {
-            var userInfos = await _userManager.Users.Include(u => u.CompanyIdNavigation).Select(u => new {
+            var userInfos = await _userManager.Users.Include(u => u.CompanyIdNavigation).Select(u => new
+            {
                 UserId = u.Id,
                 UserName = u.UserName,
                 Email = u.Email,
@@ -420,6 +424,66 @@ namespace AsriATS.Application.Services
             user.Address = update.Address;
             user.Dob = update.Dob;
             user.Sex = update.Sex;
+        }
+
+        public async Task<BaseResponseDto> UploadDocumentAsync(IFormFile file)
+        {
+            var userName = _httpContextAccessor.HttpContext!.User.Identity!.Name;
+            var user = await _userManager.FindByNameAsync(userName!);
+
+            if (file.ContentType.ToLower() != "pdf" || file.ContentType.ToLower() != "docx")
+            {
+                return new BaseResponseDto
+                {
+                    Status = "Error",
+                    Message = "File type must be pdf or docx"
+                };
+            }
+
+            try
+            {
+                // store the document in storage
+                var uploadPath = Path.Combine(Directory.GetCurrentDirectory(), "uploads");
+                if (!Directory.Exists(uploadPath))
+                {
+                    Directory.CreateDirectory(uploadPath);
+                }
+
+                var fileName = Path.GetFileName(file.FileName);
+                var filePath = Path.Combine(uploadPath, $"{Guid.NewGuid()}_{fileName}");
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
+                }
+
+                // create new SupportingDocument object
+                var newDocument = new SupportingDocument
+                {
+                    UserId = user!.Id,
+                    DocumentName = file.FileName,
+                    FilePath = filePath,
+                    UploadedDate = DateTime.UtcNow,
+                };
+
+                // save newDocument
+                await _documentSupportRepository.CreateAsync(newDocument);
+
+                return new BaseResponseDto
+                {
+                    Status = "Success",
+                    Message = "Document uploaded successfuly"
+                };
+
+            }
+            catch (System.Exception)
+            {
+                return new BaseResponseDto
+                {
+                    Status = "Error",
+                    Message = "Document upload error"
+                };
+            }
         }
     }
 }
