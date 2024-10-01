@@ -35,7 +35,7 @@ namespace AsriATS.Persistance.Repositories
 
         public async Task<IEnumerable<JobPostTemplate>> GetAllAsync(Expression<Func<JobPostTemplate, bool>> expression)
         {
-            var jobPostTemplates = await _context.JobPostTemplates.Where(expression).Include(j => j.CompanyIdNavigation).Include(j => j.RequesterIdNavigation).ToListAsync();
+            var jobPostTemplates = await _context.JobPostTemplates.Where(expression).Include(j => j.CompanyIdNavigation).ToListAsync();
 
             return jobPostTemplates;
         }
