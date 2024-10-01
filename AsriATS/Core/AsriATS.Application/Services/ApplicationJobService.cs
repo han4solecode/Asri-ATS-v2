@@ -186,7 +186,7 @@ namespace AsriATS.Application.Services
                 ActionDate = DateTime.UtcNow,
                 Comments = "Submitted job application"
             };
-            await _workflowActionRepository.CreateAsync(newWorkflowAction);githu
+            await _workflowActionRepository.CreateAsync(newWorkflowAction);
 
             return new BaseResponseDto
             {
