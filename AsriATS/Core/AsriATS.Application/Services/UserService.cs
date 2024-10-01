@@ -431,7 +431,7 @@ namespace AsriATS.Application.Services
             var userName = _httpContextAccessor.HttpContext!.User.Identity!.Name;
             var user = await _userManager.FindByNameAsync(userName!);
 
-            if (file.ContentType.ToLower() != "pdf" || file.ContentType.ToLower() != "docx")
+            if (!file.ContentType.Equals("application/pdf", StringComparison.CurrentCultureIgnoreCase) && !file.ContentType.Equals("application/vnd.openxmlformats-officedocument.wordprocessingml.document", StringComparison.CurrentCultureIgnoreCase))
             {
                 return new BaseResponseDto
                 {
