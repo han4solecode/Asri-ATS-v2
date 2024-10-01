@@ -485,5 +485,66 @@ namespace AsriATS.Application.Services
                 };
             }
         }
+
+        public async Task<BaseResponseDto> DeleteDocumentAsync(int id)
+        {
+            var userName = _httpContextAccessor.HttpContext!.User.Identity!.Name;
+            var user = await _userManager.FindByNameAsync(userName!);
+
+            var document = await _documentSupportRepository.GetByIdAsync(id);
+
+            if (document == null)
+            {
+                return new BaseResponseDto
+                {
+                    Status = "Error",
+                    Message = "Document not found"
+                };
+            }
+
+            if (document.UserId != user!.Id)
+            {
+                return new BaseResponseDto
+                {
+                    Status = "Error",
+                    Message = "Unauthorized to delete document"
+                };
+            }
+
+            try
+            {
+                // delete document in storage
+                // check if documetn exist
+                if (!File.Exists(document.FilePath))
+                {
+                    return new BaseResponseDto
+                    {
+                        Status = "Error",
+                        Message = "Document does not exist in storage"
+                    };
+                }
+
+                File.Delete(document.FilePath);
+
+                // delete document in database
+                await _documentSupportRepository.DeleteAsync(document);
+
+                return new BaseResponseDto
+                {
+                    Status = "Success",
+                    Message = "Document deleted successfuly"
+                };
+            }
+            catch (System.Exception)
+            {
+                return new BaseResponseDto
+                {
+                    Status = "Error",
+                    Message = "Document delete error"
+                };
+
+                throw;
+            }
+        }
     }
 }

@@ -20,5 +20,7 @@ namespace AsriATS.Application.Contracts
         Task<IEnumerable<object>> GetAllUserInfoAsync();
 
         Task<BaseResponseDto> UploadDocumentAsync(IFormFile file);
+
+        Task<BaseResponseDto> DeleteDocumentAsync(int id);
     }
 }
