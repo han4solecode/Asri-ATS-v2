@@ -124,5 +124,24 @@ namespace AsriATS.WebAPI.Controllers
 
             return Ok(res);
         }
+
+        [Authorize(Roles = "Applicant")]
+        [HttpDelete("delete-document/{id}")]
+        public async Task<IActionResult> DeleteDocument(int id)
+        {
+            if (id <= 0)
+            {
+                return BadRequest("id must be greater than 0");
+            }
+
+            var res = await _userService.DeleteDocumentAsync(id);
+
+            if (res.Status == "Error")
+            {
+                return BadRequest(res.Message);
+            }
+
+            return Ok(res);
+        }
     }
 }
