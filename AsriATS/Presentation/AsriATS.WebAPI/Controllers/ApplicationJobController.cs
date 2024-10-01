@@ -35,6 +35,7 @@ namespace AsriATS.WebAPI.Controllers
 
             return Ok(new { message = result.Message });
         }
+
         [Authorize(Roles = "Applicant, HR Manager, Recruiter")]
         [HttpGet("job-application")]
         public async Task<IActionResult> GetAllApplication()
@@ -42,6 +43,15 @@ namespace AsriATS.WebAPI.Controllers
             var request = await _applicationJobService.GetAllApplicationStatuses();
 
             return Ok(request);
+        }
+
+        [Authorize(Roles = "Applicant")]
+        [HttpGet("documents")]
+        public async Task<IActionResult> GetAllSupportingDocuments()
+        {
+            var docs = await _applicationJobService.GetAllSupportingDocuments();
+
+            return Ok(docs);
         }
     }
 }
