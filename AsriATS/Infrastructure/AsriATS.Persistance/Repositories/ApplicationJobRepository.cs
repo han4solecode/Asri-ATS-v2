@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Design;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -62,18 +63,19 @@ namespace AsriATS.Persistance.Repositories
             return applications;
         }
 
-        public async Task<IEnumerable<ApplicationJob>> GetAllByApplicantAsync(string applicantId)
+        public async Task<IEnumerable<ApplicationJob>> GetAllByApplicantAsync(Expression<Func<ApplicationJob, bool>> expression)
         {
             return await _context.ApplicationJobs
                 .Include(r => r.ProcessIdNavigation)
                 .ThenInclude(p => p.WorkflowSequence)
+                .ThenInclude(wfs => wfs.Role)
                 .Include(r => r.ProcessIdNavigation)
                 .ThenInclude(p => p.Requester)
                 .Include(r => r.ProcessIdNavigation)
                 .ThenInclude(p => p.WorkflowActions)
                 .Include(r => r.JobPostNavigation)
-                .ThenInclude(p => p.CompanyId)
-                .Where(r => r.UserId == applicantId) // Filter by applicant ID
+                .ThenInclude(p => p.CompanyIdNavigation)
+                .Where(expression) // Filter
                 .ToListAsync();
         }
     }

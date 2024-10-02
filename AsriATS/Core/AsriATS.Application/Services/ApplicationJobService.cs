@@ -227,7 +227,7 @@ namespace AsriATS.Application.Services
                 if (role == "Applicant")
                 {
                     // Fetch all applications where the user is the applicant
-                    var applicantApplications = await _applicationJobRepository.GetAllByApplicantAsync(user.Id);
+                    var applicantApplications = await _applicationJobRepository.GetAllByApplicantAsync(r => r.UserId == user!.Id);
                     applications.AddRange(applicantApplications);
                 }
                 else
@@ -316,6 +316,29 @@ namespace AsriATS.Application.Services
                 Message = "Document retrieved successfuly",
                 Documents = [userDoc]
             };
+        }
+
+        public async Task<IEnumerable<object>> GetAllIncomingApplications()
+        {
+            var userName = _httpContextAccessor.HttpContext!.User.Identity!.Name;
+            var user = await _userManager.FindByNameAsync(userName!);
+            var userRoles = await _userManager.GetRolesAsync(user!);
+
+            var applications = new List<ApplicationJob>();
+            var applicantApplications = await _applicationJobRepository.GetAllByApplicantAsync(aj => userRoles.Contains(aj.ProcessIdNavigation.WorkflowSequence.Role.Name) && aj.JobPostNavigation.CompanyId == user.CompanyId);
+            applications.AddRange(applicantApplications);
+
+            // Project the results into a more user-friendly format
+            var applicationStatuses = applications.Select(app => new
+            {
+                ApplicationId = app.ApplicationJobId,
+                ApplicantName = $"{app.UserIdNavigation.FirstName} {app.UserIdNavigation.LastName}",
+                JobTitle = app.JobPostNavigation.JobTitle,
+                Status = app.ProcessIdNavigation.Status,
+                Comments = app.ProcessIdNavigation.WorkflowActions.Select(wa => wa.Comments).LastOrDefault() // Get last comment or null if none
+            }).ToList();
+
+            return applicationStatuses;
         }
     }
 }

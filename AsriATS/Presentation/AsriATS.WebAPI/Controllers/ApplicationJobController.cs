@@ -72,5 +72,14 @@ namespace AsriATS.WebAPI.Controllers
 
             return Ok(res);
         }
+
+        [Authorize(Roles = "HR Manager, Recruiter")]
+        [HttpGet("incoming-application")]
+        public async Task<IActionResult> GetAllIncomingApplications()
+        {
+            var request = await _applicationJobService.GetAllIncomingApplications();
+
+            return Ok(request);
+        }
     }
 }

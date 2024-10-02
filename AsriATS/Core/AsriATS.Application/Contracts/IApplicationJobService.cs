@@ -17,5 +17,6 @@ namespace AsriATS.Application.Contracts
         Task<SupportingDocumentResponseDto> GetAllSupportingDocuments();
 
         Task<SupportingDocumentResponseDto> GetSupportingDocumentById(int id);
+        Task<IEnumerable<object>> GetAllIncomingApplications();
     }
 }
