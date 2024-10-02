@@ -257,20 +257,65 @@ namespace AsriATS.Application.Services
             return applicationStatuses;
         }
 
-        public async Task<IEnumerable<object>> GetAllSupportingDocuments()
+        public async Task<SupportingDocumentResponseDto> GetAllSupportingDocuments()
         {
             var userName = _httpContextAccessor.HttpContext!.User.Identity!.Name;
             var user = await _userManager.FindByNameAsync(userName!);
 
             var docs = await _documentSupportRepository.GetAllAsync();
 
-            var userDocs = docs.Where(d => d.UserId == user!.Id).Select(x => new {
+            var userDocs = docs.Where(d => d.UserId == user!.Id).Select(x => new
+            {
                 DocumentId = x.SupportingDocumentId,
                 DocumentName = x.DocumentName,
                 UploadedDate = x.UploadedDate
             });
 
-            return userDocs;
+            return new SupportingDocumentResponseDto
+            {
+                Status = "Success",
+                Message = "Documents retrieved successfuly",
+                Documents = userDocs
+            };
+        }
+
+        public async Task<SupportingDocumentResponseDto> GetSupportingDocumentById(int id)
+        {
+            var userName = _httpContextAccessor.HttpContext!.User.Identity!.Name;
+            var user = await _userManager.FindByNameAsync(userName!);
+
+            var doc = await _documentSupportRepository.GetByIdAsync(id);
+
+            if (doc == null)
+            {
+                return new SupportingDocumentResponseDto
+                {
+                    Status = "Error",
+                    Message = "Document does not exist"
+                };
+            }
+
+            if (doc.UserId != user!.Id)
+            {
+                return new SupportingDocumentResponseDto
+                {
+                    Status = "Error",
+                    Message = "Unauthorized to retrieve document"
+                };
+            }
+
+            var userDoc = new {
+                DocumentId = doc.SupportingDocumentId,
+                DocumentName = doc.DocumentName,
+                UploadedDate = doc.UploadedDate
+            };
+
+            return new SupportingDocumentResponseDto
+            {
+                Status = "Success",
+                Message = "Document retrieved successfuly",
+                Documents = [userDoc]
+            };
         }
     }
 }
