@@ -133,6 +133,7 @@ namespace AsriATS.Application.Services
                 Skills = request.Skills,
                 JobPostId = request.JobPostId,
                 ProcessId = newProcess.ProcessId,
+                UploadedDate = DateTime.UtcNow,
                 SupportingDocumentsId = request.SupportingDocumentsId,
                 SupportingDocumentsIdNavigation = new List<SupportingDocument>() // Initialize the list of supporting documents
             };
@@ -206,6 +207,65 @@ namespace AsriATS.Application.Services
                 Comments = "Submitted job application"
             };
             await _workflowActionRepository.CreateAsync(newWorkflowAction);
+
+            var actorEmails = new List<string>();
+            // Get requester email
+            var requesterEmail = user.Email!;
+            actorEmails.Add(requesterEmail);
+
+            // Check if there is any next actor available
+            // If exist, add actor email to actorEmails
+            var updatedProcess = await _processRepository.GetByIdAsync(newProcess.ProcessId);
+
+            if (updatedProcess!.WorkflowSequence.RequiredRole != null)
+            {
+                var nextActorRoleName = newProcess.WorkflowSequence.Role.Name;
+
+                // Retrieve all recruiters in the same company as the job post
+                var recruiters = await _userManager.GetUsersInRoleAsync("Recruiter");
+                var recruitersInCompany = recruiters.Where(r => r.CompanyId == jobPost.CompanyId).Select(r => r.Email).ToList();
+
+                actorEmails.AddRange(recruitersInCompany);
+
+                var htmlTemplate = System.IO.File.ReadAllText(@"./Templates/EmailTemplates/SubmitApplicationJob.html");
+                htmlTemplate = htmlTemplate.Replace("{{Name}}", $"{user.FirstName} {user.LastName}");
+                htmlTemplate = htmlTemplate.Replace("{{Email}}", $"{user.Email}");
+                htmlTemplate = htmlTemplate.Replace("{{PhoneNumber}}", $"{user.PhoneNumber}");
+                htmlTemplate = htmlTemplate.Replace("{{Address}}", $"{user.Address}");
+                htmlTemplate = htmlTemplate.Replace("{{WorkExperience}}", request.WorkExperience);
+                htmlTemplate = htmlTemplate.Replace("{{Education}}", request.Education);
+                htmlTemplate = htmlTemplate.Replace("{{Skills}}", request.Skills);
+                htmlTemplate = htmlTemplate.Replace("{{UploadedDate}}", newApplicationJob.UploadedDate.ToString());
+                htmlTemplate = htmlTemplate.Replace("{{JobPostId}}", request.JobPostId.ToString());
+
+                // Prepare email attachments for supporting documents
+                var emailAttachments = new List<AttachmentDto>();
+
+                foreach (var doc in newApplicationJob.SupportingDocumentsIdNavigation)
+                {
+                    if (System.IO.File.Exists(doc.FilePath))
+                    {
+                        var fileContent = await System.IO.File.ReadAllBytesAsync(doc.FilePath);
+                        var fileMimeType = MimeMapping.MimeUtility.GetMimeMapping(doc.FilePath);
+                        emailAttachments.Add(new AttachmentDto
+                        {
+                            Content = fileContent,
+                            FileName = doc.DocumentName,
+                            MimeType = fileMimeType
+                        });
+                    }
+                }
+
+                var mailData = new EmailDataDto
+                {
+                    EmailSubject = "Application submitted to Recruiter Review",
+                    EmailBody = htmlTemplate,
+                    EmailToIds = actorEmails,
+                    AttachmentFiles = emailAttachments
+                };
+
+                var emailResult = _emailService.SendEmailAsync(mailData);
+            }
 
             return new BaseResponseDto
             {

@@ -6,6 +6,6 @@ namespace AsriATS.Application.DTOs.Email
         public List<string> EmailCCIds { get; set; } = [];
         public string EmailSubject { get; set; } = null!;
         public string EmailBody { get; set; } = null!;
-        public List<string> AttachmentFiles { get; set; } = [];
+        public List<AttachmentDto> AttachmentFiles { get; set; } = [];
     }
 }

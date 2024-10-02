@@ -64,8 +64,10 @@ namespace AsriATS.Application.Services
             {
                 foreach (var file in emailData.AttachmentFiles)
                 {
-                    // pass file to emailBodyBuilder
-                    emailBodyBuilder.Attachments.Add(file);
+                    using (var stream = new MemoryStream(file.Content))
+                    {
+                        emailBodyBuilder.Attachments.Add(file.FileName, stream.ToArray(), ContentType.Parse(file.MimeType));
+                    }
                 }
             }
 
