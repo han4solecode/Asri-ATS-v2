@@ -38,7 +38,7 @@ namespace AsriATS.Persistance.Repositories
 
         public async Task<IEnumerable<SupportingDocument>> GetAllAsync(Expression<Func<SupportingDocument, bool>> expression)
         {
-            var a = await _context.SupportingDocuments.Where(expression).ToListAsync();
+            var a = await _context.SupportingDocuments.AsQueryable().Where(expression).ToListAsync();
             return a;
         }
 
