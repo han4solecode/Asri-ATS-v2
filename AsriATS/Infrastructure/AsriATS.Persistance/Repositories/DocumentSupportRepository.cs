@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -32,6 +33,12 @@ namespace AsriATS.Persistance.Repositories
         public async Task<IEnumerable<SupportingDocument>> GetAllAsync()
         {
             var a = await _context.SupportingDocuments.ToListAsync();
+            return a;
+        }
+
+        public async Task<IEnumerable<SupportingDocument>> GetAllAsync(Expression<Func<SupportingDocument, bool>> expression)
+        {
+            var a = await _context.SupportingDocuments.Where(expression).ToListAsync();
             return a;
         }
 

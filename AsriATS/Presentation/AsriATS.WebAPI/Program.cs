@@ -4,6 +4,7 @@ using AsriATS.Application.DTOs.Email;
 using AsriATS.Application.Options;
 using AsriATS.Persistance;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
@@ -59,6 +60,11 @@ public class Program
         }
 
         app.UseHttpsRedirection();
+        app.UseStaticFiles(new StaticFileOptions
+        {
+            FileProvider = new PhysicalFileProvider(Path.Combine(builder.Environment.ContentRootPath, "uploads")),
+            RequestPath = "/uploads"
+        });
 
         app.UseAuthentication();
         app.UseAuthorization();

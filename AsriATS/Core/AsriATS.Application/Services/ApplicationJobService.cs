@@ -385,20 +385,30 @@ namespace AsriATS.Application.Services
             var userName = _httpContextAccessor.HttpContext!.User.Identity!.Name;
             var user = await _userManager.FindByNameAsync(userName!);
             var userRoles = await _userManager.GetRolesAsync(user!);
+            var request = _httpContextAccessor.HttpContext.Request;
+            var baseUrl = $"{request.Scheme}://{request.Host}/uploads/";
 
             var applications = new List<ApplicationJob>();
             var applicantApplications = await _applicationJobRepository.GetAllByApplicantAsync(aj => userRoles.Contains(aj.ProcessIdNavigation.WorkflowSequence.Role.Name) && aj.JobPostNavigation.CompanyId == user.CompanyId);
             applications.AddRange(applicantApplications);
 
-            // Project the results into a more user-friendly format
-            var applicationStatuses = applications.Select(app => new
+            var applicationStatuses = await Task.WhenAll(applications.Select(async app => new
             {
                 ApplicationId = app.ApplicationJobId,
                 ApplicantName = $"{app.UserIdNavigation.FirstName} {app.UserIdNavigation.LastName}",
                 JobTitle = app.JobPostNavigation.JobTitle,
                 Status = app.ProcessIdNavigation.Status,
-                Comments = app.ProcessIdNavigation.WorkflowActions.Select(wa => wa.Comments).LastOrDefault() // Get last comment or null if none
-            }).ToList();
+                WorkExperience = app.WorkExperience,
+                Education = app.Education,
+                Skills = app.Skills,
+                Comments = app.ProcessIdNavigation.WorkflowActions.Select(wa => wa.Comments).LastOrDefault(),
+                SupportingDocuments = (await _documentSupportRepository.GetAllAsync(d => d.UserId == app.UserId))
+                           .Select(sd => new
+                           {
+                               FileName = sd.DocumentName,
+                               FileUrl = $"{baseUrl}{Uri.EscapeDataString(sd.DocumentName)}"  // Changing FileName becomes URL
+                           }).ToList()
+            }));
 
             return applicationStatuses;
         }
