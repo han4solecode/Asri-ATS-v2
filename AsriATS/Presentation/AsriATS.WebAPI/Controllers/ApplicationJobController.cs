@@ -53,5 +53,24 @@ namespace AsriATS.WebAPI.Controllers
 
             return Ok(docs);
         }
+
+        [Authorize(Roles = "Applicant")]
+        [HttpGet("documents/{id}")]
+        public async Task<IActionResult> GetSupportingDocumentById(int id)
+        {
+            if (id <= 0)
+            {
+                return BadRequest("Id must be greater than 0");
+            }
+
+            var res = await _applicationJobService.GetSupportingDocumentById(id);
+
+            if (res.Status == "Error")
+            {
+                return BadRequest(res.Message);
+            }
+
+            return Ok(res);
+        }
     }
 }
