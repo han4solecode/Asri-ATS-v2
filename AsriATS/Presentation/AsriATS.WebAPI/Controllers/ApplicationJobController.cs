@@ -1,5 +1,6 @@
 ﻿using AsriATS.Application.Contracts;
 using AsriATS.Application.DTOs.ApplicationJob;
+using AsriATS.Application.DTOs.Request;
 using AsriATS.Application.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -80,6 +81,25 @@ namespace AsriATS.WebAPI.Controllers
             var request = await _applicationJobService.GetAllIncomingApplications();
 
             return Ok(request);
+        }
+
+        [Authorize(Roles = "HR Manager, Recruiter")]
+        [HttpPost("review")]
+        public async Task<IActionResult> ReviewJobApplication([FromBody] ReviewRequestDto reviewRequest)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var res = await _applicationJobService.ReviewJobApplication(reviewRequest);
+
+            if (res.Status == "Error")
+            {
+                return BadRequest(res.Message);
+            }
+
+            return Ok(res);
         }
     }
 }
