@@ -136,7 +136,24 @@ namespace AsriATS.Application.Services
                 SupportingDocumentsIdNavigation = new List<SupportingDocument>() // Initialize the list of supporting documents
             };
 
-            // Add additional documents if provided
+            // Verify provided supporting documents are owned by the user
+            if (request.SupportingDocumentsId != null)
+            {
+                var existingDocument = await _documentSupportRepository.GetByIdAsync(request.SupportingDocumentsId.Value);
+
+                if (existingDocument == null || existingDocument.UserId != user.Id)
+                {
+                    return new BaseResponseDto
+                    {
+                        Status = "Error",
+                        Message = $"Invalid document ID {request.SupportingDocumentsId} or you do not own the document."
+                    };
+                }
+
+                newApplicationJob.SupportingDocumentsIdNavigation.Add(existingDocument);
+            }
+
+            // Add additional new documents if provided
             if (supportingDocuments != null)
             {
                 var uploadPath = Path.Combine(Directory.GetCurrentDirectory(), "uploads");
@@ -149,9 +166,10 @@ namespace AsriATS.Application.Services
                 {
                     if (document != null && document.Length > 0)
                     {
-                        // Generate a unique file name by prepending a GUID to the original file name
+                        // Generate a unique file name by prepending a GUID to the original file name, while keeping the original file name intact
                         var fileExtension = Path.GetExtension(document.FileName); // Get file extension
-                        var fileName = $"{Guid.NewGuid()}{fileExtension}"; // Prepend GUID to file name
+                        var originalFileName = Path.GetFileNameWithoutExtension(document.FileName); // Get original file name without extension
+                        var fileName = $"{Guid.NewGuid()}_{originalFileName}{fileExtension}"; // Mix GUID with original file name
                         var fullPath = Path.Combine(uploadPath, fileName);
 
                         using (var stream = new FileStream(fullPath, FileMode.Create))

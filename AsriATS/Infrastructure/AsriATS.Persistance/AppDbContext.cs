@@ -111,7 +111,7 @@ namespace AsriATS.Persistance
             {
                 // Foreign key to AspNetUsers (User)
                 entity.HasOne(aj => aj.UserIdNavigation)
-                    .WithMany()
+                    .WithMany(aj => aj.ApplicationJobs)
                     .HasForeignKey(aj => aj.UserId)
                     .OnDelete(DeleteBehavior.Restrict); 
 
@@ -138,7 +138,7 @@ namespace AsriATS.Persistance
             {
                 // Foreign key to AspNetUsers (User)
                 entity.HasOne(sd => sd.UserIdNavigation)
-                    .WithMany()
+                    .WithMany(sd => sd.SupportingDocuments)
                     .HasForeignKey(sd => sd.UserId)
                     .OnDelete(DeleteBehavior.Restrict); // Use Restrict to avoid cascading delete on users
             });
