@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using AsriATS.Application.DTOs.Request;
 
 namespace AsriATS.Application.Contracts
 {
@@ -17,6 +18,9 @@ namespace AsriATS.Application.Contracts
         Task<SupportingDocumentResponseDto> GetAllSupportingDocuments();
 
         Task<SupportingDocumentResponseDto> GetSupportingDocumentById(int id);
+
         Task<IEnumerable<object>> GetAllIncomingApplications();
+
+        Task<BaseResponseDto> ReviewJobApplication(ReviewRequestDto reviewRequest);
     }
 }

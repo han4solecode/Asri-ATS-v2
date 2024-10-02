@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using AsriATS.Application.DTOs.Email;
 using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
+using AsriATS.Application.DTOs.Request;
 
 namespace AsriATS.Application.Services
 {
@@ -304,7 +305,8 @@ namespace AsriATS.Application.Services
                 };
             }
 
-            var userDoc = new {
+            var userDoc = new
+            {
                 DocumentId = doc.SupportingDocumentId,
                 DocumentName = doc.DocumentName,
                 UploadedDate = doc.UploadedDate
@@ -339,6 +341,77 @@ namespace AsriATS.Application.Services
             }).ToList();
 
             return applicationStatuses;
+        }
+
+        public async Task<BaseResponseDto> ReviewJobApplication(ReviewRequestDto reviewRequest)
+        {
+            var userName = _httpContextAccessor.HttpContext!.User.Identity!.Name;
+            var user = await _userManager.FindByNameAsync(userName!);
+            var userRoles = await _userManager.GetRolesAsync(user!);
+            var userRole = userRoles.Single();
+
+            // get process
+            var process = await _processRepository.GetByIdAsync(reviewRequest.ProcessId);
+
+            if (process == null)
+            {
+                return new BaseResponseDto
+                {
+                    Status = "Error",
+                    Message = "Process does not exist"
+                };
+            }
+
+            if (process.WorkflowSequence.RequiredRole == null)
+            {
+                return new BaseResponseDto
+                {
+                    Status = "Error",
+                    Message = "Process already finished"
+                };
+            }
+
+            // get job application company id from job post
+            var jobApplicationCompanyId = process.ApplicationJobNavigation.Select(x => x.JobPostNavigation.CompanyId).Single();
+
+            if (jobApplicationCompanyId != user!.CompanyId || process.WorkflowSequence.Role.Name != userRole)
+            {
+                return new BaseResponseDto
+                {
+                    Status = "Error",
+                    Message = "Unauthorize to review request"
+                };
+            }
+
+            var newWorkflowAction = new WorkflowAction
+            {
+                ProcessId = process.ProcessId,
+                StepId = process.CurrentStepId,
+                ActorId = user.Id,
+                Action = reviewRequest.Action,
+                ActionDate = DateTime.UtcNow,
+                Comments = reviewRequest.Comment
+            };
+
+            await _workflowActionRepository.CreateAsync(newWorkflowAction);
+
+            // get nextStepId
+            var nextStepRule = await _nextStepRuleRepository.GetFirstOrDefaultAsync(nsr => nsr.CurrentStepId == process.CurrentStepId && nsr.ConditionValue == reviewRequest.Action);
+            var nextStepId = nextStepRule!.NextStepId;
+
+            // update process
+            process.Status = $"{reviewRequest.Action} by {userRole}";
+            process.CurrentStepId = nextStepId;
+            await _processRepository.UpdateAsync(process);
+
+            // send email logic
+
+            
+            return new BaseResponseDto
+            {
+                Status = "Success",
+                Message = "Job Application Reviewed Sucessfuly"
+            };
         }
     }
 }
