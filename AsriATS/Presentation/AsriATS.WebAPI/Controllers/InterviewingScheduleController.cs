@@ -1,5 +1,6 @@
 ﻿using AsriATS.Application.Contracts;
 using AsriATS.Application.DTOs.InterivewScheduling;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AsriATS.WebAPI.Controllers
@@ -15,6 +16,7 @@ namespace AsriATS.WebAPI.Controllers
             _interviewSchedulingService = interviewSchedulingService;
         }
 
+        [Authorize(Roles = "Recruiter")]
         [HttpPost("SetInterviewSchedule")]
         public async Task<IActionResult> SetInterviewSchedule([FromBody] InterviewSchedulingRequestDto request)
         {
