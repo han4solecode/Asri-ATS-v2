@@ -22,5 +22,6 @@ namespace AsriATS.Application.Contracts
         Task<IEnumerable<object>> GetAllIncomingApplications();
 
         Task<BaseResponseDto> ReviewJobApplication(ReviewRequestDto reviewRequest);
+        Task<BaseResponseDto> UpdateApplicationJob(UpdateApplicationJobDto requestDto, List<IFormFile>? supportingDocuments = null);
     }
 }

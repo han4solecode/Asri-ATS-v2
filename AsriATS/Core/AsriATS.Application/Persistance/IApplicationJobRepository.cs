@@ -13,5 +13,6 @@ namespace AsriATS.Application.Persistance
     {
         Task<IEnumerable<ApplicationJob>> GetAllToStatusAsync(int companyId, string userRole);
         Task<IEnumerable<ApplicationJob>> GetAllByApplicantAsync(Expression<Func<ApplicationJob, bool>> expression);
+        Task<ApplicationJob?> GetFirstOrDefaultAsync(Expression<Func<ApplicationJob, bool>> predicate);
     }
 }

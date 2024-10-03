@@ -1,4 +1,5 @@
 ﻿using AsriATS.Application.Contracts;
+using AsriATS.Application.DTOs;
 using AsriATS.Application.DTOs.ApplicationJob;
 using AsriATS.Application.DTOs.Request;
 using AsriATS.Application.Services;
@@ -100,6 +101,29 @@ namespace AsriATS.WebAPI.Controllers
             }
 
             return Ok(res);
+        }
+
+        [Authorize]
+        [HttpPut("Update")]
+        public async Task<IActionResult> UpdateApplicationJob([FromForm] UpdateApplicationJobDto request, [FromForm] List<IFormFile>? supportingDocuments)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new BaseResponseDto
+                {
+                    Status = "Error",
+                    Message = "Invalid request data"
+                });
+            }
+
+            var response = await _applicationJobService.UpdateApplicationJob(request, supportingDocuments);
+
+            if (response.Status == "Error")
+            {
+                return BadRequest(response);
+            }
+
+            return Ok(response);
         }
     }
 }

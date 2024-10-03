@@ -79,5 +79,10 @@ namespace AsriATS.Persistance.Repositories
                 .Where(expression) // Filter
                 .ToListAsync();
         }
+
+        public async Task<ApplicationJob?> GetFirstOrDefaultAsync(Expression<Func<ApplicationJob, bool>> predicate)
+        {
+            return await _context.ApplicationJobs.FirstOrDefaultAsync(predicate);
+        }
     }
 }

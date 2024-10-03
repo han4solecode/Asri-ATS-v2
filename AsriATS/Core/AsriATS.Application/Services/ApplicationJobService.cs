@@ -520,5 +520,175 @@ namespace AsriATS.Application.Services
                 Message = "Job Application Reviewed Sucessfuly"
             };
         }
+
+        public async Task<BaseResponseDto> UpdateApplicationJob(UpdateApplicationJobDto requestDto, List<IFormFile>? supportingDocuments = null)
+        {
+            // Get the user from HttpContextAccessor
+            var userName = _httpContextAccessor.HttpContext!.User.Identity!.Name;
+            var user = await _userManager.FindByNameAsync(userName!);
+            var userRoles = await _userManager.GetRolesAsync(user!);
+            var userRole = userRoles.Single();
+
+            if (user == null)
+            {
+                return new BaseResponseDto
+                {
+                    Status = "Error",
+                    Message = "User not found"
+                };
+            }
+
+            // Retrieve the process linked to the application
+            var process = await _processRepository.GetByIdAsync(requestDto.ProcessId);
+
+            if (process.WorkflowSequence.RequiredRole == null)
+            {
+                return new BaseResponseDto
+                {
+                    Status = "Error",
+                    Message = "Process not found or does not require request additional information"
+                };
+            }
+
+            // Retrieve the required role as an ID
+            var requiredRoleId = process.WorkflowSequence.RequiredRole;
+
+            // Retrieve the actual role name from the database (using RoleManager or any custom role repository)
+            var requiredRole = await _roleManager.FindByIdAsync(requiredRoleId);
+
+            // Compare the user's role with the required role name
+            if (!requiredRole.Name.Equals(userRole, StringComparison.OrdinalIgnoreCase))
+            {
+                return new BaseResponseDto
+                {
+                    Status = "Error",
+                    Message = $"Request additional information not allowed for the current process status. Required role: {requiredRole.Name}"
+                };
+            }
+
+            // Ensure the application belongs to the current user
+            var application = await _applicationJobRepository.GetFirstOrDefaultAsync(aj => aj.ApplicationJobId == requestDto.ApplicationJobId && aj.UserId == user.Id);
+
+            if (application == null)
+            {
+                return new BaseResponseDto
+                {
+                    Status = "Error",
+                    Message = "Application job not found"
+                };
+            }
+
+            // Update the application job details (e.g., skills, work experience, education)
+            application.WorkExperience = requestDto.WorkExperience;
+            application.Education = requestDto.Education;
+            application.Skills = requestDto.Skills;
+
+            // Handle supporting document updates
+            if (requestDto.SupportingDocuments != null && requestDto.SupportingDocuments.Any())
+            {
+                foreach (var documentDto in requestDto.SupportingDocuments)
+                {
+                    var existingDocument = await _documentSupportRepository.GetByIdAsync(documentDto.SupportingDocumentsId);
+
+                    if (existingDocument != null && existingDocument.UserId == user.Id)
+                    {
+                        // Update document if it already exists
+                        existingDocument.DocumentName = documentDto.DocumentName;
+                        existingDocument.FilePath = documentDto.FilePath; // Assuming URL is updated here
+                        await _documentSupportRepository.UpdateAsync(existingDocument);
+                    }
+                    else
+                    {
+                        // Add new document if not found
+                        var newDocument = new SupportingDocument
+                        {
+                            UserId = user.Id,
+                            DocumentName = documentDto.DocumentName,
+                            FilePath = documentDto.FilePath
+                        };
+                        await _documentSupportRepository.CreateAsync(newDocument);
+                    }
+                }
+            }
+
+            // Handle additional new documents if provided
+            if (supportingDocuments != null && supportingDocuments.Any())
+            {
+                var uploadPath = Path.Combine(Directory.GetCurrentDirectory(), "uploads");
+                if (!Directory.Exists(uploadPath))
+                {
+                    Directory.CreateDirectory(uploadPath);
+                }
+
+                foreach (var document in supportingDocuments)
+                {
+                    if (document != null && document.Length > 0)
+                    {
+                        // Generate unique file name
+                        var fileExtension = Path.GetExtension(document.FileName);
+                        var originalFileName = Path.GetFileNameWithoutExtension(document.FileName);
+                        var fileName = $"{Guid.NewGuid()}_{originalFileName}{fileExtension}";
+                        var fullPath = Path.Combine(uploadPath, fileName);
+
+                        using (var stream = new FileStream(fullPath, FileMode.Create))
+                        {
+                            await document.CopyToAsync(stream);
+                        }
+
+                        var newSupportingDocument = new SupportingDocument
+                        {
+                            DocumentName = fileName,
+                            FilePath = fullPath,
+                            UserId = user.Id,
+                            UploadedDate = DateTime.UtcNow
+                        };
+
+                        // Ensure SupportingDocumentsIdNavigation is initialized
+                        if (application.SupportingDocumentsIdNavigation == null)
+                        {
+                            application.SupportingDocumentsIdNavigation = new List<SupportingDocument>();
+                        }
+
+                        // Save the new supporting document to the database
+                        await _documentSupportRepository.CreateAsync(newSupportingDocument);
+
+                        // Add the new document to the application's navigation property
+                        application.SupportingDocumentsIdNavigation.Add(newSupportingDocument);
+                    }
+                }
+            }
+
+            // Save updated application job
+            await _applicationJobRepository.UpdateAsync(application);
+
+            // Log the modification in the workflow
+            var workflowAction = new WorkflowAction
+            {
+                ProcessId = process.ProcessId,
+                StepId = process.CurrentStepId,
+                ActorId = user.Id,
+                Action = "Update",
+                ActionDate = DateTime.UtcNow,
+                Comments = requestDto.Comments
+            };
+            await _workflowActionRepository.CreateAsync(workflowAction);
+
+            // Move to the next step if applicable
+            var nextStepRule = await _nextStepRuleRepository.GetFirstOrDefaultAsync(nsr => nsr.CurrentStepId == process.CurrentStepId && nsr.ConditionValue == workflowAction.Action);
+            var nextStepId = nextStepRule!.NextStepId;
+
+            // update process
+            process.Status = $"{workflowAction.Action} by {userRole}";
+            process.CurrentStepId = nextStepId;
+            await _processRepository.UpdateAsync(process);
+
+            // Send notification to relevant actors (HR or Recruiters) for further review
+
+            return new BaseResponseDto
+            {
+                Status = "Success",
+                Message = "Application job updated successfully. Reviewers have been notified."
+            };
+        }
     }
 }
