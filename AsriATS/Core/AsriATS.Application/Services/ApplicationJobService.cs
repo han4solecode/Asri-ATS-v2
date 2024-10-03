@@ -496,11 +496,11 @@ namespace AsriATS.Application.Services
             }
 
             // send email notification
-            var emailTemplate = File.ReadAllText(@"./EmailTemplates/ReviewJobApplication.html");
+            var emailTemplate = File.ReadAllText(@"./Templates/EmailTemplates/ReviewJobApplication.html");
 
             emailTemplate = emailTemplate.Replace("{{Name}}", $"{process.Requester.FirstName} {process.Requester.LastName}");
-            emailTemplate = emailTemplate.Replace("{{JobTitle}}", $"{process.ApplicationJobNavigation.Select(x => x.JobPostNavigation.JobTitle)}");
-            emailTemplate = emailTemplate.Replace("{{JobTitle}}", $"{process.ApplicationJobNavigation.Select(x => x.JobPostNavigation.CompanyIdNavigation.Name).Single()}");
+            emailTemplate = emailTemplate.Replace("{{JobTitle}}", $"{process.ApplicationJobNavigation.Select(x => x.JobPostNavigation.JobTitle).Single()}");
+            emailTemplate = emailTemplate.Replace("{{CompanyName}}", $"{process.ApplicationJobNavigation.Select(x => x.JobPostNavigation.CompanyIdNavigation.Name).Single()}");
             emailTemplate = emailTemplate.Replace("{{Status}}", $"{process.Status}");
             emailTemplate = emailTemplate.Replace("{{Comment}}", $"{process.WorkflowActions.Select(wa => wa.Comments).LastOrDefault()}");
 
