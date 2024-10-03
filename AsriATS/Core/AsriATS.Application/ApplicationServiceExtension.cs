@@ -20,6 +20,7 @@ namespace AsriATS.Application
             services.AddScoped<IJobPostTemplateRequestService, JobPostTemplateRequestService>();
             services.AddScoped<IJobPostTemplateService, JobPostTemplateService>();
             services.AddScoped<IApplicationJobService, ApplicationJobService>();
+            services.AddScoped<IInterviewSchedulingService, InterviewSchedulingService>();
         }
     }
 }

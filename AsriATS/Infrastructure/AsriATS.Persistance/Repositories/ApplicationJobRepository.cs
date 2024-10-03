@@ -40,7 +40,7 @@ namespace AsriATS.Persistance.Repositories
 
         public async Task<ApplicationJob?> GetByIdAsync(int id)
         {
-            return await _context.ApplicationJobs.FindAsync(id);
+            return await _context.ApplicationJobs.Include(aj => aj.JobPostNavigation).FirstOrDefaultAsync(aj => aj.ApplicationJobId == id);
         }
 
         public async Task UpdateAsync(ApplicationJob entity)

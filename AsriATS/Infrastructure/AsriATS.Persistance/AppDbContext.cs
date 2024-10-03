@@ -45,6 +45,8 @@ namespace AsriATS.Persistance
         public DbSet<ApplicationJob> ApplicationJobs { get; set; }
         public DbSet<SupportingDocument> SupportingDocuments { get; set; }
 
+        public DbSet<InterviewScheduling> InterviewScheduling { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -140,6 +142,14 @@ namespace AsriATS.Persistance
                 entity.HasOne(sd => sd.UserIdNavigation)
                     .WithMany(sd => sd.SupportingDocuments)
                     .HasForeignKey(sd => sd.UserId)
+                    .OnDelete(DeleteBehavior.Restrict); // Use Restrict to avoid cascading delete on users
+            });
+
+            modelBuilder.Entity<InterviewScheduling>(entity =>
+            {
+                entity.HasOne(i => i.ApplicationIdNavigation)
+                    .WithOne()
+                    .HasForeignKey<InterviewScheduling>(i => i.ApplicationId)
                     .OnDelete(DeleteBehavior.Restrict); // Use Restrict to avoid cascading delete on users
             });
         }
