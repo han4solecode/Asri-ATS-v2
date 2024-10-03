@@ -392,9 +392,6 @@ namespace AsriATS.Application.Services
             var applicantApplications = await _applicationJobRepository.GetAllByApplicantAsync(aj => userRoles.Contains(aj.ProcessIdNavigation.WorkflowSequence.Role.Name) && aj.JobPostNavigation.CompanyId == user.CompanyId);
             applications.AddRange(applicantApplications);
 
-            // Fetch supporting documents in a separate query first
-            var supportingDocuments = await _documentSupportRepository.GetAllAsync(d => applications.Select(a => a.UserId).Contains(d.UserId));
-
             var applicationStatuses = applications.Select(app => new
             {
                 ApplicationId = app.ApplicationJobId,
@@ -406,12 +403,11 @@ namespace AsriATS.Application.Services
                 Education = app.Education,
                 Skills = app.Skills,
                 Comments = app.ProcessIdNavigation.WorkflowActions.Select(wa => wa.Comments).LastOrDefault(),
-                SupportingDocuments = supportingDocuments.Where(sd => sd.UserId == app.UserId)
-                    .Select(sd => new
-                    {
-                        FileName = sd.DocumentName,
-                        FileUrl = $"{baseUrl}{Uri.EscapeDataString(sd.DocumentName)}"
-                    }).ToList()
+                SupportingDocuments = app.SupportingDocumentsIdNavigation.Select(sd => new
+                {
+                    FileName = sd.DocumentName,
+                    FileUrl = $"{baseUrl}{Uri.EscapeDataString(sd.DocumentName)}"
+                }).ToList()
             }).ToList();
 
             return applicationStatuses;

@@ -75,6 +75,7 @@ namespace AsriATS.Persistance.Repositories
                 .ThenInclude(p => p.WorkflowActions)
                 .Include(r => r.JobPostNavigation)
                 .ThenInclude(p => p.CompanyIdNavigation)
+                .Include(r => r.SupportingDocumentsIdNavigation)
                 .Where(expression) // Filter
                 .ToListAsync();
         }
