@@ -320,7 +320,7 @@ namespace AsriATS.Application.Services
             var emailTemplate = File.ReadAllText(@"./Templates/EmailTemplates/ReviewJobPostRequest.html");
 
             emailTemplate = emailTemplate.Replace("{{Name}}", $"{process.Requester.FirstName} {process.Requester.LastName}");
-            emailTemplate = emailTemplate.Replace("{{UserID}}", process.RequesterId);
+            emailTemplate = emailTemplate.Replace("{{UserId}}", process.RequesterId);
             emailTemplate = emailTemplate.Replace("{{Email}}", requesterEmail);
             emailTemplate = emailTemplate.Replace("{{JobTitle}}", reqData.JobTitle);
             emailTemplate = emailTemplate.Replace("{{Description}}", reqData.Description);
