@@ -317,8 +317,7 @@ namespace AsriATS.Application.Services
             }
 
             // send email notification
-            // TODO: email template
-            var emailTemplate = File.ReadAllText(@"./EmailTemplates/ReviewJobPostRequest.html");
+            var emailTemplate = File.ReadAllText(@"./Templates/EmailTemplates/ReviewJobPostRequest.html");
 
             emailTemplate = emailTemplate.Replace("{{Name}}", $"{process.Requester.FirstName} {process.Requester.LastName}");
             emailTemplate = emailTemplate.Replace("{{UserID}}", process.RequesterId);
