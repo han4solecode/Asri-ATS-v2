@@ -479,7 +479,44 @@ namespace AsriATS.Application.Services
             await _processRepository.UpdateAsync(process);
 
             // send email logic
+            // get other actors email
+            var workflowActions = await _workflowActionRepository.GetAllAsync();
+            var actorEmails = workflowActions.Where(a => a.ProcessId == process.ProcessId).Select(x => x.Actor.Email).Distinct().ToList();
+            // get requester email
+            var requesterEmail = process.Requester.Email;
+            // remove requesterEmail from actorEmails so requester only receive the email once
+            actorEmails.Remove(requesterEmail);
 
+            // check if there is any next actor available
+            // if exist, add actor email to actorEmails
+            var updatedProcess = await _processRepository.GetByIdAsync(process.ProcessId);
+            if (updatedProcess!.WorkflowSequence.RequiredRole != null)
+            {
+                var nextActorRoleName = process.WorkflowSequence.Role.Name;
+                var users = await _userManager.GetUsersInRoleAsync(nextActorRoleName!);
+                var nextActorEmails = users.Where(a => a.CompanyId == user.CompanyId).Select(a => a.Email).ToList();
+                // append nextActorEmails to actorEmails
+                actorEmails.AddRange(nextActorEmails);
+            }
+
+            // send email notification
+            var emailTemplate = File.ReadAllText(@"./EmailTemplates/ReviewJobApplication.html");
+
+            emailTemplate = emailTemplate.Replace("{{Name}}", $"{process.Requester.FirstName} {process.Requester.LastName}");
+            emailTemplate = emailTemplate.Replace("{{JobTitle}}", $"{process.ApplicationJobNavigation.Select(x => x.JobPostNavigation.JobTitle)}");
+            emailTemplate = emailTemplate.Replace("{{JobTitle}}", $"{process.ApplicationJobNavigation.Select(x => x.JobPostNavigation.CompanyIdNavigation.Name).Single()}");
+            emailTemplate = emailTemplate.Replace("{{Status}}", $"{process.Status}");
+            emailTemplate = emailTemplate.Replace("{{Comment}}", $"{process.WorkflowActions.Select(wa => wa.Comments).LastOrDefault()}");
+
+            var mail = new EmailDataDto
+            {
+                EmailToIds = [requesterEmail],
+                EmailCCIds = actorEmails!,
+                EmailSubject = "Job Application Update",
+                EmailBody = emailTemplate
+            };
+
+            await _emailService.SendEmailAsync(mail);
             
             return new BaseResponseDto
             {
