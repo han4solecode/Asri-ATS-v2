@@ -567,7 +567,7 @@ namespace AsriATS.Application.Services
             }
 
             // Ensure the application belongs to the current user
-            var application = await _applicationJobRepository.GetFirstOrDefaultAsync(aj => aj.ApplicationJobId == requestDto.ApplicationJobId && aj.UserId == user.Id);
+            var application = await _applicationJobRepository.GetFirstOrDefaultAsyncUpdate(aj => aj.ApplicationJobId == requestDto.ApplicationJobId && aj.UserId == user.Id, include: query => query.Include(aj => aj.SupportingDocumentsIdNavigation));
 
             if (application == null)
             {
@@ -582,6 +582,7 @@ namespace AsriATS.Application.Services
             application.WorkExperience = requestDto.WorkExperience;
             application.Education = requestDto.Education;
             application.Skills = requestDto.Skills;
+            application.UploadedDate = DateTime.UtcNow;
 
             // Handle supporting document updates
             if (requestDto.SupportingDocuments != null && requestDto.SupportingDocuments.Any())
@@ -683,6 +684,52 @@ namespace AsriATS.Application.Services
             await _processRepository.UpdateAsync(process);
 
             // Send notification to relevant actors (HR or Recruiters) for further review
+            // Prepare email notification content
+            var actorEmails = new List<string> { user.Email! };
+
+            // Get additional actor emails (e.g., recruiters, etc.)
+            var recruiters = await _userManager.GetUsersInRoleAsync("Recruiter");
+            var recruitersInCompany = recruiters.Where(r => r.CompanyId == application.JobPostNavigation.CompanyId).Select(r => r.Email).ToList();
+            actorEmails.AddRange(recruitersInCompany);
+
+            var htmlTemplate = System.IO.File.ReadAllText(@"./Templates/EmailTemplates/UpdateApplicationJob.html");
+            htmlTemplate = htmlTemplate.Replace("{{Name}}", $"{user.FirstName} {user.LastName}");
+            htmlTemplate = htmlTemplate.Replace("{{WorkExperience}}", application.WorkExperience);
+            htmlTemplate = htmlTemplate.Replace("{{Education}}", application.Education);
+            htmlTemplate = htmlTemplate.Replace("{{Skills}}", application.Skills);
+            htmlTemplate = htmlTemplate.Replace("{{UploadedDate}}", application.UploadedDate.ToString());
+
+            // Attach updated documents
+            var emailAttachments = new List<AttachmentDto>();
+            if (application.SupportingDocumentsIdNavigation != null)
+            {
+                foreach (var doc in application.SupportingDocumentsIdNavigation)
+                {
+                    if (System.IO.File.Exists(doc.FilePath))
+                    {
+                        var fileContent = await System.IO.File.ReadAllBytesAsync(doc.FilePath);
+                        var fileMimeType = MimeMapping.MimeUtility.GetMimeMapping(doc.FilePath);
+                        emailAttachments.Add(new AttachmentDto
+                        {
+                            Content = fileContent,
+                            FileName = doc.DocumentName,
+                            MimeType = fileMimeType
+                        });
+                    }
+                }
+            }
+
+            // Prepare the email data
+            var mailData = new EmailDataDto
+            {
+                EmailSubject = "Application Job Update Notification",
+                EmailBody = htmlTemplate,
+                EmailToIds = actorEmails,
+                AttachmentFiles = emailAttachments
+            };
+
+            // Send the email notification
+            await _emailService.SendEmailAsync(mailData);
 
             return new BaseResponseDto
             {

@@ -1,6 +1,7 @@
 ﻿using AsriATS.Application.Persistance;
 using AsriATS.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Design;
@@ -83,6 +84,18 @@ namespace AsriATS.Persistance.Repositories
         public async Task<ApplicationJob?> GetFirstOrDefaultAsync(Expression<Func<ApplicationJob, bool>> predicate)
         {
             return await _context.ApplicationJobs.FirstOrDefaultAsync(predicate);
+        }
+
+        public async Task<ApplicationJob> GetFirstOrDefaultAsyncUpdate(Expression<Func<ApplicationJob, bool>> predicate, Func<IQueryable<ApplicationJob>, IIncludableQueryable<ApplicationJob, object>> include = null)
+        {
+            IQueryable<ApplicationJob> query = _context.ApplicationJobs;
+
+            if (include != null)
+            {
+                query = include(query); // Apply eager loading
+            }
+
+            return await query.FirstOrDefaultAsync(predicate);
         }
     }
 }
