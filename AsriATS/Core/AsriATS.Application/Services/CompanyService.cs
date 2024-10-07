@@ -3,6 +3,7 @@ using System.Text;
 using AsriATS.Application.Contracts;
 using AsriATS.Application.DTOs;
 using AsriATS.Application.DTOs.Company;
+using AsriATS.Application.DTOs.Email;
 using AsriATS.Application.DTOs.Request;
 using AsriATS.Application.Persistance;
 using AsriATS.Domain.Entities;
@@ -14,19 +15,18 @@ namespace AsriATS.Application.Services
     public class CompanyService : ICompanyService
     {
         private readonly ICompanyRepository _companyRepository;
-        private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly UserManager<AppUser> _userManager;
         private readonly RoleManager<AppRole> _roleManager;
         private readonly ICompanyRequestRepository _companyRequestRepository;
+        private readonly IEmailService _emailService;
 
-        public CompanyService(ICompanyRepository companyRepository, IHttpContextAccessor httpContextAccessor, UserManager<AppUser> userManager, RoleManager<AppRole> roleManager, ICompanyRequestRepository companyRequestRepository)
+        public CompanyService(ICompanyRepository companyRepository, UserManager<AppUser> userManager, RoleManager<AppRole> roleManager, ICompanyRequestRepository companyRequestRepository, IEmailService emailService)
         {
             _companyRepository = companyRepository;
-            _httpContextAccessor = httpContextAccessor;
             _userManager = userManager;
             _roleManager = roleManager;
             _companyRequestRepository = companyRequestRepository;
-
+            _emailService = emailService;
         }
 
         public async Task<BaseResponseDto> CompanyRegisterRequestAsync(CompanyRegisterRequestDto companyRegisterRequest)
@@ -159,7 +159,22 @@ namespace AsriATS.Application.Services
                 }
 
                 // send email notification to new user to give the newly created credential (username and password)
+                var emailTemplate = File.ReadAllText(@"./Templates/EmailTemplates/CompanyRegistrationApproved.html");
 
+                // email template replace text with necessary data
+                emailTemplate = emailTemplate.Replace("{{Name}}", $"{newUser.FirstName} {newUser.LastName}");
+                emailTemplate = emailTemplate.Replace("{{CompanyName}}", newCompany.Name);
+                emailTemplate = emailTemplate.Replace("{{UserName}}", newUser.UserName);
+                emailTemplate = emailTemplate.Replace("{{Password}}", password);
+
+                var mail = new EmailDataDto
+                {
+                    EmailToIds = [newUser.Email],
+                    EmailSubject = "Asri ATS Company Registration",
+                    EmailBody = emailTemplate
+                };
+
+                await _emailService.SendEmailAsync(mail);
 
                 return new BaseResponseDto
                 {
