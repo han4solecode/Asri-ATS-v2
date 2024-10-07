@@ -16,7 +16,7 @@ namespace AsriATS.WebAPI.Controllers
             _interviewSchedulingService = interviewSchedulingService;
         }
 
-        [Authorize(Roles = "Recruiter")]
+        [Authorize(Roles = "HR Manager, Recruiter")]
         [HttpPost("SetInterviewSchedule")]
         public async Task<IActionResult> SetInterviewSchedule([FromBody] InterviewSchedulingRequestDto request)
         {

@@ -113,10 +113,11 @@ namespace AsriATS.Application.Services
 
             var newInterviewSchedule = new InterviewScheduling
             {
-                ApplicationId = request.ApplicantId,
+                ApplicationId = request.ApplicationJobId,
                 Interviewer = request.Interviewers,
                 InterviewTime = utcTime,
-                InterviewType = request.InterviewType
+                InterviewType = request.InterviewType,
+                Location = request.Location,
             };
 
             await _interviewSchedulingRepository.CreateAsync(newInterviewSchedule);
