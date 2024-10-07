@@ -39,7 +39,7 @@ namespace AsriATS.Application.Services
             var userRoles = await _userManager.GetRolesAsync(user!);
             var userRole = userRoles.Single();
 
-            var applicantJob = await _applicationJobRepository.GetByIdAsync(request.ApplicantId);
+            var applicantJob = await _applicationJobRepository.GetByIdAsync(request.ApplicationJobId);
             if (applicantJob == null)
             {
                 return new BaseResponseDto
