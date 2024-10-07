@@ -7,6 +7,7 @@ using AsriATS.Application.DTOs.Register;
 using AsriATS.Application.DTOs.JobPostTemplateRequest;
 using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
+using AsriATS.Application.DTOs.Email;
 
 namespace AsriATS.Application.Services
 {
@@ -17,14 +18,16 @@ namespace AsriATS.Application.Services
         private readonly UserManager<AppUser> _userManager;
         private readonly IJobPostTemplateRepository _jobPostTemplateRepository;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IEmailService _emailService;
 
-        public JobPostTemplateRequestService(IJobTemplateRequestRepository jobTemplateRequestRepository, ICompanyRepository companyRepository, UserManager<AppUser> userManager, IJobPostTemplateRepository jobPostTemplateRepository, IHttpContextAccessor httpContextAccessor)
+        public JobPostTemplateRequestService(IJobTemplateRequestRepository jobTemplateRequestRepository, ICompanyRepository companyRepository, UserManager<AppUser> userManager, IJobPostTemplateRepository jobPostTemplateRepository, IHttpContextAccessor httpContextAccessor, IEmailService emailService)
         {
             _jobTemplateRequestRepository = jobTemplateRequestRepository;
             _companyRepository = companyRepository;
             _userManager = userManager;
             _jobPostTemplateRepository = jobPostTemplateRepository;
             _httpContextAccessor = httpContextAccessor;
+            _emailService = emailService;
         }
 
         public async Task<BaseResponseDto> SubmitJobTemplateRequest(JobPostTemplateRequestDto request)
@@ -43,7 +46,7 @@ namespace AsriATS.Application.Services
             var userName = _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.Name);
 
             // Get the user information from UserManager
-            var user = await _userManager.FindByNameAsync(userName);
+            var user = await _userManager.FindByNameAsync(userName!);
             if (user == null)
             {
                 return new BaseResponseDto
@@ -134,6 +137,27 @@ namespace AsriATS.Application.Services
 
                 await _jobPostTemplateRepository.CreateAsync(newJobPostTemplate);
 
+                // send email notification
+                var emailTemplate = File.ReadAllText(@"./Templates/EmailTemplates/JobPostTemplateRequestApproved.html");
+
+                emailTemplate = emailTemplate.Replace("{{Name}}", $"{request.RequesterIdNavigation.FirstName} {request.RequesterIdNavigation.LastName}");
+                emailTemplate = emailTemplate.Replace("{{CompanyName}}", request.CompanyIdNavigation.Name);
+                emailTemplate = emailTemplate.Replace("{{JobTitle}}", newJobPostTemplate.JobTitle);
+                emailTemplate = emailTemplate.Replace("{{Description}}", newJobPostTemplate.Description);
+                emailTemplate = emailTemplate.Replace("{{Requirements}}", newJobPostTemplate.Requirements);
+                emailTemplate = emailTemplate.Replace("{{Location}}", newJobPostTemplate.Location);
+                emailTemplate = emailTemplate.Replace("{{SalaryRange}}", $"{newJobPostTemplate.MinSalary} - {newJobPostTemplate.MaxSalary}");
+                emailTemplate = emailTemplate.Replace("{{EmploymentType}}", newJobPostTemplate.EmploymentType);
+
+                var mail = new EmailDataDto
+                {
+                    EmailToIds = [request.RequesterIdNavigation.Email],
+                    EmailSubject = "Job Post Template Request",
+                    EmailBody = emailTemplate
+                };
+
+                await _emailService.SendEmailAsync(mail);
+
                 return new BaseResponseDto
                 {
                     Status = "Success",
@@ -161,13 +185,14 @@ namespace AsriATS.Application.Services
                 };
             }
         }
+        
         public async Task<JobPostTemplateRequestResponseDto> GetJobPostTemplateRequest(int id)
         {
             // Get the current logged-in user
             var userName = _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.Name);
 
             // Get the user information from UserManager
-            var user = await _userManager.FindByNameAsync(userName);
+            var user = await _userManager.FindByNameAsync(userName!);
             if (user == null)
             {
                 return new JobPostTemplateRequestResponseDto

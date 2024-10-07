@@ -41,7 +41,7 @@ namespace AsriATS.Persistance.Repositories
 
         public async Task<JobPostTemplateRequest?> GetByIdAsync(int id)
         {
-            var jobPostTemplateRequest = await _context.JobPostTemplateRequests.FindAsync(id);
+            var jobPostTemplateRequest = await _context.JobPostTemplateRequests.Include(j => j.RequesterIdNavigation).Include(j => j.CompanyIdNavigation).FirstOrDefaultAsync(x => x.JobTemplateRequestId == id);
 
             return jobPostTemplateRequest;
         }
