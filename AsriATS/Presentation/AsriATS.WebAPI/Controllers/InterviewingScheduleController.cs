@@ -74,5 +74,24 @@ namespace AsriATS.WebAPI.Controllers
 
             return Ok(res);        
         }
+
+        [Authorize(Roles = "Applicant")]
+        [HttpPost("confirm")]
+        public async Task<IActionResult> InterviewConfirmation([FromBody] ReviewRequestDto reviewRequest)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var res = await _interviewSchedulingService.InterviewConfimation(reviewRequest);
+
+            if (res.Status == "Error")
+            {
+                return BadRequest(res.Message);
+            }
+
+            return Ok(res);
+        }
     }
 }
