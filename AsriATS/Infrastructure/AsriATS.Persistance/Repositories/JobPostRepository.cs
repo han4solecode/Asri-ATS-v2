@@ -1,4 +1,5 @@
-﻿using AsriATS.Application.Persistance;
+﻿using AsriATS.Application.DTOs.Report;
+using AsriATS.Application.Persistance;
 using AsriATS.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -48,6 +49,25 @@ namespace AsriATS.Persistance.Repositories
         public IQueryable<JobPost> SearchJobPostAsync()
         {
             return _context.JobPosts.AsQueryable();
+        }
+
+        public async Task<int> TotalJobPost()
+        {
+            var job = await _context.JobPosts.CountAsync();
+            return job;
+        }
+
+        public async Task<List<JobPostStatusDto>> GetJobPostSummaryAsync()
+        {
+            return await (from aj in _context.JobPostRequests
+                          join p in _context.Processes on aj.ProcessId equals p.ProcessId // Join based on ProcessId
+                          select new JobPostStatusDto
+                          {
+                              JobPostId = aj.JobPostRequestId,
+                              CreatedDate = p.RequestDate, // Date from Process table
+                              Status = p.Status // Status from Process table
+                          })
+                         .ToListAsync();
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using AsriATS.Application.Persistance;
+﻿using AsriATS.Application.DTOs.Report;
+using AsriATS.Application.Persistance;
 using AsriATS.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
@@ -96,6 +97,26 @@ namespace AsriATS.Persistance.Repositories
             }
 
             return await query.FirstOrDefaultAsync(predicate);
+        }
+
+        public async Task<int> TotalApplicationJob()
+        {
+            var apply = await _context.ApplicationJobs.CountAsync();
+            return apply;
+        }
+
+        // Repository Method for Applications Summary
+        public async Task<List<ApplicationJobStatusDto>> GetApplicationSummaryAsync()
+        {
+            return await (from aj in _context.ApplicationJobs
+                          join p in _context.Processes on aj.ProcessId equals p.ProcessId // Use ProcessId if it links to ApplicationJob
+                          select new ApplicationJobStatusDto
+                          {
+                              ApplicationJobId = aj.ApplicationJobId,
+                              UploadedDate = aj.UploadedDate,
+                              Status = p.Status // Status from the process table
+                          })
+                         .ToListAsync();
         }
     }
 }

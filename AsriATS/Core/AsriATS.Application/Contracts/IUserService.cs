@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using AsriATS.Application.DTOs.User;
+using AsriATS.Application.DTOs.Report;
 using Microsoft.AspNetCore.Http;
 
 namespace AsriATS.Application.Contracts
@@ -22,5 +23,6 @@ namespace AsriATS.Application.Contracts
         Task<BaseResponseDto> UploadDocumentAsync(IFormFile file);
 
         Task<BaseResponseDto> DeleteDocumentAsync(int id);
+        Task<IEnumerable<DemographicOverviewDto>> GetDemographicOverviewAsync(string address);
     }
 }

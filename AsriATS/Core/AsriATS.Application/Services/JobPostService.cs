@@ -112,6 +112,8 @@ namespace AsriATS.Application.Services
                     }
                 }
             }
+            // Sort jobs by CreatedDate (newest first)
+            jobs = jobs.OrderByDescending(j => j.CreatedDate).ToList();
 
             // If pagination is null or neither pageSize nor pageNumber is provided, return all jobs
             if (pagination == null || (pagination.PageSize == null && pagination.PageNumber == null))

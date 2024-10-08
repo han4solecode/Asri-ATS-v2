@@ -14,6 +14,7 @@ using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
 using AsriATS.Application.DTOs.User;
 using AsriATS.Application.Persistance;
+using AsriATS.Application.DTOs.Report;
 
 namespace AsriATS.Application.Services
 {
@@ -545,6 +546,24 @@ namespace AsriATS.Application.Services
 
                 throw;
             }
+        }
+
+        public async Task<IEnumerable<DemographicOverviewDto>> GetDemographicOverviewAsync(string address)
+        {
+            var userDemographic = await _userManager.Users
+                .Where(u => u.Address.Contains(address) && u.CompanyId == null) // Check if address contains the string and has no CompanyId
+                .Select(u => new DemographicOverviewDto
+                {
+                    UserId = u.Id,
+                    Username = u.UserName,
+                    FullName = u.FirstName + " " + u.LastName,
+                    Address = u.Address,
+                    Email = u.Email,
+                    PhoneNumber = u.PhoneNumber
+                })
+                .ToListAsync();
+
+            return userDemographic;
         }
     }
 }

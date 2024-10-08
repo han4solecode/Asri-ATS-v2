@@ -1,4 +1,5 @@
-﻿using AsriATS.Application.Persistance.Common;
+﻿using AsriATS.Application.DTOs.Report;
+using AsriATS.Application.Persistance.Common;
 using AsriATS.Domain.Entities;
 using Microsoft.EntityFrameworkCore.Query;
 using System;
@@ -16,5 +17,7 @@ namespace AsriATS.Application.Persistance
         Task<IEnumerable<ApplicationJob>> GetAllByApplicantAsync(Expression<Func<ApplicationJob, bool>> expression);
         Task<ApplicationJob?> GetFirstOrDefaultAsync(Expression<Func<ApplicationJob, bool>> predicate);
         Task<ApplicationJob> GetFirstOrDefaultAsyncUpdate(Expression<Func<ApplicationJob, bool>> predicate, Func<IQueryable<ApplicationJob>, IIncludableQueryable<ApplicationJob, object>> include = null);
+        Task<int> TotalApplicationJob();
+        Task<List<ApplicationJobStatusDto>> GetApplicationSummaryAsync();
     }
 }
