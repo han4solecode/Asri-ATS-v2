@@ -1,5 +1,6 @@
 ﻿using AsriATS.Application.Contracts;
 using AsriATS.Application.DTOs.InterivewScheduling;
+using AsriATS.Application.DTOs.Request;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -16,7 +17,7 @@ namespace AsriATS.WebAPI.Controllers
             _interviewSchedulingService = interviewSchedulingService;
         }
 
-        [Authorize(Roles = "HR Manager, Recruiter")]
+        [Authorize(Roles = "HR Manager")]
         [HttpPost("SetInterviewSchedule")]
         public async Task<IActionResult> SetInterviewSchedule([FromBody] InterviewSchedulingRequestDto request)
         {
@@ -34,6 +35,25 @@ namespace AsriATS.WebAPI.Controllers
             }
 
             return Ok(new { message = result.Message });
+        }
+
+        [Authorize(Roles = "Applicant, HR Manager")]
+        [HttpPost("review")]
+        public async Task<IActionResult> ReviewInterviewProcess([FromBody] ReviewRequestDto reviewRequest)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var res = await _interviewSchedulingService.ReviewInterviewProcess(reviewRequest);
+
+            if (res.Status == "Error")
+            {
+                return BadRequest(res.Message);
+            }
+
+            return Ok(res);
         }
     }
 }
