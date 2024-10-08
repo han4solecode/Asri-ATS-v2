@@ -24,5 +24,8 @@ namespace AsriATS.Domain.Entities
         // navigation to JobPostRequest
         public virtual JobPostRequest? JobPostRequestNavigation { get; set; }
         public virtual ICollection<ApplicationJob> ApplicationJobNavigation { get; set; }
+
+        // navigation to InterviewScheduling
+        public virtual InterviewScheduling? InterviewScheduleNavigation { get; set; }
     }
 }

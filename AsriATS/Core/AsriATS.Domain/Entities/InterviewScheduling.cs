@@ -15,5 +15,9 @@ namespace AsriATS.Domain.Entities
         public List<string> InterviewersComments { get; set; } = new List<string>();
         public string InterviewType { get; set; } = null!;
         public string Location { get; set; } = null!;
+        public bool? IsConfirmed { get; set; } = null;
+        // foreign key to process
+        public int ProcessId { get; set; }
+        public virtual Process ProcessIdNavigation { get; set; } = null!;
     }
 }
