@@ -12,6 +12,6 @@ namespace AsriATS.Application.Contracts
 
         Task<BaseResponseDto> UpdateInterviewSchedule(UpdateInterviewScheduleDto updateInterview);
 
-        Task<BaseResponseDto> InterviewConfimation(ReviewRequestDto reviewRequest);
+        Task<BaseResponseDto> InterviewConfirmation(ReviewRequestDto reviewRequest);
     }
 }

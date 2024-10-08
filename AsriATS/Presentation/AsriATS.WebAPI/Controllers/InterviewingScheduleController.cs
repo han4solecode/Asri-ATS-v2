@@ -84,7 +84,7 @@ namespace AsriATS.WebAPI.Controllers
                 return BadRequest(ModelState);
             }
 
-            var res = await _interviewSchedulingService.InterviewConfimation(reviewRequest);
+            var res = await _interviewSchedulingService.InterviewConfirmation(reviewRequest);
 
             if (res.Status == "Error")
             {

@@ -330,7 +330,7 @@ namespace AsriATS.Application.Services
             };
         }
 
-        public async Task<BaseResponseDto> InterviewConfimation(ReviewRequestDto reviewRequest)
+        public async Task<BaseResponseDto> InterviewConfirmation(ReviewRequestDto reviewRequest)
         {
             var review = await ReviewInterviewProcess(reviewRequest);
 
