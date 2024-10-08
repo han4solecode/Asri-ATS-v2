@@ -323,10 +323,49 @@ namespace AsriATS.Application.Services
 
 
             return new BaseResponseDto
-            {   
+            {
                 Status = "Success",
                 Message = "Interview schedule updated successfuly"
             };
+        }
+
+        public async Task<BaseResponseDto> InterviewConfimation(ReviewRequestDto reviewRequest)
+        {
+            var review = await ReviewInterviewProcess(reviewRequest);
+
+            if (review.Status == "Error")
+            {
+                return new BaseResponseDto
+                {
+                    Status = "Error",
+                    Message = review.Message,
+                };
+            }
+            else
+            {
+                if (reviewRequest.Action == "Confirm")
+                {
+                    var process = await _processRepository.GetByIdAsync(reviewRequest.ProcessId);
+
+                    if (process == null)
+                    {
+                        return new BaseResponseDto
+                        {
+                            Status = "Error",
+                            Message = "Process does not exist"
+                        };
+                    }
+
+                    process.InterviewScheduleNavigation!.IsConfirmed = true;
+                    await _processRepository.UpdateAsync(process);
+                }
+
+                return new BaseResponseDto
+                {
+                    Status = "Success",
+                    Message = $"Interview {reviewRequest.Action} successfuly"
+                };
+            }
         }
 
         // public async Task<BaseResponseDto> SetCompleteInterview
