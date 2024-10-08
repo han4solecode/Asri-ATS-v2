@@ -119,6 +119,7 @@ namespace AsriATS.Application.Services
                 InterviewTime = utcTime,
                 InterviewType = request.InterviewType,
                 Location = request.Location,
+                ProcessId = process.ProcessId,
             };
 
             await _interviewSchedulingRepository.CreateAsync(newInterviewSchedule);
