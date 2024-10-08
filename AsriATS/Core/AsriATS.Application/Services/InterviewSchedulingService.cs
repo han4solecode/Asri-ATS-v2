@@ -2,6 +2,7 @@
 using AsriATS.Application.DTOs;
 using AsriATS.Application.DTOs.Email;
 using AsriATS.Application.DTOs.InterivewScheduling;
+using AsriATS.Application.DTOs.Request;
 using AsriATS.Application.Persistance;
 using AsriATS.Domain.Entities;
 using Microsoft.AspNetCore.Http;
@@ -32,7 +33,7 @@ namespace AsriATS.Application.Services
             _interviewSchedulingRepository = interviewSchedulingRepository;
         }
 
-        public async Task<BaseResponseDto> SetInterviewSchedule (InterviewSchedulingRequestDto request)
+        public async Task<BaseResponseDto> SetInterviewSchedule(InterviewSchedulingRequestDto request)
         {
             var userName = _httpContextAccessor.HttpContext!.User.Identity!.Name;
             var user = await _userManager.FindByNameAsync(userName!);
@@ -149,5 +150,114 @@ namespace AsriATS.Application.Services
                 Message = "Set Interview Schedule Sucessfuly"
             };
         }
+
+        public async Task<BaseResponseDto> ReviewInterviewProcess(ReviewRequestDto reviewRequest)
+        {
+            var userName = _httpContextAccessor.HttpContext!.User.Identity!.Name;
+            var user = await _userManager.FindByNameAsync(userName!);
+            var userRoles = await _userManager.GetRolesAsync(user!);
+            var userRole = userRoles.Single();
+
+            var process = await _processRepository.GetByIdAsync(reviewRequest.ProcessId);
+
+            if (process == null)
+            {
+                return new BaseResponseDto
+                {
+                    Status = "Error",
+                    Message = "Process does not exist"
+                };
+            }
+
+            if (process.WorkflowSequence.RequiredRole == null)
+            {
+                return new BaseResponseDto
+                {
+                    Status = "Error",
+                    Message = "Process already finished"
+                };
+            }
+
+            var jobApplicationCompanyId = process.ApplicationJobNavigation.Select(x => x.JobPostNavigation.CompanyId).Single();
+
+            if (user!.CompanyId != null) // check if user has a company
+            {
+                if (jobApplicationCompanyId != user!.CompanyId || process.WorkflowSequence.Role.Name != userRole)
+                {
+                    return new BaseResponseDto
+                    {
+                        Status = "Error",
+                        Message = "Unauthorize to review request"
+                    };
+                }
+            }
+            else // applicant check
+            {
+                if (process.RequesterId != user.Id || process.WorkflowSequence.Role.Name != userRole)
+                {
+                    return new BaseResponseDto
+                    {
+                        Status = "Error",
+                        Message = "Unauthorize to review request"
+                    };
+                }
+            }
+
+            var newWorkflowAction = new WorkflowAction
+            {
+                ProcessId = process.ProcessId,
+                StepId = process.CurrentStepId,
+                ActorId = user.Id,
+                Action = reviewRequest.Action,
+                ActionDate = DateTime.UtcNow,
+                Comments = reviewRequest.Comment
+            };
+
+            await _workflowActionRepository.CreateAsync(newWorkflowAction);
+
+            // get nextStepId
+            var nextStepRule = await _nextStepRuleRepository.GetFirstOrDefaultAsync(nsr => nsr.CurrentStepId == process.CurrentStepId && nsr.ConditionValue == reviewRequest.Action);
+            var nextStepId = nextStepRule!.NextStepId;
+
+            // update process
+            process.Status = $"{reviewRequest.Action} by {userRole}";
+            process.CurrentStepId = nextStepId;
+            await _processRepository.UpdateAsync(process);
+
+            // email notification
+
+
+            return new BaseResponseDto
+            {
+                Status = "Success",
+                Message = "Job Application Reviewed Sucessfuly"
+            };
+        }
+
+        public async Task<BaseResponseDto> UpdateInterviewSchedule()
+        {
+            // processId
+            // DateTime
+
+            // create new workflow action
+
+            // update InterviewScheduling
+
+            // update process
+
+            // return
+            throw new NotImplementedException();
+        }
+
+        // public async Task<BaseResponseDto> SetCompleteInterview
+        // create new workflow action
+        // set interviewerComments
+        // ReviewInterviewProcess(int ProcessId, string Action, string Comments)
+
+        // getInterviewSchedule (applicant, recruiter, and hr manager)
+
+        // 1. applicant harus bisa liat jadwal interview yang harus di confirm / reschedule
+        // 2. HR Manager harus bisa liat request reschedule dari applicant
+        // 3. HR Manager harus bisa liat hasil interview yang udah selesai
     }
 }
