@@ -1,6 +1,7 @@
 ﻿using AsriATS.Application.Contracts;
 using AsriATS.Application.DTOs.InterivewScheduling;
 using AsriATS.Application.DTOs.Request;
+using AsriATS.Application.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -92,6 +93,14 @@ namespace AsriATS.WebAPI.Controllers
             }
 
             return Ok(res);
+        }
+
+        [Authorize]
+        [HttpGet]
+        public async Task<IActionResult> GetInterviewSchedulesAllAsync()
+        {
+            var result = await _interviewSchedulingService.GetAllInterviewSchedules();
+            return Ok(result);
         }
     }
 }

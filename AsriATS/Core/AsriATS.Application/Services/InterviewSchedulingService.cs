@@ -7,6 +7,8 @@ using AsriATS.Application.Persistance;
 using AsriATS.Domain.Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using Org.BouncyCastle.Asn1.Ocsp;
+using System.Diagnostics;
 
 namespace AsriATS.Application.Services
 {
@@ -369,15 +371,48 @@ namespace AsriATS.Application.Services
             }
         }
 
-        // public async Task<BaseResponseDto> SetCompleteInterview
-        // create new workflow action
-        // set interviewerComments
-        // ReviewInterviewProcess(int ProcessId, string Action, string Comments)
+        public async Task<IEnumerable<object>> GetAllInterviewSchedules()
+        {
+            var userName = _httpContextAccessor.HttpContext!.User.Identity!.Name;
+            var user = await _userManager.FindByNameAsync(userName!);
+            var userRoles = await _userManager.GetRolesAsync(user!);
+            var userRole = userRoles.Single();
 
-        // getInterviewSchedule (applicant, recruiter, and hr manager)
+            IEnumerable<InterviewScheduling> interviewingSchedules;
 
-        // 1. applicant harus bisa liat jadwal interview yang harus di confirm / reschedule
-        // 2. HR Manager harus bisa liat request reschedule dari applicant
-        // 3. HR Manager harus bisa liat hasil interview yang udah selesai
+            if (userRole == "Applicant")
+            {
+                interviewingSchedules = await _interviewSchedulingRepository.GetAllInterviewSchedulesAsync(i => i.ApplicationIdNavigation.UserId == user!.Id && i.IsConfirmed != true);
+            }
+            else
+            {
+                interviewingSchedules = await _interviewSchedulingRepository.GetAllInterviewSchedulesAsync(i => i.ApplicationIdNavigation.JobPostNavigation.CompanyId == user!.CompanyId);
+            }
+
+            var result = interviewingSchedules.Select(i => new
+            {
+                ApplicationId = i.ApplicationId,
+                ApplicantName = $"{i.ApplicationIdNavigation.UserIdNavigation.FirstName} {i.ApplicationIdNavigation.UserIdNavigation.LastName}",
+                JobTitle = i.ApplicationIdNavigation.JobPostNavigation.JobTitle,
+                InterviewTime = i.InterviewTime,
+                Location = i.Location,
+                Interviewers = i.Interviewer,
+            }).ToList();
+
+            return result;
+        }
+        
+
+
+    // public async Task<BaseResponseDto> SetCompleteInterview
+    // create new workflow action
+    // set interviewerComments
+    // ReviewInterviewProcess(int ProcessId, string Action, string Comments)
+
+    // getInterviewSchedule (applicant, recruiter, and hr manager)
+
+    // 1. applicant harus bisa liat jadwal interview yang harus di confirm / reschedule
+    // 2. HR Manager harus bisa liat request reschedule dari applicant
+    // 3. HR Manager harus bisa liat hasil interview yang udah selesai
     }
 }

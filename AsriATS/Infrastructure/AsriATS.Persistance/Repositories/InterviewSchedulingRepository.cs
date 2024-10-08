@@ -1,6 +1,7 @@
 ﻿using AsriATS.Application.Persistance;
 using AsriATS.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 
 namespace AsriATS.Persistance.Repositories
 {
@@ -30,6 +31,17 @@ namespace AsriATS.Persistance.Repositories
             var interviewSchedules = await _context.InterviewScheduling.ToListAsync();
 
             return interviewSchedules;
+        }
+
+        public async Task<IEnumerable<InterviewScheduling>> GetAllInterviewSchedulesAsync(Expression<Func<InterviewScheduling, bool>> expression)
+        {
+            return await _context.InterviewScheduling
+                .Include(i => i.ApplicationIdNavigation)
+                .ThenInclude(aj => aj.JobPostNavigation)
+                .Include( i => i.ApplicationIdNavigation)
+                .ThenInclude(aj => aj.UserIdNavigation)
+                .Where(expression) // Filter
+                .ToListAsync();
         }
 
         public async Task<InterviewScheduling?> GetByIdAsync(int id)
