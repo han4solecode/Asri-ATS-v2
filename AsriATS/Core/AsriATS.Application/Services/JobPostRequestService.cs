@@ -290,6 +290,7 @@ namespace AsriATS.Application.Services
                     MinSalary = reqData.MinSalary,
                     MaxSalary = reqData.MaxSalary,
                     EmploymentType = reqData.EmploymentType,
+                    CreatedDate =DateTime.UtcNow
                 };
 
                 await _jobPostRepository.CreateAsync(newJobPost);
