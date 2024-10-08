@@ -57,7 +57,7 @@ namespace AsriATS.WebAPI.Controllers
         }
         
         [Authorize(Roles = "HR Manager")]
-        [HttpPost("update-schedule")]
+        [HttpPut("update-schedule")]
         public async Task<IActionResult> UpdateInterviewSchedule([FromBody] UpdateInterviewScheduleDto updateInterview)
         {
             if (!ModelState.IsValid)
