@@ -55,5 +55,24 @@ namespace AsriATS.WebAPI.Controllers
 
             return Ok(res);
         }
+        
+        [Authorize(Roles = "HR Manager")]
+        [HttpPost("update-schedule")]
+        public async Task<IActionResult> UpdateInterviewSchedule([FromBody] UpdateInterviewScheduleDto updateInterview)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var res = await _interviewSchedulingService.UpdateInterviewSchedule(updateInterview);
+
+            if (res.Status == "Error")
+            {
+                return BadRequest(res.Message);
+            }
+
+            return Ok(res);        
+        }
     }
 }
