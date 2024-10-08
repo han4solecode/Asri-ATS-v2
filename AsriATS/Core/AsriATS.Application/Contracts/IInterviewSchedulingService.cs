@@ -10,6 +10,6 @@ namespace AsriATS.Application.Contracts
 
         Task<BaseResponseDto> ReviewInterviewProcess(ReviewRequestDto reviewRequest);
 
-        Task<BaseResponseDto> UpdateInterviewSchedule();
+        Task<BaseResponseDto> UpdateInterviewSchedule(UpdateInterviewScheduleDto updateInterview);
     }
 }

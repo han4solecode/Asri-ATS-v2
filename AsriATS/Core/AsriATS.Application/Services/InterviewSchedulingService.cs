@@ -119,7 +119,6 @@ namespace AsriATS.Application.Services
                 InterviewTime = utcTime,
                 InterviewType = request.InterviewType,
                 Location = request.Location,
-                ProcessId = process.ProcessId,
             };
 
             await _interviewSchedulingRepository.CreateAsync(newInterviewSchedule);
@@ -225,29 +224,109 @@ namespace AsriATS.Application.Services
             process.CurrentStepId = nextStepId;
             await _processRepository.UpdateAsync(process);
 
-            // email notification
+            // TODO: send email notification
 
 
             return new BaseResponseDto
             {
                 Status = "Success",
-                Message = "Job Application Reviewed Sucessfuly"
+                Message = "Interview Process Reviewed Sucessfuly"
             };
         }
 
-        public async Task<BaseResponseDto> UpdateInterviewSchedule()
+        public async Task<BaseResponseDto> UpdateInterviewSchedule(UpdateInterviewScheduleDto updateInterview)
         {
-            // processId
-            // DateTime
+            var userName = _httpContextAccessor.HttpContext!.User.Identity!.Name;
+            var user = await _userManager.FindByNameAsync(userName!);
+            var userRoles = await _userManager.GetRolesAsync(user!);
+            var userRole = userRoles.Single();
+
+            var process = await _processRepository.GetByIdAsync(updateInterview.ProcessId);
+
+            if (process == null)
+            {
+                return new BaseResponseDto
+                {
+                    Status = "Error",
+                    Message = "Process does not exist"
+                };
+            }
+
+            if (process.WorkflowSequence.RequiredRole == null)
+            {
+                return new BaseResponseDto
+                {
+                    Status = "Error",
+                    Message = "Process already finished"
+                };
+            }
+
+            if (process.InterviewScheduleNavigation!.IsConfirmed != null)
+            {
+                return new BaseResponseDto
+                {
+                    Status = "Error",
+                    Message = "Interview schedule can not be updated"
+                };
+            }
+
+            var jobApplicationCompanyId = process.ApplicationJobNavigation.Select(x => x.JobPostNavigation.CompanyId).Single();
+
+            if (jobApplicationCompanyId != user!.CompanyId || process.WorkflowSequence.Role.Name != userRole)
+            {
+                return new BaseResponseDto
+                {
+                    Status = "Error",
+                    Message = "Unauthorize to review request"
+                };
+            }
+
+            var interview = await _interviewSchedulingRepository.GetByIdAsync(process.InterviewScheduleNavigation.InterviewSchedulingId);
+
+            if (interview == null)
+            {
+                return new BaseResponseDto
+                {
+                    Status = "Error",
+                    Message = "Interview schedule does not exist"
+                };
+            }
+
+            // update interview schedule
+            interview.InterviewTime = updateInterview.InterviewTime;
+
+            await _interviewSchedulingRepository.UpdateAsync(interview);
 
             // create new workflow action
+            var newWorkflowAction = new WorkflowAction
+            {
+                ProcessId = process.ProcessId,
+                StepId = process.CurrentStepId,
+                ActorId = user.Id,
+                Action = "Update",
+                ActionDate = DateTime.UtcNow,
+                Comments = updateInterview.Comment,
+            };
 
-            // update InterviewScheduling
+            await _workflowActionRepository.CreateAsync(newWorkflowAction);
+
+            // get nextStepId
+            var nextStepRule = await _nextStepRuleRepository.GetFirstOrDefaultAsync(nsr => nsr.CurrentStepId == process.CurrentStepId && nsr.ConditionValue == newWorkflowAction.Action);
+            var nextStepId = nextStepRule!.NextStepId;
 
             // update process
+            process.Status = $"{newWorkflowAction.Action} by {userRole}";
+            process.CurrentStepId = nextStepId;
+            await _processRepository.UpdateAsync(process);
 
-            // return
-            throw new NotImplementedException();
+            // TODO: send email notification
+
+
+            return new BaseResponseDto
+            {   
+                Status = "Success",
+                Message = "Interview schedule updated successfuly"
+            };
         }
 
         // public async Task<BaseResponseDto> SetCompleteInterview
