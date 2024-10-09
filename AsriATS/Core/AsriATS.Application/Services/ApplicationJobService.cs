@@ -441,6 +441,18 @@ namespace AsriATS.Application.Services
                 };
             }
 
+            // next step rule validation
+            var nextStepRule = await _nextStepRuleRepository.GetFirstOrDefaultAsync(nsr => nsr.CurrentStepId == process.CurrentStepId && nsr.ConditionValue == reviewRequest.Action);
+
+            if (nextStepRule == null)
+            {
+                return new BaseResponseDto
+                {
+                    Status = "Error",
+                    Message = "Action is not valid"
+                };
+            }
+
             // get job application company id from job post
             var jobApplicationCompanyId = process.ApplicationJobNavigation.Select(x => x.JobPostNavigation.CompanyId).Single();
 
@@ -466,8 +478,7 @@ namespace AsriATS.Application.Services
             await _workflowActionRepository.CreateAsync(newWorkflowAction);
 
             // get nextStepId
-            var nextStepRule = await _nextStepRuleRepository.GetFirstOrDefaultAsync(nsr => nsr.CurrentStepId == process.CurrentStepId && nsr.ConditionValue == reviewRequest.Action);
-            var nextStepId = nextStepRule!.NextStepId;
+            var nextStepId = nextStepRule.NextStepId;
 
             // update process
             process.Status = $"{reviewRequest.Action} by {userRole}";
