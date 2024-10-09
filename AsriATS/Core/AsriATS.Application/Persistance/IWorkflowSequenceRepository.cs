@@ -12,5 +12,6 @@ namespace AsriATS.Application.Persistance
     public interface IWorkflowSequenceRepository : IBaseRepository<WorkflowSequence>
     {
         Task<WorkflowSequence?> GetFirstOrDefaultAsync(Expression<Func<WorkflowSequence, bool>> expression);
+        Task<IEnumerable<WorkflowSequence>> GetAllAsync(Expression<Func<WorkflowSequence, bool>> expression);
     }
 }

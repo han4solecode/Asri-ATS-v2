@@ -9,6 +9,9 @@ using System.Text;
 using System.Threading.Tasks;
 using TheArtOfDev.HtmlRenderer.Core;
 using TheArtOfDev.HtmlRenderer.PdfSharp;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Http;
+using AsriATS.Domain.Entities;
 
 namespace AsriATS.Application.Services
 {
@@ -17,12 +20,20 @@ namespace AsriATS.Application.Services
         private readonly IApplicationJobRepository _applicationJobRepository;
         private readonly IJobPostRepository _jobPostRepository;
         private readonly IUserService _userService;
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly UserManager<AppUser> _userManager;
+        private readonly IWorkflowSequenceRepository _workflowSequenceRepository;
+        private readonly IWorkflowActionRepository _workflowActionRepository;
 
-        public ReportService(IApplicationJobRepository applicationJobRepository, IJobPostRepository jobPostRepository, IUserService userService)
+        public ReportService(IApplicationJobRepository applicationJobRepository, IJobPostRepository jobPostRepository, IUserService userService, IHttpContextAccessor httpContextAccessor, UserManager<AppUser> userManager, IWorkflowSequenceRepository workflowSequenceRepository, IWorkflowActionRepository workflowActionRepository)
         {
             _applicationJobRepository = applicationJobRepository;
             _jobPostRepository = jobPostRepository;
             _userService = userService;
+            _httpContextAccessor = httpContextAccessor;
+            _userManager = userManager;
+            _workflowSequenceRepository = workflowSequenceRepository;
+            _workflowActionRepository = workflowActionRepository;
         }
 
         public async Task<byte[]> GenerateOverallRecruitmentMetricsAsync()
@@ -109,6 +120,47 @@ namespace AsriATS.Application.Services
                 document.Save(stream, false);
                 return stream.ToArray();
             }
+        }
+
+        public async Task<byte[]> GenerateRecruitmentFunnelReportAsync()
+        {
+            var userName = _httpContextAccessor.HttpContext!.User.Identity!.Name;
+            var user = await _userManager.FindByNameAsync(userName!);
+
+            //GetAll Recruitment Steps
+            var allStages = await _workflowSequenceRepository.GetAllAsync(ws => ws.Workflow.WorkflowId == 1);
+            //GetAll Steps that Applicants did
+            var recruitmentFunnel = await _workflowActionRepository.GetRecruitmentFlunnel(user!.CompanyId);
+
+            var results = allStages
+                .GroupJoin(recruitmentFunnel,
+                    stage => stage.StepName,
+                    funnel => funnel.StageName,
+                    (stage, funnel) => new
+                    {
+                        stage.StepName,
+                        Count = funnel.Select(f => f.Count).FirstOrDefault()
+                    })
+                .Select(r => new
+                {
+                    CompanyName = recruitmentFunnel.FirstOrDefault()?.CompanyName ?? "Unknown",
+                    StageName = r.StepName,
+                    Count = r.Count
+                })
+                .ToList();
+
+            // Start building the HTML content for the PDF
+            string htmlContent = "<h1>Recruitment Funnel Overview Report</h1>";
+            htmlContent += $"<h3>Company: {results[0].CompanyName}</h3>";
+            htmlContent += "<table><thead><tr><td>Recruitment Step</td><td>Count</td></thead><tbody>";
+
+            foreach (var result  in results)
+            {
+                htmlContent += $"<tr><td>{result.StageName}</td><td>{result.Count}</td></tr>";
+            }
+            htmlContent += "</tbody></table>";
+            // Generate PDF using Polybioz
+            return GeneratePdf(htmlContent);
         }
     }
 }

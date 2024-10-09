@@ -1,4 +1,5 @@
-﻿using AsriATS.Application.Persistance;
+﻿using AsriATS.Application.DTOs.WorkflowAction;
+using AsriATS.Application.Persistance;
 using AsriATS.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
@@ -49,6 +50,26 @@ namespace AsriATS.Persistance.Repositories
         {
             _context.WorkflowActions.Update(entity);
             await _context.SaveChangesAsync();
+        }
+
+        public async Task<IEnumerable<RecruitmentFunnelDto>> GetRecruitmentFlunnel(int? companyId)
+        {
+            var recruitmentFunnel = await _context.WorkflowActions
+                .Include(wa => wa.Process)                           
+                    .ThenInclude(p => p.ApplicationJobNavigation)
+                     .ThenInclude(aj => aj.JobPostNavigation)            
+                     .ThenInclude(jp => jp.CompanyIdNavigation)
+                .Include(wa => wa.WorkflowSequence)                       
+                .Where(wa => wa.Process.ApplicationJobNavigation.Any(aj => aj.JobPostNavigation.CompanyId == companyId))
+                .GroupBy(wa => new { CompanyName = wa.Process.ApplicationJobNavigation.FirstOrDefault().JobPostNavigation.CompanyIdNavigation.Name, wa.WorkflowSequence.StepName })
+                .Select(g => new RecruitmentFunnelDto
+                {
+                    CompanyName = g.Key.CompanyName,
+                    StageName = g.Key.StepName,
+                    Count = g.Count()
+                })
+                .ToListAsync();
+            return recruitmentFunnel;
         }
     }
 }

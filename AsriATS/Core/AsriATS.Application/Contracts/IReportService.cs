@@ -10,5 +10,6 @@ namespace AsriATS.Application.Contracts
     {
         Task<byte[]> GenerateOverallRecruitmentMetricsAsync();
         Task<byte[]> GenerateDemographicReportAsync(string address);
+        Task<byte[]> GenerateRecruitmentFunnelReportAsync();
     }
 }

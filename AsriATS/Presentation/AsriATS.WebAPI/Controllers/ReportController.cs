@@ -1,4 +1,5 @@
 ﻿using AsriATS.Application.Contracts;
+using AsriATS.Application.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AsriATS.WebAPI.Controllers
@@ -26,6 +27,13 @@ namespace AsriATS.WebAPI.Controllers
         {
             var pdfBytes = await _reportService.GenerateDemographicReportAsync(address);
             return File(pdfBytes, "application/pdf", "DemographicReport.pdf");
+        }
+
+        [HttpGet("generate-recruitment-flunnel")]
+        public async Task<IActionResult> GenerateRecruitmentFlunnelReport()
+        {
+            var response = await _reportService.GenerateRecruitmentFunnelReportAsync();
+            return Ok(response);
         }
     }
 }
