@@ -5,6 +5,9 @@ using AsriATS.Domain.Entities;
 using AsriATS.Application.Contracts;
 using AsriATS.Application.DTOs.Register;
 using Microsoft.AspNetCore.Identity;
+using AsriATS.Application.DTOs.Email;
+using Org.BouncyCastle.Asn1.Ocsp;
+using System.Diagnostics;
 
 namespace AsriATS.Application.Services
 {
@@ -14,13 +17,15 @@ namespace AsriATS.Application.Services
         private readonly ICompanyRepository _companyRepository;
         private readonly UserManager<AppUser> _userManager;
         private readonly RoleManager<AppRole> _roleManager;
+        private readonly IEmailService _emailService;
         private static readonly Random Random = new Random();
-        public RecruiterRegistrationRequestService(IRecruiterRegistrationRequestRepository recruiterRegistrationRequestRepository, ICompanyRepository companyRepository, UserManager<AppUser> userManager, RoleManager<AppRole> roleManager)
+        public RecruiterRegistrationRequestService(IRecruiterRegistrationRequestRepository recruiterRegistrationRequestRepository, ICompanyRepository companyRepository, UserManager<AppUser> userManager, RoleManager<AppRole> roleManager, IEmailService emailService)
         {
             _recruiterRegistrationRequestRepository = recruiterRegistrationRequestRepository;
             _companyRepository = companyRepository;
             _userManager = userManager;
             _roleManager = roleManager;
+            _emailService = emailService;
         }
         public async Task<BaseResponseDto> SubmitRecruiterRegistrationRequest(RecruiterRegistrationRequestDto request)
         {
@@ -158,6 +163,20 @@ namespace AsriATS.Application.Services
                 }
 
                 // send email notification to new user to give the newly created credential (username and password)
+                var emailTemplate = File.ReadAllText(@"./Templates/EmailTemplates/CredentialForNewRegisteredRecruiter.html");
+
+                emailTemplate = emailTemplate.Replace("{{Name}}", $"{recruiterRequest.FirstName} {recruiterRequest.LastName}");
+                emailTemplate = emailTemplate.Replace("{{UserName}}", recruiterRequest.Email);
+                emailTemplate = emailTemplate.Replace("{{Password}}", password);
+
+                var mail = new EmailDataDto
+                {
+                    EmailToIds = [recruiterRequest.Email],
+                    EmailSubject = "Registration Approved",
+                    EmailBody = emailTemplate
+                };
+
+                await _emailService.SendEmailAsync(mail);
 
                 return new BaseResponseDto
                 {
