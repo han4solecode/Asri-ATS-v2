@@ -73,7 +73,7 @@ namespace AsriATS.Application.Services
                 };
             }
 
-            if (process.WorkflowSequence.StepName != "Shortlisted")
+            if (process.WorkflowSequence.StepName != "HR Manager Set Interview Schedule")
             {
                 return new BaseResponseDto
                 {
@@ -371,6 +371,49 @@ namespace AsriATS.Application.Services
             }
         }
 
+        public async Task<BaseResponseDto> MarkInterviewAsComplete(MarkInterviewAsCompleteDto markInterviewAsComplete)
+        {
+            var reviewRequest = new ReviewRequestDto
+            {
+                ProcessId = markInterviewAsComplete.ProcessId,
+                Action = "Complete",
+                Comment = markInterviewAsComplete.Comment
+            };
+
+            var review = await ReviewInterviewProcess(reviewRequest);
+
+            if (review.Status == "Error")
+            {
+                return new BaseResponseDto
+                {
+                    Status = "Error",
+                    Message = review.Message,
+                };
+            }
+            else
+            {
+                var process = await _processRepository.GetByIdAsync(markInterviewAsComplete.ProcessId);
+
+                if (process == null)
+                {
+                    return new BaseResponseDto
+                    {
+                        Status = "Error",
+                        Message = "Process does not exist"
+                    };
+                }
+
+                process.InterviewScheduleNavigation!.InterviewersComments = markInterviewAsComplete.InterviewersComments;
+                await _processRepository.UpdateAsync(process);
+
+                return new BaseResponseDto
+                {
+                    Status = "Success",
+                    Message = $"Interview marked as complete successfuly"
+                };
+            }
+        }
+
         public async Task<IEnumerable<object>> GetAllInterviewSchedules()
         {
             var userName = _httpContextAccessor.HttpContext!.User.Identity!.Name;
@@ -401,18 +444,17 @@ namespace AsriATS.Application.Services
 
             return result;
         }
-        
 
 
-    // public async Task<BaseResponseDto> SetCompleteInterview
-    // create new workflow action
-    // set interviewerComments
-    // ReviewInterviewProcess(int ProcessId, string Action, string Comments)
+        // public async Task<BaseResponseDto> SetCompleteInterview
+        // create new workflow action
+        // set interviewerComments
+        // ReviewInterviewProcess(int ProcessId, string Action, string Comments)
 
-    // getInterviewSchedule (applicant, recruiter, and hr manager)
+        // getInterviewSchedule (applicant, recruiter, and hr manager)
 
-    // 1. applicant harus bisa liat jadwal interview yang harus di confirm / reschedule
-    // 2. HR Manager harus bisa liat request reschedule dari applicant
-    // 3. HR Manager harus bisa liat hasil interview yang udah selesai
+        // 1. applicant harus bisa liat jadwal interview yang harus di confirm / reschedule
+        // 2. HR Manager harus bisa liat request reschedule dari applicant
+        // 3. HR Manager harus bisa liat hasil interview yang udah selesai
     }
 }

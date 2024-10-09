@@ -95,6 +95,25 @@ namespace AsriATS.WebAPI.Controllers
             return Ok(res);
         }
 
+        [Authorize(Roles = "HR Manager")]
+        [HttpPost("mark-complete")]
+        public async Task<IActionResult> MarkInterviewAsComplete([FromBody] MarkInterviewAsCompleteDto markInterviewAsComplete)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var res = await _interviewSchedulingService.MarkInterviewAsComplete(markInterviewAsComplete);
+
+            if (res.Status == "Error")
+            {
+                return BadRequest(res.Message);
+            }
+
+            return Ok(res);
+        }
+
         [Authorize]
         [HttpGet]
         public async Task<IActionResult> GetInterviewSchedulesAllAsync()
