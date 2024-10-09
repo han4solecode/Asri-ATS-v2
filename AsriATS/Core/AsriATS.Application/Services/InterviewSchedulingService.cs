@@ -391,7 +391,7 @@ namespace AsriATS.Application.Services
                     };
                 }
                 // TODO: send reschedule request email
-                
+
 
                 return new BaseResponseDto
                 {
@@ -458,10 +458,36 @@ namespace AsriATS.Application.Services
             }
             else
             {
+                var userName = _httpContextAccessor.HttpContext!.User.Identity!.Name;
+                var user = await _userManager.FindByNameAsync(userName!);
+
+                var process = await _processRepository.GetByIdAsync(reviewRequest.ProcessId);
+
+                var requesterEmail = process!.Requester.Email;
+
                 if (reviewRequest.Action == "Offer")
                 {
-                    // TODO: send offering email
+                    // send offering email
+                    var emailTemplate = File.ReadAllText(@"./Templates/EmailTemplates/JobOfferLetter.html");
 
+                    var a = process.ApplicationJobNavigation.Select(x => x.JobPostNavigation.MinSalary).SingleOrDefault();
+
+                    emailTemplate = emailTemplate.Replace("{{Name}}", $"{process.Requester.FirstName} {process.Requester.LastName}");
+                    emailTemplate = emailTemplate.Replace("{{JobTitle}}", process.ApplicationJobNavigation.Select(x => x.JobPostNavigation.JobTitle).SingleOrDefault());
+                    emailTemplate = emailTemplate.Replace("{{CompanyName}}", process.ApplicationJobNavigation.Select(x => x.JobPostNavigation.CompanyIdNavigation.Name).SingleOrDefault());
+                    emailTemplate = emailTemplate.Replace("{{Salary}}", $"{process.ApplicationJobNavigation.Select(x => x.JobPostNavigation.MinSalary).SingleOrDefault()}");
+                    emailTemplate = emailTemplate.Replace("{{CompanyAddress}}", process.ApplicationJobNavigation.Select(x => x.JobPostNavigation.CompanyIdNavigation.Address).SingleOrDefault());
+                    emailTemplate = emailTemplate.Replace("{{HREmail}}", user!.Email);
+                    emailTemplate = emailTemplate.Replace("{{HRName}}", $"{user.FirstName} {user.LastName}");
+
+                    var offerEmail = new EmailDataDto
+                    {
+                        EmailCCIds = [requesterEmail],
+                        EmailSubject = "Hiring Process Update",
+                        EmailBody = emailTemplate
+                    };
+
+                    await _emailService.SendEmailAsync(offerEmail);
 
                     return new BaseResponseDto
                     {
@@ -470,8 +496,22 @@ namespace AsriATS.Application.Services
                     };
                 }
 
-                // TODO: send rejection email
+                // send rejection email
+                var emailTemplate1 = File.ReadAllText(@"./Templates/EmailTemplates/JobRejectionLetter.html");
 
+                emailTemplate1 = emailTemplate1.Replace("{{Name}}", $"{process.Requester.FirstName} {process.Requester.LastName}");
+                emailTemplate1 = emailTemplate1.Replace("{{JobTitle}}", process.ApplicationJobNavigation.Select(x => x.JobPostNavigation.JobTitle).SingleOrDefault());
+                emailTemplate1 = emailTemplate1.Replace("{{CompanyName}}", process.ApplicationJobNavigation.Select(x => x.JobPostNavigation.CompanyIdNavigation.Name).SingleOrDefault());
+                emailTemplate1 = emailTemplate1.Replace("{{HRName}}", $"{user!.FirstName} {user.LastName}");
+
+                var rejectionEmail = new EmailDataDto
+                {
+                    EmailCCIds = [requesterEmail],
+                    EmailSubject = "Hiring Process Update",
+                    EmailBody = emailTemplate1
+                };
+
+                await _emailService.SendEmailAsync(rejectionEmail);
 
                 return new BaseResponseDto
                 {
