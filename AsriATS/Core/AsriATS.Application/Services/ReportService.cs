@@ -12,6 +12,7 @@ using TheArtOfDev.HtmlRenderer.PdfSharp;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Http;
 using AsriATS.Domain.Entities;
+using Org.BouncyCastle.Asn1.Ocsp;
 
 namespace AsriATS.Application.Services
 {
@@ -116,7 +117,7 @@ namespace AsriATS.Application.Services
             var user = await _userManager.FindByNameAsync(userName!);
 
             //GetAll Recruitment Steps
-            var allStages = await _workflowSequenceRepository.GetAllAsync(ws => ws.Workflow.WorkflowId == 1);
+            var allStages = await _workflowSequenceRepository.GetAllAsync(ws => ws.Workflow.WorkflowName == "Application Job Request");
             //GetAll Steps that Applicants did
             var recruitmentFunnel = await _workflowActionRepository.GetRecruitmentFlunnel(user!.CompanyId);
 
