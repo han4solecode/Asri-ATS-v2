@@ -134,10 +134,18 @@ namespace AsriATS.WebAPI.Controllers
         }
 
         [Authorize]
-        [HttpGet]
-        public async Task<IActionResult> GetInterviewSchedulesAllAsync()
+        [HttpGet("unconfirmed-interview-schedule")]
+        public async Task<IActionResult> GetUnconfirmedInterviewSchedulesAllAsync()
         {
-            var result = await _interviewSchedulingService.GetAllInterviewSchedules();
+            var result = await _interviewSchedulingService.GetAllUnconfirmedInterviewSchedules();
+            return Ok(result);
+        }
+
+        [Authorize]
+        [HttpGet("confirmed-interview-schedule")]
+        public async Task<IActionResult> GetConfirmedInterviewSchedulesAllAsync()
+        {
+            var result = await _interviewSchedulingService.GetAllConfirmedInterviewSchedules();
             return Ok(result);
         }
     }

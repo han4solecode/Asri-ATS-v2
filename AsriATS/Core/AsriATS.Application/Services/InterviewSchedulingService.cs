@@ -481,7 +481,7 @@ namespace AsriATS.Application.Services
             }
         }
 
-        public async Task<IEnumerable<object>> GetAllInterviewSchedules()
+        public async Task<IEnumerable<object>> GetAllUnconfirmedInterviewSchedules()
         {
             var userName = _httpContextAccessor.HttpContext!.User.Identity!.Name;
             var user = await _userManager.FindByNameAsync(userName!);
@@ -496,7 +496,38 @@ namespace AsriATS.Application.Services
             }
             else
             {
-                interviewingSchedules = await _interviewSchedulingRepository.GetAllInterviewSchedulesAsync(i => i.ApplicationIdNavigation.JobPostNavigation.CompanyId == user!.CompanyId);
+                interviewingSchedules = await _interviewSchedulingRepository.GetAllInterviewSchedulesAsync(i => i.ApplicationIdNavigation.JobPostNavigation.CompanyId == user!.CompanyId && i.IsConfirmed != true);
+            }
+
+            var result = interviewingSchedules.Select(i => new
+            {
+                ApplicationId = i.ApplicationId,
+                ApplicantName = $"{i.ApplicationIdNavigation.UserIdNavigation.FirstName} {i.ApplicationIdNavigation.UserIdNavigation.LastName}",
+                JobTitle = i.ApplicationIdNavigation.JobPostNavigation.JobTitle,
+                InterviewTime = i.InterviewTime,
+                Location = i.Location,
+                Interviewers = i.Interviewer,
+            }).ToList();
+
+            return result;
+        }
+
+        public async Task<IEnumerable<object>> GetAllConfirmedInterviewSchedules()
+        {
+            var userName = _httpContextAccessor.HttpContext!.User.Identity!.Name;
+            var user = await _userManager.FindByNameAsync(userName!);
+            var userRoles = await _userManager.GetRolesAsync(user!);
+            var userRole = userRoles.Single();
+
+            IEnumerable<InterviewScheduling> interviewingSchedules;
+
+            if (userRole == "Applicant")
+            {
+                interviewingSchedules = await _interviewSchedulingRepository.GetAllInterviewSchedulesAsync(i => i.ApplicationIdNavigation.UserId == user!.Id && i.IsConfirmed == true);
+            }
+            else
+            {
+                interviewingSchedules = await _interviewSchedulingRepository.GetAllInterviewSchedulesAsync(i => i.ApplicationIdNavigation.JobPostNavigation.CompanyId == user!.CompanyId && i.IsConfirmed == true);
             }
 
             var result = interviewingSchedules.Select(i => new
