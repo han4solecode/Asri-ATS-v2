@@ -181,6 +181,18 @@ namespace AsriATS.Application.Services
                 };
             }
 
+            // next step rule check
+            var nextStepRule = await _nextStepRuleRepository.GetFirstOrDefaultAsync(nsr => nsr.CurrentStepId == process.CurrentStepId && nsr.ConditionValue == reviewRequest.Action);
+
+            if (nextStepRule == null)
+            {
+                return new BaseResponseDto
+                {
+                    Status = "Error",
+                    Message = $"Action is not valid"
+                };
+            };
+
             var jobApplicationCompanyId = process.ApplicationJobNavigation.Select(x => x.JobPostNavigation.CompanyId).Single();
 
             if (user!.CompanyId != null) // check if user has a company
@@ -219,16 +231,12 @@ namespace AsriATS.Application.Services
             await _workflowActionRepository.CreateAsync(newWorkflowAction);
 
             // get nextStepId
-            var nextStepRule = await _nextStepRuleRepository.GetFirstOrDefaultAsync(nsr => nsr.CurrentStepId == process.CurrentStepId && nsr.ConditionValue == reviewRequest.Action);
             var nextStepId = nextStepRule!.NextStepId;
 
             // update process
             process.Status = $"{reviewRequest.Action} by {userRole}";
             process.CurrentStepId = nextStepId;
             await _processRepository.UpdateAsync(process);
-
-            // TODO: send email notification
-
 
             return new BaseResponseDto
             {
@@ -263,6 +271,18 @@ namespace AsriATS.Application.Services
                     Message = "Process already finished"
                 };
             }
+
+            // check nextStepRule
+            var nextStepRule = await _nextStepRuleRepository.GetFirstOrDefaultAsync(nsr => nsr.CurrentStepId == process.CurrentStepId && nsr.ConditionValue == "Update");
+
+            if (nextStepRule == null)
+            {
+                return new BaseResponseDto
+                {
+                    Status = "Error",
+                    Message = $"Action is not valid"
+                };
+            };
 
             if (process.InterviewScheduleNavigation!.IsConfirmed != null)
             {
@@ -314,8 +334,7 @@ namespace AsriATS.Application.Services
             await _workflowActionRepository.CreateAsync(newWorkflowAction);
 
             // get nextStepId
-            var nextStepRule = await _nextStepRuleRepository.GetFirstOrDefaultAsync(nsr => nsr.CurrentStepId == process.CurrentStepId && nsr.ConditionValue == newWorkflowAction.Action);
-            var nextStepId = nextStepRule!.NextStepId;
+            var nextStepId = nextStepRule.NextStepId;
 
             // update process
             process.Status = $"{newWorkflowAction.Action} by {userRole}";
@@ -361,7 +380,11 @@ namespace AsriATS.Application.Services
 
                     process.InterviewScheduleNavigation!.IsConfirmed = true;
                     await _processRepository.UpdateAsync(process);
+
+                    // TODO: send schedule confirmation email
+                    
                 }
+                // TODO: send reschedule request email
 
                 return new BaseResponseDto
                 {
@@ -414,6 +437,43 @@ namespace AsriATS.Application.Services
             }
         }
 
+        public async Task<BaseResponseDto> ReviewInterviewResult(ReviewRequestDto reviewRequest)
+        {
+            var review = await ReviewInterviewProcess(reviewRequest);
+
+            if (review.Status == "Error")
+            {
+                return new BaseResponseDto
+                {
+                    Status = "Error",
+                    Message = review.Message,
+                };
+            }
+            else
+            {
+                if (reviewRequest.Action == "Offer")
+                {
+                    // TODO: send offering email
+
+
+                    return new BaseResponseDto
+                    {
+                        Status = "Success",
+                        Message = "Interview result reviewed successfuly"
+                    };
+                }
+
+                // TODO: send rejection email
+
+
+                return new BaseResponseDto
+                {
+                    Status = "Success",
+                    Message = "Interview result reviewed successfuly"
+                };
+            }
+        }
+
         public async Task<IEnumerable<object>> GetAllInterviewSchedules()
         {
             var userName = _httpContextAccessor.HttpContext!.User.Identity!.Name;
@@ -444,7 +504,6 @@ namespace AsriATS.Application.Services
 
             return result;
         }
-
 
         // public async Task<BaseResponseDto> SetCompleteInterview
         // create new workflow action

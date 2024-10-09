@@ -114,6 +114,25 @@ namespace AsriATS.WebAPI.Controllers
             return Ok(res);
         }
 
+        [Authorize(Roles = "HR Manager")]
+        [HttpPost("review-result")]
+        public async Task<IActionResult> ReviewInterviewResult([FromBody] ReviewRequestDto reviewRequest)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var res = await _interviewSchedulingService.ReviewInterviewResult(reviewRequest);
+
+            if (res.Status == "Error")
+            {
+                return BadRequest(res.Message);
+            }
+
+            return Ok(res);
+        }
+
         [Authorize]
         [HttpGet]
         public async Task<IActionResult> GetInterviewSchedulesAllAsync()

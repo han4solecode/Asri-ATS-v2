@@ -16,6 +16,8 @@ namespace AsriATS.Application.Contracts
 
         Task<BaseResponseDto> MarkInterviewAsComplete(MarkInterviewAsCompleteDto markInterviewAsComplete);
 
+        Task<BaseResponseDto> ReviewInterviewResult(ReviewRequestDto reviewRequest);
+
         Task<IEnumerable<object>> GetAllInterviewSchedules();
     }
 }
