@@ -31,11 +31,11 @@ namespace AsriATS.WebAPI.Controllers
         }
 
         [Authorize(Roles = "Recruiter")]
-        [HttpGet("generate-recruitment-flunnel")]
+        [HttpGet("generate-recruitment-funnel")]
         public async Task<IActionResult> GenerateRecruitmentFlunnelReport()
         {
-            var response = await _reportService.GenerateRecruitmentFunnelReportAsync();
-            return Ok(response);
+            var pdfBytes = await _reportService.GenerateRecruitmentFunnelReportAsync();
+            return File(pdfBytes, "application/pdf", "RecruitmentFunnelReport.pdf");
         }
     }
 }
