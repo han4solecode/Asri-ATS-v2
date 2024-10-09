@@ -382,9 +382,16 @@ namespace AsriATS.Application.Services
                     await _processRepository.UpdateAsync(process);
 
                     // TODO: send schedule confirmation email
-                    
+
+
+                    return new BaseResponseDto
+                    {
+                        Status = "Success",
+                        Message = $"Interview {reviewRequest.Action} successfuly"
+                    };
                 }
                 // TODO: send reschedule request email
+                
 
                 return new BaseResponseDto
                 {
