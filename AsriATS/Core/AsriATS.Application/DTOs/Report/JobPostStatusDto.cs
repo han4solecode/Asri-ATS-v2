@@ -10,6 +10,7 @@ namespace AsriATS.Application.DTOs.Report
     {
         public int JobPostId { get; set; }
         public DateTime CreatedDate { get; set; }
+        public int CompanyId { get; set; }
         public string Status { get; set; }
     }
 }

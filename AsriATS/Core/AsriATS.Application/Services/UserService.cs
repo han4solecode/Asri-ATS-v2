@@ -555,8 +555,8 @@ namespace AsriATS.Application.Services
                 .Select(u => new DemographicOverviewDto
                 {
                     UserId = u.Id,
-                    Username = u.UserName,
                     FullName = u.FirstName + " " + u.LastName,
+                    Dob = u.Dob,
                     Address = u.Address,
                     Email = u.Email,
                     PhoneNumber = u.PhoneNumber

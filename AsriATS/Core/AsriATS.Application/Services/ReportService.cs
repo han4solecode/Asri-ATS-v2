@@ -37,33 +37,21 @@ namespace AsriATS.Application.Services
             string htmlContent = "<h1>Overall Recruitment Metrics</h1>";
 
             // Total Jobs Posted section
-            htmlContent += "<h2>Total Jobs Posted</h2>";
-            htmlContent += "<table><thead><tr><td>Job Post ID</td><td>Created Date</td><td>Status</td></tr></thead><tbody>";
+            htmlContent += $"<h2>Total Jobs Posted : {jobTotal}</h2>";
+            htmlContent += "<table><thead><tr><td>Job Post ID</td><td>Created Date</td><td>Status</td><td>Company ID</td></tr></thead><tbody>";
             jobPosts.ForEach(job =>
             {
-                htmlContent += $"<tr><td>{job.JobPostId}</td><td>{job.CreatedDate.ToShortDateString()}</td><td>{job.Status}</td></tr>";
+                htmlContent += $"<tr><td>{job.JobPostId}</td><td>{job.CreatedDate.ToShortDateString()}</td><td>{job.Status}</td><td>{job.CompanyId}</td></tr>";
             });
             htmlContent += "</tbody></table>";
 
             // Applications Summary section
-            htmlContent += "<h2>Applications Summary</h2>";
-            htmlContent += "<table><thead><tr><td>Application Job ID</td><td>Uploaded Date</td><td>Status</td></tr></thead><tbody>";
+            htmlContent += $"<h2>Applications Summary : {totalApply}</h2>";
+            htmlContent += "<table><thead><tr><td>Application Job ID</td><td>Job Post ID</td><td>Uploaded Date</td><td>Status</td></tr></thead><tbody>";
             applicationSummary.ForEach(app =>
             {
-                htmlContent += $"<tr><td>{app.ApplicationJobId}</td><td>{app.UploadedDate.ToShortDateString()}</td><td>{app.Status}</td></tr>"; // Change to RequestDate if needed
+                htmlContent += $"<tr><td>{app.ApplicationJobId}</td><td>{app.JobPostId}</td><td>{app.UploadedDate.ToShortDateString()}</td><td>{app.Status}</td></tr>"; // Change to RequestDate if needed
             });
-            htmlContent += "</tbody></table>";
-
-            // Applications Total section
-            htmlContent += "<h2>Applications Total</h2>";
-            htmlContent += "<table><thead><tr><td>Total Applications</td></tr></thead><tbody>";
-            htmlContent += $"<tr><td>{totalApply}</td></tr>"; // Just display the total count
-            htmlContent += "</tbody></table>";
-
-            // Total Jobs Posted Count section
-            htmlContent += "<h2>Total Job Posts</h2>";
-            htmlContent += "<table><thead><tr><td>Total Job Posts</td></tr></thead><tbody>";
-            htmlContent += $"<tr><td>{jobTotal}</td></tr>"; // Just display the total count
             htmlContent += "</tbody></table>";
 
             // Generate PDF using Polybioz
@@ -77,11 +65,11 @@ namespace AsriATS.Application.Services
             // Start building the HTML content for the PDF
             string htmlContent = "<h1>Demographic Overview Report</h1>";
             htmlContent += $"<h3>Address Filter: {address}</h3>";
-            htmlContent += "<table><thead><tr><td>User ID</td><td>UserName</td><td>Full Name</td><td>Address</td><td>Email</td><td>Phone Number</td></tr></thead><tbody>";
+            htmlContent += "<table><thead><tr><td>User ID</td><td>Full Name</td><td>Tanggal Lahir</td><td>Address</td><td>Email</td><td>Phone Number</td></tr></thead><tbody>";
 
             foreach (var demographic in demographics)
             {
-                htmlContent += $"<tr><td>{demographic.UserId}</td><td>{demographic.Username}</td><td>{demographic.FullName}</td><td>{demographic.Address}</td><td>{demographic.Email}</td><td>{demographic.PhoneNumber}</td></tr>";
+                htmlContent += $"<tr><td>{demographic.UserId}</td><td>{demographic.FullName}</td><td>{demographic.Dob}</td><td>{demographic.Address}</td><td>{demographic.Email}</td><td>{demographic.PhoneNumber}</td></tr>";
             }
 
             htmlContent += "</tbody></table>";

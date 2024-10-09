@@ -2,6 +2,7 @@
 using AsriATS.Application.Persistance;
 using AsriATS.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.Design;
 
 namespace AsriATS.Persistance.Repositories
 {
@@ -59,15 +60,20 @@ namespace AsriATS.Persistance.Repositories
 
         public async Task<List<JobPostStatusDto>> GetJobPostSummaryAsync()
         {
+            var statuses = new List<string> { "Approved by HR Manager", "Rejected by HR Manager", "Modification Request" };
+
             return await (from aj in _context.JobPostRequests
                           join p in _context.Processes on aj.ProcessId equals p.ProcessId // Join based on ProcessId
+                          where statuses.Contains(p.Status) // Filter by statuses
+                          orderby aj.CompanyId // Sort by Company ID
                           select new JobPostStatusDto
                           {
                               JobPostId = aj.JobPostRequestId,
                               CreatedDate = p.RequestDate, // Date from Process table
-                              Status = p.Status // Status from Process table
+                              Status = p.Status, // Status from Process table
+                              CompanyId = aj.CompanyId // Include Company ID in the DTO
                           })
-                         .ToListAsync();
+                          .ToListAsync();
         }
     }
 }
