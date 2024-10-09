@@ -113,6 +113,7 @@ namespace AsriATS.Persistance.Repositories
                           select new ApplicationJobStatusDto
                           {
                               ApplicationJobId = aj.ApplicationJobId,
+                              JobPostId = aj.JobPostId,
                               UploadedDate = aj.UploadedDate,
                               Status = p.Status // Status from the process table
                           })
