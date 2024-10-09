@@ -9,6 +9,7 @@ namespace AsriATS.Application.DTOs.Report
     public class ApplicationJobStatusDto
     {
         public int ApplicationJobId { get; set; }
+        public int JobPostId { get; set; }
         public DateTime UploadedDate { get; set; }
         public string Status { get; set; }
     }

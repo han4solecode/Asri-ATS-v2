@@ -1,13 +1,20 @@
-﻿﻿table {
+﻿table {
     border-collapse: collapse;
     border: 1px solid black;
     text-align: center;
     vertical-align: middle;
+    width: 100%;
+    table-layout: fixed; /* Ensures columns are evenly distributed */
 }
 
 th, td {
     border: 1px solid black;
-    padding: 8px;
+    padding: 6px; /* Increased padding for better readability */
+    font-size: 10px; /* Adjusted font size */
+    word-wrap: break-word; /* Ensures content wraps within cells */
+    max-width: 150px; /* Sets a maximum width for cells */
+    overflow: hidden; /* Hides overflow content */
+    text-overflow: ellipsis; /* Adds ellipsis for overflow content */
 }
 
 h1 {
@@ -15,9 +22,11 @@ h1 {
     font-size: 24px;
     text-align: center;
     color: black;
+    margin-bottom: 20px; /* Added margin for spacing */
 }
 
-thead {
-    background-color: black;
-    text-decoration-color: white;
+body {
+    font-family: Arial, sans-serif; /* Set a readable font */
+    margin: 0;
+    padding: 0;
 }
