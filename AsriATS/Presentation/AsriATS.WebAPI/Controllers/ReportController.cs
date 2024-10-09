@@ -1,5 +1,6 @@
 ﻿using AsriATS.Application.Contracts;
 using AsriATS.Application.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AsriATS.WebAPI.Controllers
@@ -29,6 +30,7 @@ namespace AsriATS.WebAPI.Controllers
             return File(pdfBytes, "application/pdf", "DemographicReport.pdf");
         }
 
+        [Authorize(Roles = "Recruiter")]
         [HttpGet("generate-recruitment-flunnel")]
         public async Task<IActionResult> GenerateRecruitmentFlunnelReport()
         {
