@@ -59,10 +59,10 @@ namespace AsriATS.Application.Services
 
             // Applications Summary section
             htmlContent += $"<h2>Applications Summary : {totalApply}</h2>";
-            htmlContent += "<table><thead><tr><td>Application Job ID</td><td>Job Post ID</td><td>Uploaded Date</td><td>Status</td></tr></thead><tbody>";
+            htmlContent += "<table><thead><tr><td>Application Job ID</td><td>Job Post ID</td><td>Uploaded Date</td><td>Status</td><td>Interview Date</td><td>Interview Scheduled</td></tr></thead><tbody>";
             applicationSummary.ForEach(app =>
             {
-                htmlContent += $"<tr><td>{app.ApplicationJobId}</td><td>{app.JobPostId}</td><td>{app.UploadedDate.ToShortDateString()}</td><td>{app.Status}</td></tr>"; // Change to RequestDate if needed
+                htmlContent += $"<tr><td>{app.ApplicationJobId}</td><td>{app.JobPostId}</td><td>{app.UploadedDate.ToShortDateString()}</td><td>{app.Status}</td><td>{app.InterviewDate}</td><td>{app.InterviewScheduled}</td></tr>"; // Change to RequestDate if needed
             });
             htmlContent += "</tbody></table>";
 

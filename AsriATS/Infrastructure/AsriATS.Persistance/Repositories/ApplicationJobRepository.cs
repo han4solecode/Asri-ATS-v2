@@ -109,13 +109,17 @@ namespace AsriATS.Persistance.Repositories
         public async Task<List<ApplicationJobStatusDto>> GetApplicationSummaryAsync()
         {
             return await (from aj in _context.ApplicationJobs
-                          join p in _context.Processes on aj.ProcessId equals p.ProcessId // Use ProcessId if it links to ApplicationJob
+                          join p in _context.Processes on aj.ProcessId equals p.ProcessId // Join with Process table using ProcessId
+                          join isch in _context.InterviewScheduling on aj.ApplicationJobId equals isch.ApplicationId into interviewGroup // Left join with InterviewScheduling using ApplicationJobId
+                          from interview in interviewGroup.DefaultIfEmpty() // This ensures a left join
                           select new ApplicationJobStatusDto
                           {
                               ApplicationJobId = aj.ApplicationJobId,
                               JobPostId = aj.JobPostId,
                               UploadedDate = aj.UploadedDate,
-                              Status = p.Status // Status from the process table
+                              Status = p.Status, // Status from the Process table
+                              InterviewScheduled = interview != null, // Check if an interview is scheduled
+                              InterviewDate = interview.InterviewTime // Nullable InterviewDate from InterviewScheduling
                           })
                          .ToListAsync();
         }
