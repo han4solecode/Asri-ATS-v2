@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Http;
 using AsriATS.Domain.Entities;
 using Org.BouncyCastle.Asn1.Ocsp;
+using AsriATS.Application.DTOs.Report;
 
 namespace AsriATS.Application.Services
 {
@@ -25,8 +26,9 @@ namespace AsriATS.Application.Services
         private readonly UserManager<AppUser> _userManager;
         private readonly IWorkflowSequenceRepository _workflowSequenceRepository;
         private readonly IWorkflowActionRepository _workflowActionRepository;
+        private readonly IJobPostRequestRepository _jobPostRequestRepository;
 
-        public ReportService(IApplicationJobRepository applicationJobRepository, IJobPostRepository jobPostRepository, IUserService userService, IHttpContextAccessor httpContextAccessor, UserManager<AppUser> userManager, IWorkflowSequenceRepository workflowSequenceRepository, IWorkflowActionRepository workflowActionRepository)
+        public ReportService(IApplicationJobRepository applicationJobRepository, IJobPostRepository jobPostRepository, IUserService userService, IHttpContextAccessor httpContextAccessor, UserManager<AppUser> userManager, IWorkflowSequenceRepository workflowSequenceRepository, IWorkflowActionRepository workflowActionRepository, IJobPostRequestRepository jobPostRequestRepository)
         {
             _applicationJobRepository = applicationJobRepository;
             _jobPostRepository = jobPostRepository;
@@ -35,6 +37,7 @@ namespace AsriATS.Application.Services
             _userManager = userManager;
             _workflowSequenceRepository = workflowSequenceRepository;
             _workflowActionRepository = workflowActionRepository;
+            _jobPostRequestRepository = jobPostRequestRepository;
         }
 
         public async Task<byte[]> GenerateOverallRecruitmentMetricsAsync()
@@ -150,6 +153,57 @@ namespace AsriATS.Application.Services
             htmlContent += "</tbody></table>";
             // Generate PDF using Polybioz
             return GeneratePdf(htmlContent);
+        }
+
+        public async Task<byte[]> GenerateComplianceApprovalMetricsPdfAsync()
+        {
+            var metricsByCompany = await _jobPostRequestRepository.GetJobPostApprovalMetricsByCompanyAsync();
+
+            // Start building the HTML content for the PDF
+            string htmlContent = "<h1>Compliance and Approval Metrics Report</h1>";
+
+            // Loop through each company's metrics and add to the HTML content
+            foreach (var metrics in metricsByCompany)
+            {
+                htmlContent += $"<h2>Company ID: {metrics.CompanyId}</h2>";
+                htmlContent += "<p>Total Approved: " + metrics.TotalApproved + "</p>";
+                htmlContent += "<p>Total Rejected: " + metrics.TotalRejected + "</p>";
+                htmlContent += "<p>Average Approval Time (in days): " + metrics.AverageApprovalTime.ToString("F2") + "</p>";
+                htmlContent += "<hr>"; // Add a separator between companies
+            }
+
+            // Generate PDF using Polybioz
+            return GeneratePdf(htmlContent);
+        }
+
+        public async Task<ApplicationJobSummaryDto> GetTotalAndApplicationSummaryAsync()
+        {
+            // Get data from repository methods without date filtering
+            var jobPosts = await _jobPostRepository.GetJobPostSummaryAsync();
+            var applicationSummary = await _applicationJobRepository.GetApplicationSummaryAsync();
+            var jobTotal = await _jobPostRepository.TotalJobPost();
+            var totalApply = await _applicationJobRepository.TotalApplicationJob();
+
+            return new ApplicationJobSummaryDto
+            {
+                TotalApplications = totalApply,
+                ApplicationSummaries = applicationSummary,
+                TotalJobPosted = jobTotal,
+                JobStatusDtos = jobPosts
+            };
+        }
+
+        public async Task<IEnumerable<DemographicOverviewDto>> GetDemographicSummaryAsync(string address)
+        {
+            var demographics = await _userService.GetDemographicOverviewAsync(address);
+
+            return demographics;
+        }
+
+        public async Task<List<ComplianceApprovalMetricsDto>> GetJobPostApprovalMetricsByCompanyAsync()
+        {
+            var job = await _jobPostRequestRepository.GetJobPostApprovalMetricsByCompanyAsync();
+            return job;
         }
     }
 }

@@ -60,11 +60,8 @@ namespace AsriATS.Persistance.Repositories
 
         public async Task<List<JobPostStatusDto>> GetJobPostSummaryAsync()
         {
-            var statuses = new List<string> { "Approved by HR Manager", "Rejected by HR Manager", "Modification Request" };
-
             return await (from aj in _context.JobPostRequests
                           join p in _context.Processes on aj.ProcessId equals p.ProcessId // Join based on ProcessId
-                          where statuses.Contains(p.Status) // Filter by statuses
                           orderby aj.CompanyId // Sort by Company ID
                           select new JobPostStatusDto
                           {

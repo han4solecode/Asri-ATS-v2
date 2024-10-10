@@ -1,4 +1,5 @@
-﻿using AsriATS.Application.Persistance;
+﻿using AsriATS.Application.DTOs.Report;
+using AsriATS.Application.Persistance;
 using AsriATS.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
@@ -56,6 +57,58 @@ namespace AsriATS.Persistance.Repositories
         public async Task<JobPostRequest?> GetFirstOrDefaultAsync(Expression<Func<JobPostRequest, bool>> expression)
         {
             return await _context.JobPostRequests.FirstOrDefaultAsync(expression);
+        }
+
+        public async Task<List<ComplianceApprovalMetricsDto>> GetJobPostApprovalMetricsByCompanyAsync()
+        {
+            var jobRequests = await (from jpr in _context.JobPostRequests
+                                     join p in _context.Processes on jpr.ProcessId equals p.ProcessId
+                                     where p.Status == "Approved by HR Manager" || p.Status == "Rejected by HR Manager"
+                                     select new
+                                     {
+                                         jpr.JobPostRequestId,
+                                         jpr.CompanyId,
+                                         RequestDate = p.RequestDate,
+                                         Status = p.Status
+                                     })
+                            .ToListAsync();
+
+            var approvedJobRequests = jobRequests.Where(r => r.Status == "Approved by HR Manager").ToList();
+            var approvedJobPostIds = approvedJobRequests.Select(req => req.JobPostRequestId).ToList();
+
+            var approvedJobPosts = await _context.JobPosts
+                                                 .Where(jp => approvedJobPostIds.Contains(jp.JobPostId)) // Assuming JobPostId is the key
+                                                 .ToListAsync();
+
+            var jobPostApprovalMetrics = jobRequests
+                .GroupBy(req => req.CompanyId)
+                .Select(g =>
+                {
+                    var companyApprovedPosts = approvedJobPosts.Where(jp => g.Select(req => req.JobPostRequestId).Contains(jp.JobPostId)).ToList();
+                    var totalApproved = companyApprovedPosts.Count;
+                    var approvalTimes = companyApprovedPosts
+                        .Select(jp =>
+                        {
+                            var request = g.FirstOrDefault(req => req.JobPostRequestId == jp.JobPostId);
+                            return request != null ? (jp.CreatedDate - request.RequestDate).TotalDays : 0;
+                        })
+                        .ToList();
+
+                    var averageApprovalTime = totalApproved > 0 ? approvalTimes.Average() : 0;
+
+                    var totalRejected = g.Count(req => req.Status == "Rejected by HR Manager");
+
+                    return new ComplianceApprovalMetricsDto
+                    {
+                        CompanyId = g.Key,
+                        TotalApproved = totalApproved,
+                        TotalRejected = totalRejected,
+                        AverageApprovalTime = averageApprovalTime
+                    };
+                })
+                .ToList();
+
+            return jobPostApprovalMetrics;
         }
     }
 }

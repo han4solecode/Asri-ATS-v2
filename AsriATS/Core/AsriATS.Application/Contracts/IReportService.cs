@@ -1,4 +1,5 @@
-﻿using System;
+﻿using AsriATS.Application.DTOs.Report;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,5 +12,9 @@ namespace AsriATS.Application.Contracts
         Task<byte[]> GenerateOverallRecruitmentMetricsAsync();
         Task<byte[]> GenerateDemographicReportAsync(string address);
         Task<byte[]> GenerateRecruitmentFunnelReportAsync();
+        Task<ApplicationJobSummaryDto> GetTotalAndApplicationSummaryAsync();
+        Task<IEnumerable<DemographicOverviewDto>> GetDemographicSummaryAsync(string address);
+        Task<byte[]> GenerateComplianceApprovalMetricsPdfAsync();
+        Task<List<ComplianceApprovalMetricsDto>> GetJobPostApprovalMetricsByCompanyAsync();
     }
 }
