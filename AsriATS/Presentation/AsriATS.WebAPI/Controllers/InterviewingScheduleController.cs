@@ -148,5 +148,14 @@ namespace AsriATS.WebAPI.Controllers
             var result = await _interviewSchedulingService.GetAllConfirmedInterviewSchedules();
             return Ok(result);
         }
+
+        [Authorize(Roles = "HR Manager")]
+        [HttpGet("completed-interview")]
+        public async Task<IActionResult> GetAllCompletedInterview()
+        {
+            var result = await _interviewSchedulingService.GetAllCompletedInterview();
+
+            return Ok(result);
+        }
     }
 }

@@ -19,6 +19,9 @@ namespace AsriATS.Application.Contracts
         Task<BaseResponseDto> ReviewInterviewResult(ReviewRequestDto reviewRequest);
 
         Task<IEnumerable<object>> GetAllUnconfirmedInterviewSchedules();
+
         Task<IEnumerable<object>> GetAllConfirmedInterviewSchedules();
+
+        Task<IEnumerable<object>> GetAllCompletedInterview();
     }
 }

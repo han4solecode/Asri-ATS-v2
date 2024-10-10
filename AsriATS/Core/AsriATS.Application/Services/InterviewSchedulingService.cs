@@ -583,15 +583,24 @@ namespace AsriATS.Application.Services
             return result;
         }
 
-        // public async Task<BaseResponseDto> SetCompleteInterview
-        // create new workflow action
-        // set interviewerComments
-        // ReviewInterviewProcess(int ProcessId, string Action, string Comments)
+        public async Task<IEnumerable<object>> GetAllCompletedInterview()
+        {
+            var userName = _httpContextAccessor.HttpContext!.User.Identity!.Name;
+            var user = await _userManager.FindByNameAsync(userName!);
 
-        // getInterviewSchedule (applicant, recruiter, and hr manager)
+            var completedInterview = await _interviewSchedulingRepository.GetAllInterviewSchedulesAsync(i => i.ApplicationIdNavigation.JobPostNavigation.CompanyId == user!.CompanyId && i.InterviewersComments.Count != 0);
 
-        // 1. applicant harus bisa liat jadwal interview yang harus di confirm / reschedule
-        // 2. HR Manager harus bisa liat request reschedule dari applicant
-        // 3. HR Manager harus bisa liat hasil interview yang udah selesai
+            var result = completedInterview.Select(i => new {
+                ProcessId = i.ProcessId,
+                ApplicationId = i.ApplicationId,
+                ApplicantName = $"{i.ApplicationIdNavigation.UserIdNavigation.FirstName} {i.ApplicationIdNavigation.UserIdNavigation.LastName}",
+                JobTitle = i.ApplicationIdNavigation.JobPostNavigation.JobTitle,
+                InterviewTime = i.InterviewTime,
+                Interviewers = i.Interviewer,
+                InterviwersComments = i.InterviewersComments
+            });
+
+            return result;
+        }
     }
 }
