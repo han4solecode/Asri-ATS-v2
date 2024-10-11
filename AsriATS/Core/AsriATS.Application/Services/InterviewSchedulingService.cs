@@ -542,6 +542,7 @@ namespace AsriATS.Application.Services
             var result = interviewingSchedules.Select(i => new
             {
                 ApplicationId = i.ApplicationId,
+                ProcessId = i.ProcessId,
                 ApplicantName = $"{i.ApplicationIdNavigation.UserIdNavigation.FirstName} {i.ApplicationIdNavigation.UserIdNavigation.LastName}",
                 JobTitle = i.ApplicationIdNavigation.JobPostNavigation.JobTitle,
                 InterviewTime = i.InterviewTime,
@@ -573,6 +574,7 @@ namespace AsriATS.Application.Services
             var result = interviewingSchedules.Select(i => new
             {
                 ApplicationId = i.ApplicationId,
+                ProcessId = i.ProcessId,
                 ApplicantName = $"{i.ApplicationIdNavigation.UserIdNavigation.FirstName} {i.ApplicationIdNavigation.UserIdNavigation.LastName}",
                 JobTitle = i.ApplicationIdNavigation.JobPostNavigation.JobTitle,
                 InterviewTime = i.InterviewTime,
