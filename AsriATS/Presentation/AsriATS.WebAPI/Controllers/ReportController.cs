@@ -30,7 +30,7 @@ namespace AsriATS.WebAPI.Controllers
             return File(pdfBytes, "application/pdf", "DemographicReport.pdf");
         }
 
-        [Authorize(Roles = "Recruiter")]
+        [Authorize(Roles = "Recruiter, HR Manager")]
         [HttpGet("generate-recruitment-funnel")]
         public async Task<IActionResult> GenerateRecruitmentFlunnelReport()
         {
