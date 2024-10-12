@@ -164,6 +164,13 @@ namespace AsriATS.Application.Services
                     Directory.CreateDirectory(uploadPath);
                 }
 
+                // Create a user-specific folder inside "uploads" based on the UserId
+                var userUploadPath = Path.Combine(uploadPath, user.Id.ToString()); // Use UserId as folder name
+                if (!Directory.Exists(userUploadPath))
+                {
+                    Directory.CreateDirectory(userUploadPath); // Create directory for the user if it doesn't exist
+                }
+
                 foreach (var document in supportingDocuments)
                 {
                     if (document != null && document.Length > 0)
@@ -172,7 +179,7 @@ namespace AsriATS.Application.Services
                         var fileExtension = Path.GetExtension(document.FileName); // Get file extension
                         var originalFileName = Path.GetFileNameWithoutExtension(document.FileName); // Get original file name without extension
                         var fileName = $"{Guid.NewGuid()}_{originalFileName}{fileExtension}"; // Mix GUID with original file name
-                        var fullPath = Path.Combine(uploadPath, fileName);
+                        var fullPath = Path.Combine(userUploadPath, fileName);
 
                         using (var stream = new FileStream(fullPath, FileMode.Create))
                         {
@@ -406,7 +413,7 @@ namespace AsriATS.Application.Services
                 SupportingDocuments = app.SupportingDocumentsIdNavigation.Select(sd => new
                 {
                     FileName = sd.DocumentName,
-                    FileUrl = $"{baseUrl}{Uri.EscapeDataString(sd.DocumentName)}"
+                    FileUrl = $"{baseUrl}{app.UserId}/" + Uri.EscapeDataString(sd.DocumentName)
                 }).ToList()
             }).ToList();
 

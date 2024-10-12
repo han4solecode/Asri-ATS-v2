@@ -449,9 +449,15 @@ namespace AsriATS.Application.Services
                 {
                     Directory.CreateDirectory(uploadPath);
                 }
+                // Create a user-specific folder inside "uploads" based on the UserId
+                var userUploadPath = Path.Combine(uploadPath, user.Id.ToString()); // Use UserId as folder name
+                if (!Directory.Exists(userUploadPath))
+                {
+                    Directory.CreateDirectory(userUploadPath); // Create directory for the user if it doesn't exist
+                }
 
                 var fileName = Path.GetFileName(file.FileName);
-                var filePath = Path.Combine(uploadPath, $"{Guid.NewGuid()}_{fileName}");
+                var filePath = Path.Combine(userUploadPath, $"{Guid.NewGuid()}_{fileName}");
 
                 using (var stream = new FileStream(filePath, FileMode.Create))
                 {
