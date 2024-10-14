@@ -108,7 +108,7 @@ namespace AsriATS.WebAPI.Controllers
 
         [Authorize(Roles = "Applicant")]
         [HttpPost("upload-document")]
-        public async Task<IActionResult> UploadDocument([FromForm] IFormFile file)
+        public async Task<IActionResult> UploadDocument(IFormFile file)
         {
             if (!ModelState.IsValid)
             {
