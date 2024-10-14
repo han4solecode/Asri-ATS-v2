@@ -23,6 +23,16 @@ namespace AsriATS.WebAPI.Controllers
             _jobPostTemplateRequestService = jobPostTemplateRequestService;
         }
         
+        /// <summary>
+        /// Retrieve all incoming company registration request
+        /// </summary>
+        /// <remarks>
+        /// Sample request:
+        /// 
+        ///     GET /api/dashboard/company-regist-request
+        /// 
+        /// </remarks>
+        /// <returns>A list of company registration request</returns>
         [Authorize(Roles = "Administrator")]
         [HttpGet("company-regist-request")]
         public async Task<IActionResult> GetAllCompanyRegistrationRequest()
@@ -32,6 +42,16 @@ namespace AsriATS.WebAPI.Controllers
             return Ok(cr);
         }
 
+        /// <summary>
+        /// Retrieve all user info
+        /// </summary>
+        /// <remarks>
+        /// Sample request:
+        /// 
+        ///     GET /api/dashboard/users
+        /// 
+        /// </remarks>
+        /// <returns>A list of all users</returns>
         [Authorize(Roles = "Administrator")]
         [HttpGet("users")]
         public async Task<IActionResult> GetAllUsers()
@@ -41,6 +61,16 @@ namespace AsriATS.WebAPI.Controllers
             return Ok(users);
         }
 
+        /// <summary>
+        /// Retrieve all role change requests
+        /// </summary>
+        /// <remarks>
+        /// Sample request:
+        /// 
+        ///     GET /api/dashboard/role-change-request
+        /// 
+        /// </remarks>
+        /// <returns>A list of role change request</returns>
         [Authorize(Roles = "Administrator")]
         [HttpGet("role-change-request")]
         public async Task<IActionResult> GetAllRoleChangeRequest()
@@ -50,7 +80,17 @@ namespace AsriATS.WebAPI.Controllers
             return Ok(rcr);
         }
 
-        [Authorize(Roles = "HR Manager, Recruiter")]
+        /// <summary>
+        /// Retreive all job post request in a company
+        /// </summary>
+        /// <remarks>
+        /// Sample request:
+        /// 
+        ///     GET /api/dashboard/job-post-request
+        /// 
+        /// </remarks>
+        /// <returns>A list of job post request</returns>
+        [Authorize(Roles = "HR Manager")]
         [HttpGet("job-post-request")]
         public async Task<IActionResult> GetAllJobPostRequestToReview()
         {
@@ -59,6 +99,16 @@ namespace AsriATS.WebAPI.Controllers
             return Ok(request);
         }
 
+        /// <summary>
+        /// Retreive all job post template request in a company
+        /// </summary>
+        /// <remarks>
+        /// Sample request:
+        /// 
+        ///     GET /api/dashboard/job-post-template-request
+        /// 
+        /// </remarks>
+        /// <returns>A list of job post template request</returns>
         [Authorize(Roles = "HR Manager")]
         [HttpGet("job-post-template-request")]
         public async Task<IActionResult> GetAllJobPostTemplateRequestToReview()
