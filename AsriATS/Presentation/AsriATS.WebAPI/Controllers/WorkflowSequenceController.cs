@@ -14,7 +14,27 @@ namespace AsriATS.WebAPI.Controllers
         {
             _workflowService = workflowService;
         }
-
+        /// <summary>
+        /// You can Create for the Workflow Sequence here
+        /// </summary>
+        /// <remarks>
+        /// 
+        /// All the parameters in the request body cannot be null except requiredRole. 
+        ///  
+        /// NOTE: The `Workflow Sequence` is used to define the sequence of steps in a process.
+        /// For example, a `Workflow Sequence` can be used to define the stages in the process of creating a job post or submitting a job application.
+        /// Sample request:
+        ///
+        ///     POST https://localhost:7080/api/WorkflowSequence/create
+        ///     {
+        ///         "workflowId": 1,
+        ///         "stepOrder": 1,
+        ///         "stepName": "Submit Job Application",
+        ///         "requiredRole": "9c973a4a-7974-4b43-9731-8c318accf936"
+        ///     }
+        /// </remarks>
+        /// <param name="request"></param>
+        /// <returns></returns>
         // [Authorize(Roles = "Administrator")]
         [HttpPost("create")]
         public async Task<IActionResult> CreateWorkflowSequence([FromBody] WorkflowSequenceRequestDto request)
