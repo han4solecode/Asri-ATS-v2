@@ -17,6 +17,29 @@ namespace AsriATS.WebAPI.Controllers
             _userService = userService;
         }
 
+        /// <summary>
+        /// Update current user profile
+        /// </summary>
+        /// <remarks>
+        /// Only user with the role "Administrator", "HR Manager", "Recruiter", and "Applicant" are authorized to access this endpoint.
+        /// 
+        /// Sample request:
+        /// 
+        ///     PUT /api/user/update-user
+        ///     {
+        ///         "username": "RecruiterCo1",
+        ///         "firstname": "Recruiter",
+        ///         "lastname": "Co1",
+        ///         "email": "frederickzoey90@gmail.com",
+        ///         "address": "Jl. Radal, Jakarta",
+        ///         "dob": "2002-01-01",
+        ///         "sex": "Female",
+        ///         "phoneNumber": "+6256789"
+        ///     }
+        /// 
+        /// </remarks>
+        /// <param name="update"></param>
+        /// <returns></returns>
         [Authorize(Roles = "Administrator, HR Manager, Recruiter, Applicant")]
         [HttpPut("update-user")]
         public async Task<IActionResult> UpdateUser([FromBody] UpdateRequestDto update)
@@ -43,6 +66,19 @@ namespace AsriATS.WebAPI.Controllers
             }
         }
 
+        /// <summary>
+        /// Retrieve logged in user info
+        /// </summary>
+        /// <remarks>
+        /// Only user with the role "Administrator", "HR Manager", "Recruiter", and "Applicant" are authorized to access this endpoint.
+        /// 
+        /// Sample request:
+        /// 
+        ///     GET /api/user/user-info
+        /// 
+        /// </remarks>
+        /// <returns>A logged in user data</returns>
+        [Authorize(Roles = "Administrator, HR Manager, Recruiter, Applicant")]
         [HttpGet("user-info")]
         public async Task<IActionResult> GetUserInfo()
         {
@@ -61,8 +97,20 @@ namespace AsriATS.WebAPI.Controllers
             }
         }
 
+        /// <summary>
+        /// Delete user account
+        /// </summary>
+        /// <remarks>
+        /// Only user with the role "Administrator", "HR Manager", "Recruiter", and "Applicant" are authorized to access this endpoint.
+        /// 
+        /// Sample request:
+        /// 
+        ///     DELETE /api/user/delete/applicant1
+        /// 
+        /// </remarks>
+        /// <param name="username"></param>
+        /// <returns></returns>
         [Authorize(Roles = "Administrator, HR Manager, Recruiter, Applicant")]
-        //delete account for user roles hierarchy
         [HttpDelete("delete/{username}")]
         public async Task<IActionResult> DeleteUser(string username)
         {
@@ -88,6 +136,19 @@ namespace AsriATS.WebAPI.Controllers
             }
         }
 
+        /// <summary>
+        /// Retrieve all users in the same company
+        /// </summary>
+        /// <remarks>
+        /// Only user with the role "HR Manager" and "Recruiter" are authorized to access this endpoint.
+        /// 
+        /// Sample request:
+        /// 
+        ///     GET /api/user/company
+        /// 
+        /// </remarks>
+        /// <returns></returns>
+        [Authorize(Roles = "HR Manager, Recruiter")]
         [HttpGet("company")]
         public async Task<IActionResult> GetUserSameCompany()
         {
@@ -106,6 +167,20 @@ namespace AsriATS.WebAPI.Controllers
             }
         }
 
+        /// <summary>
+        /// Upload a new document
+        /// </summary>
+        /// <remarks>
+        /// Only user with the role "Applicant" is authorized to access this endpoint.
+        /// 
+        /// Sample request:
+        /// 
+        ///     POST /api/user/upload-document
+        ///         -F file=@cv.pdf
+        /// 
+        /// </remarks>
+        /// <param name="file"></param>
+        /// <returns></returns>
         [Authorize(Roles = "Applicant")]
         [HttpPost("upload-document")]
         public async Task<IActionResult> UploadDocument(IFormFile file)
@@ -125,6 +200,19 @@ namespace AsriATS.WebAPI.Controllers
             return Ok(res);
         }
 
+        /// <summary>
+        /// Delete an existing document by id
+        /// </summary>
+        /// <remarks>
+        /// Only user with the role "Applicant" is authorized to access this endpoint.
+        /// 
+        /// Sample request:
+        /// 
+        ///     DELETE /api/user/delete-document/4
+        /// 
+        /// </remarks>
+        /// <param name="id"></param>
+        /// <returns></returns>
         [Authorize(Roles = "Applicant")]
         [HttpDelete("delete-document/{id}")]
         public async Task<IActionResult> DeleteDocument(int id)
