@@ -1,5 +1,6 @@
 ﻿using AsriATS.Application.Contracts;
 using AsriATS.Application.DTOs.NextStepRule;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AsriATS.WebAPI.Controllers
@@ -15,7 +16,26 @@ namespace AsriATS.WebAPI.Controllers
             _workflowService = nextStepRuleService;
         }
 
-        // [Authorize(Roles = "Administrator")]
+        /// <summary>
+        /// Create a new next step rule 
+        /// </summary>
+        /// <param name="request"></param>
+        /// <remarks>
+        /// Only user with the role "Administrator" is authorized to access this endpoint.
+        /// 
+        /// Sample request:
+        /// 
+        ///     POST /api/NextStepRule/create
+        ///     {
+        ///         "CurrentStepId": 3,
+        ///         "NextStepId": 4,
+        ///         "ConditionType": "Action",
+        ///         "ConditionValue": "Approved"
+        ///     }
+        /// 
+        /// </remarks>
+        /// <returns></returns>
+        [Authorize(Roles = "Administrator")]
         [HttpPost("create")]
         public async Task<IActionResult> CreateNextStepRule([FromBody] NextStepRuleRequestDto request)
         {
