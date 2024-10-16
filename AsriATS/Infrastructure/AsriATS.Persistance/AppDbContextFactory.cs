@@ -15,7 +15,7 @@ namespace AsriATS.Persistance
         {
             var configuration = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("/Users/hanndot/Documents/learn/solecode/asri-ATS/AsriATS/Presentation/AsriATS.WebAPI/appsettings.json")
+                .AddJsonFile(@"./appsettings.json")
                 .Build();
 
             var services = new ServiceCollection();
