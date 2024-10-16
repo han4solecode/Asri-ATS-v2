@@ -62,25 +62,6 @@ namespace AsriATS.WebAPI.Controllers
 
             return Ok(new { message = result.Message });
         }
-
-        [Authorize(Roles = "Applicant, HR Manager")]
-        [HttpPost("review")]
-        public async Task<IActionResult> ReviewInterviewProcess([FromBody] ReviewRequestDto reviewRequest)
-        {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
-            var res = await _interviewSchedulingService.ReviewInterviewProcess(reviewRequest);
-
-            if (res.Status == "Error")
-            {
-                return BadRequest(res.Message);
-            }
-
-            return Ok(res);
-        }
         /// <summary>
         /// Updates the interview schedule for an applicant.
         /// </summary>
