@@ -103,14 +103,14 @@ public class Program
             c.IncludeXmlComments(xmlPath);
         });
 
-        var app = builder.Build();
-
         // Cookie Configuration
         builder.Services.AddCookiePolicy(opt =>
         {
             opt.HttpOnly = HttpOnlyPolicy.Always;
             opt.Secure = CookieSecurePolicy.Always;
         });
+
+        var app = builder.Build();
 
         // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment())
