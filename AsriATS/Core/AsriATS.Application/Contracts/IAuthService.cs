@@ -22,5 +22,7 @@ namespace AsriATS.Application.Contracts
         Task<LoginResponseDto> LoginAsync(LoginRequestDto login);
         Task<UpdateResponseDto> UpdateApplicantAsync(UpdateRequestDto update);
         Task<BaseResponseDto> ChangePasswordAsync(ChangePasswordRequestDto request);
+
+        Task<BaseResponseDto> LogoutAsync();
     }
 }

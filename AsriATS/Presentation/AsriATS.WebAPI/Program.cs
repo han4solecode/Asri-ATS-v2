@@ -4,6 +4,7 @@ using AsriATS.Application.DTOs.Email;
 using AsriATS.Application.Options;
 using AsriATS.Persistance;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.CookiePolicy;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -16,6 +17,7 @@ public class Program
 {
     public static void Main(string[] args)
     {
+        var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
         var builder = WebApplication.CreateBuilder(args);
 
         // Add services to the container.
@@ -23,16 +25,24 @@ public class Program
         builder.Services.ConfigureApplication();
         builder.Services.ConfigureIdentity();
 
+        // CORS setup
+        builder.Services.AddCors(options => options.AddPolicy(name: MyAllowSpecificOrigins, policy =>
+        {
+            policy.WithOrigins("http://localhost:5173").AllowAnyHeader().AllowAnyMethod().AllowCredentials().WithExposedHeaders("Content-Disposition");
+        }));
+
         var configuration = builder.Configuration;
 
-        builder.Services.AddAuthentication(opt => {
+        builder.Services.AddAuthentication(opt =>
+        {
             opt.DefaultAuthenticateScheme =
             opt.DefaultChallengeScheme =
             opt.DefaultForbidScheme =
             opt.DefaultScheme =
             opt.DefaultSignInScheme =
             opt.DefaultSignOutScheme = JwtBearerDefaults.AuthenticationScheme;
-        }).AddJwtBearer(opt => {
+        }).AddJwtBearer(opt =>
+        {
             opt.TokenValidationParameters = new TokenValidationParameters
             {
                 ValidateIssuer = true,
@@ -41,6 +51,24 @@ public class Program
                 ValidAudience = configuration["JWT:Audience"],
                 ValidateIssuerSigningKey = true,
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["JWT:SigningKey"]!)),
+            };
+
+            opt.Events = new JwtBearerEvents
+            {
+                OnTokenValidated = context =>
+                {
+                    return Task.CompletedTask;
+                },
+                OnAuthenticationFailed = context =>
+                {
+                    context.Response.StatusCode = 401;
+                    return Task.CompletedTask;
+                },
+                OnMessageReceived = context =>
+                {
+                    context.Token = context.Request.Cookies["AuthToken"];
+                    return Task.CompletedTask;
+                }
             };
         });
 
@@ -77,6 +105,13 @@ public class Program
 
         var app = builder.Build();
 
+        // Cookie Configuration
+        builder.Services.AddCookiePolicy(opt =>
+        {
+            opt.HttpOnly = HttpOnlyPolicy.Always;
+            opt.Secure = CookieSecurePolicy.Always;
+        });
+
         // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment())
         {
@@ -92,6 +127,9 @@ public class Program
         }
 
         app.UseHttpsRedirection();
+        // CORS
+        app.UseCors(MyAllowSpecificOrigins);
+
         app.UseStaticFiles(new StaticFileOptions
         {
             FileProvider = new PhysicalFileProvider(Path.Combine(builder.Environment.ContentRootPath, "uploads")),

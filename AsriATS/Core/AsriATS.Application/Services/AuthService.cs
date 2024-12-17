@@ -22,13 +22,13 @@ using System.Threading.Tasks;
 
 namespace AsriATS.Application.Services
 {
-    public class AuthService:IAuthService
+    public class AuthService : IAuthService
     {
         private readonly UserManager<AppUser> _userManager;
         private readonly RoleManager<AppRole> _roleManager;
         private readonly IConfiguration _configuration;
         private readonly IHttpContextAccessor _httpContextAccessor;
-    
+
         public AuthService(UserManager<AppUser> userManager, RoleManager<AppRole> roleManager, IConfiguration configuration, IHttpContextAccessor httpContextAccessor)
         {
             _userManager = userManager;
@@ -187,7 +187,7 @@ namespace AsriATS.Application.Services
                 var token = new JwtSecurityToken(
                     issuer: _configuration["JWT:Issuer"],
                     audience: _configuration["JWT:Audience"],
-                    expires: DateTime.Now.AddDays(1),
+                    expires: DateTime.Now.AddHours(3),
                     claims: authClaims,
                     signingCredentials: new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256)
                 );
@@ -199,7 +199,8 @@ namespace AsriATS.Application.Services
                     AccessToken = new JwtSecurityTokenHandler().WriteToken(token),
                     AccessTokenExpiryTime = token.ValidTo,
                     RefreshToken = user.RefreshToken,
-                    RefreshTokenExpiryTime = user.RefreshTokenExpiryTime
+                    RefreshTokenExpiryTime = user.RefreshTokenExpiryTime,
+                    Roles = [.. userRoles]
                 };
             }
         }
@@ -252,7 +253,7 @@ namespace AsriATS.Application.Services
 
                 // if refresh token is null or invalid, generate refresh token and update user
                 var refreshToken = GenerateRefreshToken();
-                var refreshTokenExpiryTime = DateTime.UtcNow.AddMinutes(3);
+                var refreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
 
                 user.RefreshToken = refreshToken;
                 user.RefreshTokenExpiryTime = refreshTokenExpiryTime;
@@ -273,6 +274,40 @@ namespace AsriATS.Application.Services
             {
                 Status = "Error",
                 Message = "Username or password is not valid!"
+            };
+        }
+
+        public async Task<BaseResponseDto> LogoutAsync()
+        {
+            var userName = _httpContextAccessor.HttpContext!.User.Identity!.Name!;
+            var user = await _userManager.FindByNameAsync(userName);
+
+            if (user == null)
+            {
+                return new BaseResponseDto
+                {
+                    Status = "Error",
+                    Message = "User not found"
+                };
+            }
+
+            if (user.RefreshToken == null)
+            {
+                return new BaseResponseDto
+                {
+                    Status = "Error",
+                    Message = "User already logged out"
+                };
+            }
+
+            user.RefreshToken = null;
+            user.RefreshTokenExpiryTime = null;
+            await _userManager.UpdateAsync(user);
+
+            return new BaseResponseDto
+            {
+                Status = "Success",
+                Message = "User logged out successfully"
             };
         }
 

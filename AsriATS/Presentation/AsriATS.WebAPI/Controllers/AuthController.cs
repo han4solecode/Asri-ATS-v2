@@ -1,4 +1,5 @@
 ﻿using AsriATS.Application.Contracts;
+using AsriATS.Application.DTOs;
 using AsriATS.Application.DTOs.ChangePassword;
 using AsriATS.Application.DTOs.Login;
 using AsriATS.Application.DTOs.Register;
@@ -138,10 +139,92 @@ namespace AsriATS.WebAPI.Controllers
             var res = await _authService.LoginAsync(login);
             if (res.Status == "Error")
             {
-                return BadRequest(res.Message);
+                return BadRequest(res);
             }
 
+            SetRefreshTokenCookie("AuthToken", res.AccessToken, res.AccessTokenExpiryTime);
+            SetRefreshTokenCookie("RefreshToken", res.RefreshToken, res.RefreshTokenExpiryTime);
+
             return Ok(res);
+        }
+
+        [Authorize]
+        [HttpPost("logout")]
+        public async Task<IActionResult> LogoutAsync()
+        {
+            var result = await _authService.LogoutAsync();
+
+            if (result.Status == "Error")
+            {
+                return BadRequest(result);
+            }
+
+            try
+            {
+                Response.Cookies.Delete("AuthToken", new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = true,
+                    SameSite = SameSiteMode.Strict,
+                });
+
+                return Ok(result);
+            }
+            catch (System.Exception ex)
+            {
+                return StatusCode(500, $"An error occured during logout. Message: {ex}");
+            }
+        }
+
+        [HttpPost("refresh-token")]
+        public async Task<IActionResult> RefreshAccessToken()
+        {
+            var refreshToken = Request.Cookies["RefreshToken"];
+
+            if (refreshToken == null)
+            {
+                try
+                {
+
+                    Response.Cookies.Delete("AuthToken", new CookieOptions
+                    {
+                        HttpOnly = true,
+                        Secure = true,
+                        SameSite = SameSiteMode.Strict,
+                    });
+
+                    Response.Cookies.Delete("RefreshToken", new CookieOptions
+                    {
+                        HttpOnly = true,
+                        Secure = true,
+                        SameSite = SameSiteMode.Strict,
+                    });
+
+                    var res = new BaseResponseDto
+                    {
+                        Status = "Error",
+                        Message = "Refresh token expired"
+                    };
+
+                    return BadRequest(res);
+                }
+                catch (System.Exception ex)
+                {
+                    return StatusCode(500, $"An error occured. Message: {ex}");
+                }
+            }
+
+            var result = await _authService.RefreshAccessTokenAsync(refreshToken!);
+
+            if (result.Status == "Error")
+            {
+                return BadRequest(result);
+            }
+
+            SetRefreshTokenCookie("AuthToken", result.AccessToken, result.AccessTokenExpiryTime);
+            SetRefreshTokenCookie("RefreshToken", result.RefreshToken, result.RefreshTokenExpiryTime);
+
+            return Ok(result);
         }
 
         /// <summary>
@@ -169,6 +252,19 @@ namespace AsriATS.WebAPI.Controllers
             }
 
             return Ok(result.Message);
+        }
+
+        private void SetRefreshTokenCookie(string tokenType, string? token, DateTime? expires)
+        {
+            var cookieOptions = new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Strict,
+                Expires = expires,
+            };
+
+            Response.Cookies.Append(tokenType, token!, cookieOptions);
         }
     }
 }
