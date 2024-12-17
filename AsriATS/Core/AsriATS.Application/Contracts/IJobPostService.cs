@@ -1,4 +1,5 @@
 ﻿using AsriATS.Application.DTOs.Helpers;
+using AsriATS.Application.DTOs.JobPost;
 using AsriATS.Domain.Entities;
 using System;
 using System.Collections.Generic;
@@ -12,5 +13,7 @@ namespace AsriATS.Application.Contracts
     {
         Task<IEnumerable<JobPost>> GetAllJobPostAsync(Pagination pagination);
         Task<IEnumerable<JobPost>> SearchJobPostAsync(QueryObject queryObject, Pagination pagination);
+        Task<object> SearchJobPostsAsync(JobPostSearch searchParams);
+        Task<JobPostDetail> JobPostDetails(int jobPostId);
     }
 }

@@ -1,5 +1,6 @@
 ﻿using AsriATS.Application.Contracts;
 using AsriATS.Application.DTOs.Helpers;
+using AsriATS.Application.DTOs.JobPost;
 using AsriATS.Application.Persistance;
 using AsriATS.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -133,6 +134,141 @@ namespace AsriATS.Application.Services
 
             // Return paginated results
             return jobs.Skip(skipNumber).Take(pageSize).ToList();
+        }
+
+
+
+        // New search Job Post Method
+        public async Task<object> SearchJobPostsAsync(JobPostSearch searchParams)
+        {
+            // Fetch data from repositories
+            var jobs = _jobPostRepository.SearchJobPostAsync(); // Fetch job posts
+            var companies = _companyRepository.SearchCompanyAsync(); // Fetch companies
+
+            var query = jobs.AsQueryable();
+
+            // Filtering
+            if (!string.IsNullOrEmpty(searchParams.JobTitle))
+                query = query.Where(j => j.JobTitle.ToLower().Contains(searchParams.JobTitle.ToLower()));
+
+            if (!string.IsNullOrEmpty(searchParams.Location))
+                query = query.Where(j => j.Location.ToLower().Contains(searchParams.Location.ToLower()));
+
+            if (!string.IsNullOrEmpty(searchParams.Description))
+                query = query.Where(j => j.Description.ToLower().Contains(searchParams.Description.ToLower()));
+
+            if (!string.IsNullOrEmpty(searchParams.Requirement))
+                query = query.Where(j => j.Requirements.ToLower().Contains(searchParams.Requirement.ToLower()));
+
+            if (searchParams.MinSalary > 0)
+                query = query.Where(j => j.MinSalary >= searchParams.MinSalary);
+
+            if (searchParams.MaxSalary > 0)
+                query = query.Where(j => j.MaxSalary <= searchParams.MaxSalary);
+
+            if (!string.IsNullOrEmpty(searchParams.EmploymentType))
+                query = query.Where(j => j.EmploymentType.ToLower().Contains(searchParams.EmploymentType.ToLower()));
+
+            if (!string.IsNullOrEmpty(searchParams.CompanyName))
+            {
+                var matchingCompanyIds = companies
+                    .Where(c => c.Name.ToLower().Contains(searchParams.CompanyName.ToLower()))
+                    .Select(c => c.CompanyId)
+                    .ToList();
+
+                query = query.Where(j => matchingCompanyIds.Contains(j.CompanyId));
+            }
+
+            if (!string.IsNullOrEmpty(searchParams.Keywords))
+            {
+                var keyword = searchParams.Keywords.ToLower();
+                int.TryParse(searchParams.Keywords, out int keywordAsInt); // Try to parse keyword as integer
+
+                query = query.Where(j =>
+                    (j.JobTitle != null && j.JobTitle.ToLower().Contains(keyword)) ||
+                    (j.Description != null && j.Description.ToLower().Contains(keyword)) ||
+                    (j.Requirements != null && j.Requirements.ToLower().Contains(keyword)) ||
+                    (j.EmploymentType != null && j.EmploymentType.ToLower().Contains(keyword)) ||
+                    (j.CompanyId != null && companies.Any(c => c.CompanyId == j.CompanyId && c.Name.ToLower().Contains(keyword))) ||
+                    (keywordAsInt > 0 && (j.MinSalary == keywordAsInt || j.MaxSalary == keywordAsInt)) // Match numeric salary
+                );
+            }
+
+            // Sorting
+            if (!string.IsNullOrEmpty(searchParams.SortBy))
+            {
+                query = searchParams.SortBy.ToLower() switch
+                {
+                    "jobtitle" => searchParams.SortOrder == "desc" ? query.OrderByDescending(j => j.JobTitle) : query.OrderBy(j => j.JobTitle),
+                    "location" => searchParams.SortOrder == "desc" ? query.OrderByDescending(j => j.Location) : query.OrderBy(j => j.Location),
+                    "employmenttype" => searchParams.SortOrder == "desc" ? query.OrderByDescending(j => j.EmploymentType) : query.OrderBy(j => j.EmploymentType),
+                    "minsalary" => searchParams.SortOrder == "desc" ? query.OrderByDescending(j => j.MinSalary) : query.OrderBy(j => j.MinSalary),
+                    "maxsalary" => searchParams.SortOrder == "desc" ? query.OrderByDescending(j => j.MaxSalary) : query.OrderBy(j => j.MaxSalary),
+                    _ => query.OrderByDescending(j => j.CreatedDate) // Default sort by newest
+                };
+            }
+            else
+            {
+                query = query.OrderByDescending(j => j.CreatedDate);
+            }
+
+            // Pagination
+            var totalRecords = query.Count();
+            var pageNumber = searchParams.PageNumber ?? 1;
+            var pageSize = searchParams.PageSize ?? 20;
+            var skip = (pageNumber - 1) * pageSize;
+
+            var paginatedJobs = await Task.FromResult(query.Skip(skip).Take(pageSize).ToList());
+
+            // Map company names to results
+            var jobResults = paginatedJobs.Select(j => new
+            {
+                j.JobPostId,
+                j.JobTitle,
+                j.Location,
+                j.Description,
+                j.Requirements,
+                j.MinSalary,
+                j.MaxSalary,
+                j.EmploymentType,
+                CompanyName = companies.FirstOrDefault(c => c.CompanyId == j.CompanyId)?.Name ?? "N/A",
+                j.CreatedDate
+            });
+            // Return result
+            return new
+            {
+                TotalRecords = totalRecords,
+                Data = jobResults
+            };
+        }
+
+        public async Task<JobPostDetail> JobPostDetails(int jobPostId)
+        {
+            // Fetch the JobPost entity by ID
+            var job = await _jobPostRepository.GetByIdAsync(jobPostId);
+
+            // Ensure the job exists
+            if (job == null)
+                throw new Exception("Job post not found");
+
+            // Fetch company details (if needed)
+            var company = await _companyRepository.GetByIdAsync(job.CompanyId);
+
+            // Map the JobPost entity to the JobPostDetail DTO
+            var jobDetail = new JobPostDetail
+            {
+                JobPostId = job.JobPostId,
+                JobTitle = job.JobTitle,
+                Location = job.Location,
+                Description = job.Description,
+                Requirement = job.Requirements,
+                EmploymentType = job.EmploymentType,
+                MinSalary = job.MinSalary,
+                MaxSalary = job.MaxSalary,
+                CompanyName = company?.Name ?? "N/A" // Get company name or default to "N/A"
+            };
+
+            return jobDetail;
         }
     }
 }

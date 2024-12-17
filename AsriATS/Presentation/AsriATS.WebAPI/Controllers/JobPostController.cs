@@ -1,5 +1,6 @@
 ﻿using AsriATS.Application.Contracts;
 using AsriATS.Application.DTOs.Helpers;
+using AsriATS.Application.DTOs.JobPost;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AsriATS.WebAPI.Controllers
@@ -29,7 +30,7 @@ namespace AsriATS.WebAPI.Controllers
         /// </remarks>
         /// <returns>Returns all Job Post.</returns>
         [HttpGet("all")]
-        public async Task<IActionResult> GetAllJobs([FromQuery]Pagination pagination)
+        public async Task<IActionResult> GetAllJobs([FromQuery] Pagination pagination)
         {
             var result = await _jobPostService.GetAllJobPostAsync(pagination);
             return Ok(result);
@@ -49,10 +50,27 @@ namespace AsriATS.WebAPI.Controllers
         /// </remarks>
         /// <returns>Returns all Job Post based on some params.</returns>
         [HttpGet("search")]
-        public async Task<IActionResult> SearchJobs([FromQuery]QueryObject queryObject, [FromQuery]Pagination pagination)
+        public async Task<IActionResult> SearchJobs([FromQuery] QueryObject queryObject, [FromQuery] Pagination pagination)
         {
             var result = await _jobPostService.SearchJobPostAsync(queryObject, pagination);
             return Ok(result);
         }
+
+        [HttpGet("search-job")]
+        public async Task<IActionResult> SearchJobPost([FromQuery] JobPostSearch search)
+        {
+            var res = await _jobPostService.SearchJobPostsAsync(search);
+            return Ok(res);
+        }
+
+        [HttpGet("search-job/{JobPostId}")]
+        public async Task<IActionResult> JobPostDetails(int JobPostId)
+        {
+            var res = await _jobPostService.JobPostDetails(JobPostId);
+            return Ok(res);
+        }
+
+
+
     }
 }
