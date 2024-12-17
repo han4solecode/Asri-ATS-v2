@@ -55,7 +55,7 @@ namespace AsriATS.Application.Services
                 .ToList();
 
             // Find the user to be updated by username
-            var userToUpdate = await _userManager.FindByNameAsync(update.Username);
+            var userToUpdate = await _userManager.FindByNameAsync(currentUser);
 
             if (userToUpdate == null)
             {
