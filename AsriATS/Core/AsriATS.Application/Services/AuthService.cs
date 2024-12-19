@@ -247,7 +247,8 @@ namespace AsriATS.Application.Services
                         RefreshTokenExpiryTime = user.RefreshTokenExpiryTime,
                         Roles = userRoles.ToList(),
                         Status = "Success",
-                        Message = "Login successful!"
+                        Message = "Login successful!",
+                        User = user,
                     };
                 }
 

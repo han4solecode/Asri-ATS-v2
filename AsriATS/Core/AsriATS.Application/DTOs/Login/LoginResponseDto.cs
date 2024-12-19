@@ -1,4 +1,5 @@
-﻿using System;
+﻿using AsriATS.Domain.Entities;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -17,5 +18,6 @@ namespace AsriATS.Application.DTOs.Login
 
         public DateTime? RefreshTokenExpiryTime { get; set; }
         public List<string> Roles { get; set; }
+        public AppUser? User { get; set; }
     }
 }

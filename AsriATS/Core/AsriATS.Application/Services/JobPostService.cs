@@ -189,6 +189,7 @@ namespace AsriATS.Application.Services
                     (j.Description != null && j.Description.ToLower().Contains(keyword)) ||
                     (j.Requirements != null && j.Requirements.ToLower().Contains(keyword)) ||
                     (j.EmploymentType != null && j.EmploymentType.ToLower().Contains(keyword)) ||
+                    (j.Location != null && j.Location.ToLower().Contains(keyword)) ||
                     (j.CompanyId != null && companies.Any(c => c.CompanyId == j.CompanyId && c.Name.ToLower().Contains(keyword))) ||
                     (keywordAsInt > 0 && (j.MinSalary == keywordAsInt || j.MaxSalary == keywordAsInt)) // Match numeric salary
                 );

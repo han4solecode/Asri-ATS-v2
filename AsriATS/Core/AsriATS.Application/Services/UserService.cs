@@ -55,7 +55,7 @@ namespace AsriATS.Application.Services
                 .ToList();
 
             // Find the user to be updated by username
-            var userToUpdate = await _userManager.FindByNameAsync(currentUser);
+            var userToUpdate = await _userManager.FindByNameAsync(update.Username!);
 
             if (userToUpdate == null)
             {
@@ -234,7 +234,6 @@ namespace AsriATS.Application.Services
                 userId = user.Id,
                 UserName = user.UserName,
                 Email = user.Email,
-                Password = user.SecurityStamp,
                 PhoneNumber = user.PhoneNumber,
                 FirstName = user.FirstName,
                 LastName = user.LastName,
