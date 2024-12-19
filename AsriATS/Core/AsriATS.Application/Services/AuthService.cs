@@ -200,7 +200,8 @@ namespace AsriATS.Application.Services
                     AccessTokenExpiryTime = token.ValidTo,
                     RefreshToken = user.RefreshToken,
                     RefreshTokenExpiryTime = user.RefreshTokenExpiryTime,
-                    Roles = [.. userRoles]
+                    Roles = [.. userRoles],
+                    Username = user.UserName
                 };
             }
         }
@@ -268,7 +269,8 @@ namespace AsriATS.Application.Services
                     RefreshTokenExpiryTime = refreshTokenExpiryTime,
                     Status = "Success",
                     Message = "Login successful!",
-                    Roles = [.. userRoles]
+                    Roles = [.. userRoles],
+                    User = user
                 };
             }
 

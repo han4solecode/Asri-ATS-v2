@@ -16,6 +16,8 @@ namespace AsriATS.Application.DTOs.RefreshToken
 
         public DateTime? RefreshTokenExpiryTime { get; set; }
 
-        public List<string> Roles { get; set; }
+        public List<string>? Roles { get; set; }
+
+        public string? Username { get; set; }
     }
 }
