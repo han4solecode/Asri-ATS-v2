@@ -249,7 +249,7 @@ namespace AsriATS.Application.Services
                         Roles = userRoles.ToList(),
                         Status = "Success",
                         Message = "Login successful!",
-                        Username = user.UserName,
+                        Username = user.UserName
                     };
                 }
 
