@@ -249,7 +249,7 @@ namespace AsriATS.Application.Services
                         Roles = userRoles.ToList(),
                         Status = "Success",
                         Message = "Login successful!",
-                        User = user,
+                        Username = user.UserName,
                     };
                 }
 
@@ -270,7 +270,7 @@ namespace AsriATS.Application.Services
                     Status = "Success",
                     Message = "Login successful!",
                     Roles = [.. userRoles],
-                    User = user
+                    Username = user.UserName
                 };
             }
 
