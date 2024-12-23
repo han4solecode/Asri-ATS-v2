@@ -54,7 +54,7 @@ namespace AsriATS.WebAPI.Controllers
 
             if (res.Status == "Error")
             {
-                return BadRequest(res.Message);
+                return BadRequest(res);
             }
 
             return Ok(res);
@@ -83,7 +83,7 @@ namespace AsriATS.WebAPI.Controllers
         [HttpPost("review-request")]
         public async Task<IActionResult> ReviewCompanyRegisterRequest([FromBody] CompanyRegisterReviewDto companyRegisterReview)
         {
-             if (!ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
@@ -92,7 +92,7 @@ namespace AsriATS.WebAPI.Controllers
 
             if (res.Status == "Error")
             {
-                return BadRequest(res.Message);
+                return BadRequest(res);
             }
 
             return Ok(res);
