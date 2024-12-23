@@ -11,5 +11,6 @@ namespace AsriATS.Application.Contracts
         Task<BaseResponseDto> ReviewCompanyRegisterRequest(CompanyRegisterReviewDto companyRegisterReview);
 
         Task<IEnumerable<CompanyRequest>> GetAllCompanyRegisterRequest();
+        Task<IEnumerable<Company>> GetAllCompany();
     }
 }

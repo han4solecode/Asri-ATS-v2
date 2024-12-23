@@ -224,5 +224,12 @@ namespace AsriATS.Application.Services
 
             return result.ToString();
         }
+
+        public async Task<IEnumerable<Company>> GetAllCompany()
+        {
+            var company = await _companyRepository.GetAllAsync();
+
+            return company;
+        }
     }
 }

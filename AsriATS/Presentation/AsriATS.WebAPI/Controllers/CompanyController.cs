@@ -97,5 +97,12 @@ namespace AsriATS.WebAPI.Controllers
 
             return Ok(res);
         }
+
+        [HttpGet("company")]
+        public async Task<IActionResult> GetCompany()
+        {
+            var res = await _companyService.GetAllCompany();
+            return Ok(res);
+        }
     }
 }
