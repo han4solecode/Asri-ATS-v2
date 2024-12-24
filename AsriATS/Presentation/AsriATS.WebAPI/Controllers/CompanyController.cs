@@ -109,6 +109,15 @@ namespace AsriATS.WebAPI.Controllers
             return Ok(res);
         }
 
+        [Authorize(Roles = "Administrator")]
+        [HttpGet("request/{id}")]
+        public async Task<IActionResult> GetCompanyRegistrationRequestById(int id)
+        {
+            var res = await _companyService.GetCompanyRegistrationRequestById(id);
+
+            return Ok(res);
+        }
+
         [HttpGet("company")]
         public async Task<IActionResult> GetCompany()
         {

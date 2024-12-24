@@ -231,5 +231,12 @@ namespace AsriATS.Application.Services
 
             return company;
         }
+
+        public async Task<CompanyRequest?> GetCompanyRegistrationRequestById(int id)
+        {
+            var companynRegistrationRequest = await _companyRequestRepository.GetByIdAsync(id);
+
+            return companynRegistrationRequest;
+        }
     }
 }

@@ -12,5 +12,7 @@ namespace AsriATS.Application.Contracts
 
         Task<IEnumerable<CompanyRequest>> GetAllCompanyRegisterRequest();
         Task<IEnumerable<Company>> GetAllCompany();
+
+        Task<CompanyRequest?> GetCompanyRegistrationRequestById(int id);
     }
 }
