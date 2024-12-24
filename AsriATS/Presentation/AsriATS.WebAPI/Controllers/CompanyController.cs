@@ -1,5 +1,6 @@
 using AsriATS.Application.Contracts;
 using AsriATS.Application.DTOs.Company;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AsriATS.WebAPI.Controllers
@@ -80,6 +81,7 @@ namespace AsriATS.WebAPI.Controllers
         /// </remarks>
         /// <param name="companyRegisterReview"></param>
         /// <returns></returns>
+        [Authorize(Roles = "Administrator")]
         [HttpPost("review-request")]
         public async Task<IActionResult> ReviewCompanyRegisterRequest([FromBody] CompanyRegisterReviewDto companyRegisterReview)
         {
@@ -94,6 +96,15 @@ namespace AsriATS.WebAPI.Controllers
             {
                 return BadRequest(res);
             }
+
+            return Ok(res);
+        }
+
+        [Authorize(Roles = "Administrator")]
+        [HttpGet("requests")]
+        public async Task<IActionResult> GetAllCompanyRegistrationRequest()
+        {
+            var res = await _companyService.GetAllCompanyRegisterRequest();
 
             return Ok(res);
         }
