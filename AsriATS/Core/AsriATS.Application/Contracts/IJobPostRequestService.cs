@@ -15,5 +15,6 @@ namespace AsriATS.Application.Contracts
         Task<BaseResponseDto> UpdateJobPostRequest(UpdateJobPostRequestDto requestDto);
 
         Task<JobPostRequestResponseDto> GetJobPostRequest(int id);
+        Task<IEnumerable<object>> GetJobPostRequestForRecruiter();
     }
 }

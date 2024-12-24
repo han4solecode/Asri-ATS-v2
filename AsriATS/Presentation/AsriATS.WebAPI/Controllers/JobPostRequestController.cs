@@ -142,5 +142,30 @@ namespace AsriATS.WebAPI.Controllers
 
             return Ok(res);
         }
+
+        [HttpGet]
+        public async Task<IActionResult> GetJobPostRequestLists()
+        {
+            var res = await _jobPostRequestService.GetJobPostRequestToReview();
+            return Ok(res);
+        }
+
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetJobPostRequestDetail(int id)
+        {
+            var res = await _jobPostRequestService.GetJobPostRequest(id);
+            if (res.Status == "Error")
+            {
+            return NotFound(res.Message); 
+            }
+            return Ok(res);
+        }
+
+        [HttpGet("recruiter")]
+        public async Task<IActionResult> GetJobPostRequestForRecruiter()
+        {
+            var res = await _jobPostRequestService.GetJobPostRequestForRecruiter();
+            return Ok(res);
+        }
     }
 }

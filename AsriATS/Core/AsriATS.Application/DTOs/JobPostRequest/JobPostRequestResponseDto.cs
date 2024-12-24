@@ -3,6 +3,7 @@ namespace AsriATS.Application.DTOs.JobPostRequest
 {
     public class JobPostRequestResponseDto : BaseResponseDto
     {
+        public string? Requester { get; set; }
         public string? JobTitle { get; set; }
 
         public int? CompanyId { get; set; }

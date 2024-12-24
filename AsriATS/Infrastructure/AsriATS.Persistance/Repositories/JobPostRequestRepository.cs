@@ -56,7 +56,7 @@ namespace AsriATS.Persistance.Repositories
 
         public async Task<JobPostRequest?> GetFirstOrDefaultAsync(Expression<Func<JobPostRequest, bool>> expression)
         {
-            return await _context.JobPostRequests.FirstOrDefaultAsync(expression);
+            return await _context.JobPostRequests.Include(jpr => jpr.ProcessIdNavigation).ThenInclude(p =>p.Requester).FirstOrDefaultAsync(expression);
         }
 
         public async Task<List<ComplianceApprovalMetricsDto>> GetJobPostApprovalMetricsByCompanyAsync()
@@ -109,6 +109,12 @@ namespace AsriATS.Persistance.Repositories
                 .ToList();
 
             return jobPostApprovalMetrics;
+        }
+        public async Task<IEnumerable<JobPostRequest>> GetAllJobPostRequestsForRecruiter(string userId)
+        {
+            var jobPostRequest = await _context.JobPostRequests.Include(r => r.ProcessIdNavigation).ThenInclude(p => p.WorkflowSequence).Include(r => r.ProcessIdNavigation).ThenInclude(p => p.Requester).Include(r => r.ProcessIdNavigation).ThenInclude(p => p.WorkflowActions).Where(r => r.ProcessIdNavigation.RequesterId == userId ).ToListAsync();
+
+            return jobPostRequest;
         }
     }
 }

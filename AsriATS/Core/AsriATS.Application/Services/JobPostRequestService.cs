@@ -49,15 +49,16 @@ namespace AsriATS.Application.Services
         public async Task<BaseResponseDto> SubmitJobPostRequest(JobPostRequestDto request)
         {
             // Retrieve the company from the repository using the provided CompanyId
-            var company = await _companyRepository.GetByIdAsync(request.CompanyId);
-            if (company == null)
-            {
-                return new RegisterResponseDto
-                {
-                    Status = "Error",
-                    Message = "Company is not registered!"
-                };
-            }
+
+            //var company = await _companyRepository.GetByIdAsync(request.CompanyId);
+            //if (company == null)
+            //{
+            //    return new RegisterResponseDto
+            //    {
+            //        Status = "Error",
+            //        Message = "Company is not registered!"
+            //    };
+            //}
 
             // Get the current logged-in user
             var userName = _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.Name);
@@ -84,7 +85,7 @@ namespace AsriATS.Application.Services
             }
 
             var recruiterCompany = await _companyRepository.GetByIdAsync(user.CompanyId.Value);
-            if (recruiterCompany == null || recruiterCompany.CompanyId != request.CompanyId)
+            if (recruiterCompany == null)
             {
                 return new BaseResponseDto
                 {
@@ -142,7 +143,7 @@ namespace AsriATS.Application.Services
             var newJobPostRequest = new JobPostRequest
             {
                 JobTitle = request.JobTitle,
-                CompanyId = request.CompanyId,
+                CompanyId = user?.CompanyId ?? 0,
                 Description = request.Description,
                 Requirements = request.Requirements,
                 Location = request.Location,
@@ -374,7 +375,7 @@ namespace AsriATS.Application.Services
                 Location = r.Location,
                 MinSalary = r.MinSalary,
                 MaxSalary = r.MaxSalary,
-                EmployementType = r.EmploymentType,
+                EmploymentType = r.EmploymentType,
                 Status = r.ProcessIdNavigation.Status,
                 Comments = r.ProcessIdNavigation.WorkflowActions.Select(wa => wa.Comments).Last()
             }).ToList();
@@ -543,7 +544,7 @@ namespace AsriATS.Application.Services
 
         public async Task<JobPostRequestResponseDto> GetJobPostRequest(int id)
         {
-            var jobPostRequest = await _jobPostRequestRepository.GetByIdAsync(id);
+            var jobPostRequest = await _jobPostRequestRepository.GetFirstOrDefaultAsync(jpr => jpr.ProcessId == id);
             if (jobPostRequest == null)
             {
                 return new JobPostRequestResponseDto
@@ -554,6 +555,7 @@ namespace AsriATS.Application.Services
             }
             var jobPostRequestDto = new JobPostRequestResponseDto
             {
+                Requester = $"{jobPostRequest.ProcessIdNavigation.Requester.FirstName} {jobPostRequest.ProcessIdNavigation.Requester.LastName}",
                 JobTitle = jobPostRequest.JobTitle,
                 CompanyId = jobPostRequest.CompanyId,
                 Description = jobPostRequest.Description,
@@ -566,6 +568,34 @@ namespace AsriATS.Application.Services
                 Message = "Job post request get successfuly"
             };
             return jobPostRequestDto;
+        }
+
+        public async Task<IEnumerable<object>> GetJobPostRequestForRecruiter()
+        {
+            // get user and role from httpcontextaccessor
+            var userName = _httpContextAccessor.HttpContext!.User.Identity!.Name;
+            var user = await _userManager.FindByNameAsync(userName!);
+
+            // retrieve job post requests
+            var requests = await _jobPostRequestRepository.GetAllJobPostRequestsForRecruiter(user!.Id!);
+
+            var a = requests.Select(r => new
+            {
+                ProcessId = r.ProcessId,
+                Requester = $"{r.ProcessIdNavigation.Requester.FirstName} {r.ProcessIdNavigation.Requester.LastName}",
+                RequestDate = r.ProcessIdNavigation.RequestDate,
+                JobTitle = r.JobTitle,
+                Description = r.Description,
+                Requirements = r.Requirements,
+                Location = r.Location,
+                MinSalary = r.MinSalary,
+                MaxSalary = r.MaxSalary,
+                EmploymentType = r.EmploymentType,
+                Status = r.ProcessIdNavigation.Status,
+                Comments = r.ProcessIdNavigation.WorkflowActions.Select(wa => wa.Comments).Last()
+            }).ToList();
+
+            return a;
         }
     }
 }

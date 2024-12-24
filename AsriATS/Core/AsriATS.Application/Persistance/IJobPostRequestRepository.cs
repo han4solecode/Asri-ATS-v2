@@ -11,5 +11,6 @@ namespace AsriATS.Application.Persistance
         Task<IEnumerable<JobPostRequest>> GetAllToBeReviewedAsync(int companyId, string userRoleId);
         Task<JobPostRequest?> GetFirstOrDefaultAsync(Expression<Func<JobPostRequest, bool>> expression);
         Task<List<ComplianceApprovalMetricsDto>> GetJobPostApprovalMetricsByCompanyAsync();
+        Task<IEnumerable<JobPostRequest>> GetAllJobPostRequestsForRecruiter(string userId);
     }
 }
