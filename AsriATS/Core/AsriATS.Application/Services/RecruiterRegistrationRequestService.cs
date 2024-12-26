@@ -8,6 +8,8 @@ using Microsoft.AspNetCore.Identity;
 using AsriATS.Application.DTOs.Email;
 using Org.BouncyCastle.Asn1.Ocsp;
 using System.Diagnostics;
+using System.ComponentModel.Design;
+using Microsoft.AspNetCore.Http;
 
 namespace AsriATS.Application.Services
 {
@@ -18,14 +20,16 @@ namespace AsriATS.Application.Services
         private readonly UserManager<AppUser> _userManager;
         private readonly RoleManager<AppRole> _roleManager;
         private readonly IEmailService _emailService;
+        private readonly IHttpContextAccessor _httpContextAccessor;
         private static readonly Random Random = new Random();
-        public RecruiterRegistrationRequestService(IRecruiterRegistrationRequestRepository recruiterRegistrationRequestRepository, ICompanyRepository companyRepository, UserManager<AppUser> userManager, RoleManager<AppRole> roleManager, IEmailService emailService)
+        public RecruiterRegistrationRequestService(IRecruiterRegistrationRequestRepository recruiterRegistrationRequestRepository, ICompanyRepository companyRepository, UserManager<AppUser> userManager, RoleManager<AppRole> roleManager, IEmailService emailService, IHttpContextAccessor httpContextAccessor)
         {
             _recruiterRegistrationRequestRepository = recruiterRegistrationRequestRepository;
             _companyRepository = companyRepository;
             _userManager = userManager;
             _roleManager = roleManager;
             _emailService = emailService;
+            _httpContextAccessor = httpContextAccessor;
         }
         public async Task<BaseResponseDto> SubmitRecruiterRegistrationRequest(RecruiterRegistrationRequestDto request)
         {
@@ -205,9 +209,37 @@ namespace AsriATS.Application.Services
 
         public async Task<IEnumerable<AllRecruiterRegistrationRequestDto>> GetAllUnreviewedRecruiterRegistrationRequest()
         {
-            var rrToBeReviewed = await _recruiterRegistrationRequestRepository.GetAllToBeReviewedAsync();
+            // Get the currently logged-in user
+            var userName = _httpContextAccessor.HttpContext?.User.Identity?.Name;
 
-            var rrToBeReviewedDto = rrToBeReviewed.Select(rr => new AllRecruiterRegistrationRequestDto
+            if (string.IsNullOrEmpty(userName))
+            {
+                throw new UnauthorizedAccessException("User is not authenticated.");
+            }
+
+            // Retrieve the user details from the UserManager
+            var user = await _userManager.FindByNameAsync(userName);
+
+            if (user == null)
+            {
+                throw new UnauthorizedAccessException("User not found.");
+            }
+
+            // Ensure the user has a CompanyId
+            if (!user.CompanyId.HasValue)
+            {
+                throw new InvalidOperationException("User does not have a company associated.");
+            }
+
+            // Get the company ID of the logged-in user
+            var userCompanyId = user.CompanyId.Value;
+
+            // Fetch recruiter registration requests for the same company
+            var rrToBeReviewed = await _recruiterRegistrationRequestRepository
+                .GetAllToBeReviewedAsync(r => r.CompanyId == userCompanyId);
+
+            var rrToBeReviewedDto = rrToBeReviewed
+                .Select(rr => new AllRecruiterRegistrationRequestDto
             {
                 RecruiterRegistrationRequestId = rr.RecruiterRegistrationRequestId,
                 Email = rr.Email,
