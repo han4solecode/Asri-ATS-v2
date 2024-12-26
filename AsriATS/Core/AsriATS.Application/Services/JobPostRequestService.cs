@@ -553,19 +553,35 @@ namespace AsriATS.Application.Services
                     Message = "Job post request is not found"
                 };
             }
+
+            var requestHistory = await _workflowActionRepository.GetAllAsync(wfa => wfa.ProcessId == id);
+            var requestHistoryDto = requestHistory.Select(x => new
+            {
+                ActionDate = x.ActionDate,
+                ActionBy = $"{x.Actor?.FirstName} {x.Actor?.LastName} ",
+                Action = x.Action,
+                Comments = x.Comments,
+            }).ToList();
+
             var jobPostRequestDto = new JobPostRequestResponseDto
             {
-                Requester = $"{jobPostRequest.ProcessIdNavigation.Requester.FirstName} {jobPostRequest.ProcessIdNavigation.Requester.LastName}",
-                JobTitle = jobPostRequest.JobTitle,
-                CompanyId = jobPostRequest.CompanyId,
-                Description = jobPostRequest.Description,
-                Requirements = jobPostRequest.Requirements,
-                Location = jobPostRequest.Location,
-                MinSalary = jobPostRequest.MinSalary,
-                MaxSalary = jobPostRequest.MaxSalary,
-                EmploymentType = jobPostRequest.EmploymentType,
+                ProcessId = jobPostRequest?.ProcessId ?? 0, // Assuming 0 as a fallback value if null
+                RequiredRole = jobPostRequest?.ProcessIdNavigation?.WorkflowSequence?.Role?.Name ?? "Unknown", // Fallback to "Unknown"
+                Requester = $"{jobPostRequest?.ProcessIdNavigation?.Requester?.FirstName ?? "N/A"} {jobPostRequest?.ProcessIdNavigation?.Requester?.LastName ?? "N/A"}", // Fallback to "N/A" if null
+                CurrentStatus = jobPostRequest?.ProcessIdNavigation?.Status ?? "Unknown", // Fallback to "Unknown"
+                Comments = jobPostRequest?.ProcessIdNavigation?.WorkflowActions?.LastOrDefault()?.Comments ?? "No Comments", // Fallback to "No Comments"
+                RequestDate = jobPostRequest?.ProcessIdNavigation?.RequestDate ?? default(DateTime), // Fallback to default DateTime if null
+                JobTitle = jobPostRequest?.JobTitle ?? "No Title", // Fallback to "No Title"
+                CompanyId = jobPostRequest?.CompanyId ?? 0, // Assuming 0 as a fallback value if null
+                Description = jobPostRequest?.Description ?? "No Description", // Fallback to "No Description"
+                Requirements = jobPostRequest?.Requirements ?? "No Requirements", // Fallback to "No Requirements"
+                Location = jobPostRequest?.Location ?? "No Location", // Fallback to "No Location"
+                MinSalary = jobPostRequest?.MinSalary ?? 0, // Assuming 0 as a fallback value if null
+                MaxSalary = jobPostRequest?.MaxSalary ?? 0, // Assuming 0 as a fallback value if null
+                EmploymentType = jobPostRequest?.EmploymentType ?? "Unknown", // Fallback to "Unknown"
+                RequestHistory = requestHistoryDto, // Fallback to empty list if null
                 Status = "Success",
-                Message = "Job post request get successfuly"
+                Message = "Job post request retrieved successfully"
             };
             return jobPostRequestDto;
         }

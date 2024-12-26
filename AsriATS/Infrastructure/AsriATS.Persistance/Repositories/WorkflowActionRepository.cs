@@ -34,6 +34,13 @@ namespace AsriATS.Persistance.Repositories
             return workflowActions;
         }
 
+        public async Task<IEnumerable<WorkflowAction>> GetAllAsync(Expression<Func<WorkflowAction, bool>> expression)
+        {
+            var workflowActions = await _context.WorkflowActions.Include(w => w.Actor).Where(expression).ToListAsync();
+
+            return workflowActions;
+        }
+
         public async Task<WorkflowAction?> GetByIdAsync(int id)
         {
             var workflowAction = await _context.WorkflowActions.FindAsync(id);

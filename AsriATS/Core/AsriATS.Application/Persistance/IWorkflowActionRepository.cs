@@ -9,5 +9,6 @@ namespace AsriATS.Application.Persistance
     {
         Task<WorkflowAction?> GetFirstOrDefaultAsync(Expression<Func<WorkflowAction, bool>> expression);
         Task<IEnumerable<RecruitmentFunnelDto>> GetRecruitmentFlunnel(int? companyId);
+        Task<IEnumerable<WorkflowAction>> GetAllAsync(Expression<Func<WorkflowAction, bool>> expression);
     }
 }
