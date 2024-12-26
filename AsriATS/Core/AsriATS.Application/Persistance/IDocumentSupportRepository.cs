@@ -12,5 +12,6 @@ namespace AsriATS.Application.Persistance
     public interface IDocumentSupportRepository:IBaseRepository<SupportingDocument>
     {
         Task<IEnumerable<SupportingDocument>> GetAllAsync(Expression<Func<SupportingDocument, bool>> expression);
+        Task<IEnumerable<SupportingDocument>> GetByApplicationJobIdAsync(int applicationJobId);
     }
 }

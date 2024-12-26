@@ -14,6 +14,7 @@ using AsriATS.Application.DTOs.Email;
 using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
 using AsriATS.Application.DTOs.Request;
+using AsriATS.Application.DTOs.WorkflowAction;
 
 namespace AsriATS.Application.Services
 {
@@ -301,7 +302,7 @@ namespace AsriATS.Application.Services
                 else
                 {
                     // Ensure CompanyId has a value for non-applicant roles
-                    if (!user.CompanyId.HasValue)
+                    if (!user!.CompanyId.HasValue)
                     {
                         throw new InvalidOperationException("User does not have a company associated.");
                     }
@@ -319,6 +320,8 @@ namespace AsriATS.Application.Services
                 ApplicantName = $"{app.UserIdNavigation.FirstName} {app.UserIdNavigation.LastName}",
                 JobTitle = app.JobPostNavigation.JobTitle,
                 Status = app.ProcessIdNavigation.Status,
+                ProcessId = app.ProcessIdNavigation.ProcessId,
+                CurrentStep = app.ProcessIdNavigation.WorkflowSequence.StepName,
                 Comments = app.ProcessIdNavigation.WorkflowActions.Select(wa => wa.Comments).LastOrDefault() // Get last comment or null if none
             }).ToList();
 
@@ -754,6 +757,58 @@ namespace AsriATS.Application.Services
                 Status = "Success",
                 Message = "Application job updated successfully. Reviewers have been notified."
             };
+        }
+
+        public async Task<ApplicationDetailDto> GetProcessAsync(int processId)
+        {
+            var process = await _processRepository.GetByIdAsync(processId);
+            if (process == null)
+            {
+                throw new NullReferenceException("Process not found.");
+            }
+
+            var app = await _processRepository.GetByProcessIdAsync(processId);
+            if (app == null)
+            {
+                throw new NullReferenceException("Leave request not found for the given process ID.");
+            }
+            var request = _httpContextAccessor.HttpContext.Request;
+            var baseUrl = $"{request.Scheme}://{request.Host}/uploads/";
+
+            var workflowActions = await _workflowActionRepository.GetByProcessIdAsync(process.ProcessId) ?? new List<WorkflowAction>();
+            var supportingDoc = await _documentSupportRepository.GetByApplicationJobIdAsync(app.ApplicationJobId);
+            var processDetailDto = new ApplicationDetailDto
+            {
+                ApplicationJobId = app.ApplicationJobId,
+                ProcessId = process.ProcessId,
+                Name = app.Name ?? "No  name provided",
+                Email = app.Email ?? "No email provided",
+                PhoneNumber = app.PhoneNumber ?? "Unknown",
+                Address = app.Address ?? "No address available",
+                WorkExperience = app.WorkExperience ?? "No Work Experience provided",
+                Education = app.Education ?? "No Education provided",
+                Skills = app.Skills ?? "No skills provided",
+                Status = process.Status ?? "No status available",
+                CurrentStep = process.WorkflowSequence.StepName ?? "No step available",
+                JobPostId = app.JobPostId,
+                UploadedDate = app.UploadedDate,
+                SupportingDocuments = supportingDoc.Select(sd => new SupportingDocumentDto
+                {
+                    SupportingDocumentsId = sd.SupportingDocumentId,
+                    DocumentName = sd.DocumentName,
+                    FilePath = $"{baseUrl}{app.UserId}/" + Uri.EscapeDataString(sd.DocumentName),
+                    UploadedDate = sd.UploadedDate,
+                }).ToList(),
+                WorkflowActions = workflowActions.Select(action => new WorkflowActionDto
+                {
+                    ActionDate = action.ActionDate,
+                    ActionBy = action.Actor.UserName ?? "Unknown",
+                    Action = action.Action ?? "No action",
+                    Comments = action.Comments ?? "No comments"
+                }).ToList()
+            };
+
+            return processDetailDto;
         }
     }
 }

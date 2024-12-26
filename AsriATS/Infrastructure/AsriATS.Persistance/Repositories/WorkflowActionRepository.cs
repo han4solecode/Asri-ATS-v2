@@ -78,5 +78,16 @@ namespace AsriATS.Persistance.Repositories
                 .ToListAsync();
             return recruitmentFunnel;
         }
+
+        public async Task<List<WorkflowAction>> GetByProcessIdAsync(int processId)
+        {
+            var workflowActions = await _context.WorkflowActions
+                                                .Where(w => w.ProcessId == processId)
+                                                .Include(w => w.Actor)
+                                                .OrderByDescending(w => w.ActionDate)
+                                                .ToListAsync();
+
+            return workflowActions;
+        }
     }
 }

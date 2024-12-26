@@ -77,7 +77,7 @@ namespace AsriATS.WebAPI.Controllers
         /// The response includes a list of all job applications with their corresponding statuses.
         /// </remarks>
         /// <returns>Returns a list of job application statuses.</returns>
-        [Authorize(Roles = "Applicant, HR Manager, Recruiter")]
+        [Authorize(Roles = "Applicant,HR Manager,Recruiter")]
         [HttpGet("job-application")]
         public async Task<IActionResult> GetAllApplication()
         {
@@ -253,6 +253,14 @@ namespace AsriATS.WebAPI.Controllers
             }
 
             return Ok(response);
+        }
+
+        [Authorize(Roles = "Applicant,HR Manager,Recruiter")]
+        [HttpGet("application/{processId}")]
+        public async Task<IActionResult> ApplicationDetails(int processId)
+        {
+            var res = await _applicationJobService.GetProcessAsync(processId);
+            return Ok(res);
         }
     }
 }

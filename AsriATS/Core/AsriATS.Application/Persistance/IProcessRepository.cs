@@ -7,5 +7,6 @@ namespace AsriATS.Application.Persistance
     public interface IProcessRepository : IBaseRepository<Process>
     {
         Task<Process?> GetFirstOrDefaultAsync(Expression<Func<Process, bool>> expression);
+        Task<ApplicationJob> GetByProcessIdAsync(int processId);
     }
 }

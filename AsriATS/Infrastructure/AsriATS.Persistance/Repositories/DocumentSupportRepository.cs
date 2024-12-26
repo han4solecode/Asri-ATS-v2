@@ -52,5 +52,12 @@ namespace AsriATS.Persistance.Repositories
             _context.SupportingDocuments.Update(entity);
             await _context.SaveChangesAsync();
         }
+
+        public async Task<IEnumerable<SupportingDocument>> GetByApplicationJobIdAsync(int applicationJobId)
+        {
+            return await _context.SupportingDocuments
+                                 .Where(sd => sd.ApplicationJobNavigation.Any(aj => aj.ApplicationJobId == applicationJobId))
+                                 .ToListAsync();
+        }
     }
 }

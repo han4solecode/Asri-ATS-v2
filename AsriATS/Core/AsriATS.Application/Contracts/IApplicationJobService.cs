@@ -23,5 +23,6 @@ namespace AsriATS.Application.Contracts
 
         Task<BaseResponseDto> ReviewJobApplication(ReviewRequestDto reviewRequest);
         Task<BaseResponseDto> UpdateApplicationJob(UpdateApplicationJobDto requestDto, List<IFormFile>? supportingDocuments = null);
+        Task<ApplicationDetailDto> GetProcessAsync(int processId);
     }
 }
