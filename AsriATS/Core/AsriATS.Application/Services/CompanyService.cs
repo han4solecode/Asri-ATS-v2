@@ -205,24 +205,41 @@ namespace AsriATS.Application.Services
 
         private static string GeneratePassword(int length)
         {
-            char[] chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890".ToCharArray();
+            // char[] chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890".ToCharArray();
 
-            byte[] data = new byte[4 * length];
-            using (var crypto = RandomNumberGenerator.Create())
+            // byte[] data = new byte[4 * length];
+            // using (var crypto = RandomNumberGenerator.Create())
+            // {
+            //     crypto.GetBytes(data);
+            // }
+            // StringBuilder result = new(length);
+
+            // for (int i = 0; i < length; i++)
+            // {
+            //     var rnd = BitConverter.ToUInt32(data, i * 4);
+            //     var idx = rnd % chars.Length;
+
+            //     result.Append(chars[idx]);
+            // }
+
+            // return result.ToString();
+
+            const string upperCase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            const string lowerCase = "abcdefghijklmnopqrstuvwxyz";
+            const string digits = "0123456789";
+
+            char[] password = new char[length];
+            password[0] = upperCase[new Random().Next(upperCase.Length)];
+            password[1] = lowerCase[new Random().Next(lowerCase.Length)];
+            password[2] = digits[new Random().Next(digits.Length)];
+
+            string allChars = upperCase + lowerCase + digits;
+            for (int i = 3; i < length; i++)
             {
-                crypto.GetBytes(data);
-            }
-            StringBuilder result = new(length);
-
-            for (int i = 0; i < length; i++)
-            {
-                var rnd = BitConverter.ToUInt32(data, i * 4);
-                var idx = rnd % chars.Length;
-
-                result.Append(chars[idx]);
+                password[i] = allChars[new Random().Next(allChars.Length)];
             }
 
-            return result.ToString();
+            return new string([.. password.OrderBy(_ => new Random().Next())]);
         }
 
         public async Task<IEnumerable<Company>> GetAllCompany()
