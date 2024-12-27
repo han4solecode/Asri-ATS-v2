@@ -772,16 +772,18 @@ namespace AsriATS.Application.Services
             {
                 throw new NullReferenceException("Leave request not found for the given process ID.");
             }
+
             var request = _httpContextAccessor.HttpContext.Request;
             var baseUrl = $"{request.Scheme}://{request.Host}/uploads/";
 
             var workflowActions = await _workflowActionRepository.GetByProcessIdAsync(process.ProcessId) ?? new List<WorkflowAction>();
             var supportingDoc = await _documentSupportRepository.GetByApplicationJobIdAsync(app.ApplicationJobId);
+
             var processDetailDto = new ApplicationDetailDto
             {
                 ApplicationJobId = app.ApplicationJobId,
                 ProcessId = process.ProcessId,
-                Name = app.Name ?? "No  name provided",
+                Name = app.Name ?? "No name provided",
                 Email = app.Email ?? "No email provided",
                 PhoneNumber = app.PhoneNumber ?? "Unknown",
                 Address = app.Address ?? "No address available",
@@ -789,7 +791,8 @@ namespace AsriATS.Application.Services
                 Education = app.Education ?? "No Education provided",
                 Skills = app.Skills ?? "No skills provided",
                 Status = process.Status ?? "No status available",
-                CurrentStep = process.WorkflowSequence.StepName ?? "No step available",
+                CurrentStep = process.WorkflowSequence?.StepName ?? "No step available",
+                RequiredRole = process.WorkflowSequence?.Role?.Name ?? "No role available",
                 JobPostId = app.JobPostId,
                 UploadedDate = app.UploadedDate,
                 SupportingDocuments = supportingDoc.Select(sd => new SupportingDocumentDto
@@ -802,7 +805,7 @@ namespace AsriATS.Application.Services
                 WorkflowActions = workflowActions.Select(action => new WorkflowActionDto
                 {
                     ActionDate = action.ActionDate,
-                    ActionBy = action.Actor.UserName ?? "Unknown",
+                    ActionBy = action.Actor?.UserName ?? "Unknown",
                     Action = action.Action ?? "No action",
                     Comments = action.Comments ?? "No comments"
                 }).ToList()
@@ -810,5 +813,6 @@ namespace AsriATS.Application.Services
 
             return processDetailDto;
         }
+
     }
 }

@@ -24,6 +24,7 @@ namespace AsriATS.Application.DTOs.ApplicationJob
         public int ProcessId { get; set; }
         public string? Status { get; set; }
         public string? CurrentStep { get; set; }
+        public string? RequiredRole {  get; set; }
         public List<WorkflowActionDto> WorkflowActions { get; set; }
         public List<SupportingDocumentDto> SupportingDocuments { get; set; }
     }
