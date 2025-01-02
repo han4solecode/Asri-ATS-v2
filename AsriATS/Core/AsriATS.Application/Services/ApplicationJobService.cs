@@ -588,13 +588,14 @@ namespace AsriATS.Application.Services
             }
 
             // Ensure the application belongs to the current user
-            var application = await _applicationJobRepository.GetFirstOrDefaultAsyncUpdate(aj => aj.ApplicationJobId == requestDto.ApplicationJobId && aj.UserId == user.Id, include: query => query.Include(aj => aj.SupportingDocumentsIdNavigation));
+            var application = await _applicationJobRepository.GetFirstOrDefaultAsyncUpdate(aj => aj.ProcessId == requestDto.ProcessId && aj.UserId == user.Id, include: query => query.Include(aj => aj.SupportingDocumentsIdNavigation));
 
             if (application == null)
             {
                 return new BaseResponseDto
                 {
                     Status = "Error",
+
                     Message = "Application job not found"
                 };
             }
@@ -793,7 +794,7 @@ namespace AsriATS.Application.Services
                 Status = process.Status ?? "No status available",
                 CurrentStep = process.WorkflowSequence?.StepName ?? "No step available",
                 RequiredRole = process.WorkflowSequence?.Role?.Name ?? "No role available",
-                JobPostId = app.JobPostId,
+                JobPostName = app.JobPostNavigation.JobTitle ?? "No Job Post Name",
                 UploadedDate = app.UploadedDate,
                 SupportingDocuments = supportingDoc.Select(sd => new SupportingDocumentDto
                 {

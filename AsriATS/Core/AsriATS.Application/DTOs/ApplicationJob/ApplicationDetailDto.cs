@@ -20,7 +20,7 @@ namespace AsriATS.Application.DTOs.ApplicationJob
         public string? Education { get; set; }
         public string? Skills { get; set; }
         public DateTime UploadedDate { get; set; }
-        public int JobPostId { get; set; }
+        public string? JobPostName { get; set; }
         public int ProcessId { get; set; }
         public string? Status { get; set; }
         public string? CurrentStep { get; set; }
