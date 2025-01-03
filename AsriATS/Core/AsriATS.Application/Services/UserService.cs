@@ -15,6 +15,7 @@ using Microsoft.EntityFrameworkCore;
 using AsriATS.Application.DTOs.User;
 using AsriATS.Application.Persistance;
 using AsriATS.Application.DTOs.Report;
+using System.Reflection.Metadata;
 
 namespace AsriATS.Application.Services
 {
@@ -455,8 +456,10 @@ namespace AsriATS.Application.Services
                     Directory.CreateDirectory(userUploadPath); // Create directory for the user if it doesn't exist
                 }
 
-                var fileName = Path.GetFileName(file.FileName);
-                var filePath = Path.Combine(userUploadPath, $"{Guid.NewGuid()}_{fileName}");
+                var fileExtension = Path.GetExtension(file.FileName); // Get file extension
+                var originalFileName = Path.GetFileNameWithoutExtension(file.FileName); // Get original file name without extension
+                var fileName = $"{Guid.NewGuid()}_{originalFileName}{fileExtension}";
+                var filePath = Path.Combine(userUploadPath, fileName);
 
                 using (var stream = new FileStream(filePath, FileMode.Create))
                 {
@@ -467,7 +470,7 @@ namespace AsriATS.Application.Services
                 var newDocument = new SupportingDocument
                 {
                     UserId = user!.Id,
-                    DocumentName = file.FileName,
+                    DocumentName = fileName,
                     FilePath = filePath,
                     UploadedDate = DateTime.UtcNow,
                 };
