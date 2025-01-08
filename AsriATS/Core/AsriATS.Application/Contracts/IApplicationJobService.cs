@@ -7,14 +7,14 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using AsriATS.Application.DTOs.Request;
+using AsriATS.Application.DTOs.Helpers;
 
 namespace AsriATS.Application.Contracts
 {
     public interface IApplicationJobService
     {
         Task<BaseResponseDto> SubmitApplicationJob(ApplicationJobDto request, List<IFormFile> supportingDocuments);
-        Task<IEnumerable<object>> GetAllApplicationStatuses();
-
+        Task<object> GetAllApplicationStatuses(Pagination pagination);
         Task<SupportingDocumentResponseDto> GetAllSupportingDocuments();
 
         Task<SupportingDocumentResponseDto> GetSupportingDocumentById(int id);

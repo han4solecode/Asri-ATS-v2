@@ -15,6 +15,8 @@ using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
 using AsriATS.Application.DTOs.Request;
 using AsriATS.Application.DTOs.WorkflowAction;
+using AsriATS.Application.DTOs.Helpers;
+using AsriATS.Application.DTOs.InterivewScheduling;
 
 namespace AsriATS.Application.Services
 {
@@ -33,8 +35,9 @@ namespace AsriATS.Application.Services
         private readonly IEmailService _emailService;
         private readonly IApplicationJobRepository _applicationJobRepository;
         private readonly IDocumentSupportRepository _documentSupportRepository;
+        private readonly IInterviewSchedulingRepository _interviewSchedulingRepository;
 
-        public ApplicationJobService(IJobPostRequestRepository jobPostRequestRepository, INextStepRuleRepository nextStepRuleRepository, IWorkflowSequenceRepository workflowSequenceRepository, IWorkflowRepository workflowRepository, IProcessRepository processRepository, IWorkflowActionRepository workflowActionRepository, UserManager<AppUser> userManager, IHttpContextAccessor httpContextAccessor, IJobPostRepository jobPostRepository, RoleManager<AppRole> roleManager, IEmailService emailService, IApplicationJobRepository applicationJobRepository, IDocumentSupportRepository documentSupportRepository)
+        public ApplicationJobService(IJobPostRequestRepository jobPostRequestRepository, INextStepRuleRepository nextStepRuleRepository, IWorkflowSequenceRepository workflowSequenceRepository, IWorkflowRepository workflowRepository, IProcessRepository processRepository, IWorkflowActionRepository workflowActionRepository, UserManager<AppUser> userManager, IHttpContextAccessor httpContextAccessor, IJobPostRepository jobPostRepository, RoleManager<AppRole> roleManager, IEmailService emailService, IApplicationJobRepository applicationJobRepository, IDocumentSupportRepository documentSupportRepository, IInterviewSchedulingRepository interviewSchedulingRepository)
         {
             _jobPostRequestRepository = jobPostRequestRepository;
             _nextStepRuleRepository = nextStepRuleRepository;
@@ -49,6 +52,7 @@ namespace AsriATS.Application.Services
             _emailService = emailService;
             _applicationJobRepository = applicationJobRepository;
             _documentSupportRepository = documentSupportRepository;
+            _interviewSchedulingRepository = interviewSchedulingRepository;
         }
 
         public async Task<BaseResponseDto> SubmitApplicationJob(ApplicationJobDto request, List<IFormFile> supportingDocuments = null)
@@ -282,7 +286,7 @@ namespace AsriATS.Application.Services
             };
         }
 
-        public async Task<IEnumerable<object>> GetAllApplicationStatuses()
+        public async Task<object> GetAllApplicationStatuses(Pagination pagination)
         {
             // Get user and roles from HttpContextAccessor
             var userName = _httpContextAccessor.HttpContext!.User.Identity!.Name;
@@ -313,7 +317,7 @@ namespace AsriATS.Application.Services
                 }
             }
 
-            // Project the results into a more user-friendly format
+            // Project the results into a user-friendly format
             var applicationStatuses = applications.Select(app => new
             {
                 ApplicationId = app.ApplicationJobId,
@@ -323,10 +327,29 @@ namespace AsriATS.Application.Services
                 ProcessId = app.ProcessIdNavigation.ProcessId,
                 CurrentStep = app.ProcessIdNavigation.WorkflowSequence.StepName,
                 Comments = app.ProcessIdNavigation.WorkflowActions.Select(wa => wa.Comments).LastOrDefault() // Get last comment or null if none
-            }).ToList();
+            });
 
-            return applicationStatuses;
+            // Apply pagination
+            var totalRecords = applicationStatuses.Count();
+            var pageNumber = pagination.PageNumber ?? 1;
+            var pageSize = pagination.PageSize ?? 20;
+            var totalPages = (int)Math.Ceiling((double)totalRecords / pageSize);
+
+            var paginatedData = applicationStatuses
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            return new
+            {
+                TotalRecords = totalRecords,
+                TotalPages = totalPages,
+                CurrentPage = pageNumber,
+                PageSize = pageSize,
+                Data = paginatedData
+            };
         }
+
 
         public async Task<SupportingDocumentResponseDto> GetAllSupportingDocuments()
         {
@@ -779,6 +802,7 @@ namespace AsriATS.Application.Services
 
             var workflowActions = await _workflowActionRepository.GetByProcessIdAsync(process.ProcessId) ?? new List<WorkflowAction>();
             var supportingDoc = await _documentSupportRepository.GetByApplicationJobIdAsync(app.ApplicationJobId);
+            var interview = await _interviewSchedulingRepository.GetByProcessIdAsync(process.ProcessId);
 
             var processDetailDto = new ApplicationDetailDto
             {
@@ -809,7 +833,19 @@ namespace AsriATS.Application.Services
                     ActionBy = action.Actor?.UserName ?? "Unknown",
                     Action = action.Action ?? "No action",
                     Comments = action.Comments ?? "No comments"
-                }).ToList()
+                }).ToList(),
+                InterviewSchedulingDetails = interview.Select(interviews => new InterviewSchedulingDetailsDto
+                {
+                    InterviewSchedulingId = interviews.InterviewSchedulingId,
+                    ApplicationId = interviews.ApplicationId,
+                    ProcessId = interviews.ProcessId,
+                    InterviewTime = interviews.InterviewTime,
+                    InterviewType = interviews.InterviewType,
+                    Interviewer = interviews.Interviewer,
+                    InterviewersComments = interviews.InterviewersComments,
+                    IsConfirmed = interviews.IsConfirmed,
+                    Location = interviews.Location,
+                }).ToList(),
             };
 
             return processDetailDto;

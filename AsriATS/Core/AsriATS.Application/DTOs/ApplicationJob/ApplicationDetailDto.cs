@@ -1,4 +1,5 @@
-﻿using AsriATS.Application.DTOs.WorkflowAction;
+﻿using AsriATS.Application.DTOs.InterivewScheduling;
+using AsriATS.Application.DTOs.WorkflowAction;
 using AsriATS.Domain.Entities;
 using System;
 using System.Collections.Generic;
@@ -27,5 +28,6 @@ namespace AsriATS.Application.DTOs.ApplicationJob
         public string? RequiredRole {  get; set; }
         public List<WorkflowActionDto> WorkflowActions { get; set; }
         public List<SupportingDocumentDto> SupportingDocuments { get; set; }
+        public List<InterviewSchedulingDetailsDto> InterviewSchedulingDetails { get; set; }
     }
 }

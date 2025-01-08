@@ -7,5 +7,6 @@ namespace AsriATS.Application.Persistance
     public interface IInterviewSchedulingRepository : IBaseRepository<InterviewScheduling>
     {
         Task<IEnumerable<InterviewScheduling>> GetAllInterviewSchedulesAsync(Expression<Func<InterviewScheduling, bool>> expression);
+        Task<List<InterviewScheduling>> GetByProcessIdAsync(int processId);
     }
 }
