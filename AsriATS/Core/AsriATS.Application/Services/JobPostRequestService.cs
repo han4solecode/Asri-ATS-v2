@@ -9,6 +9,8 @@ using System.Security.Claims;
 using AsriATS.Application.DTOs.Register;
 using AsriATS.Application.DTOs.Request;
 using AsriATS.Application.DTOs.Email;
+using AsriATS.Application.DTOs.Helpers;
+using AsriATS.Application.DTOs.JobPost;
 
 namespace AsriATS.Application.Services
 {
@@ -350,7 +352,7 @@ namespace AsriATS.Application.Services
             };
         }
 
-        public async Task<IEnumerable<object>> GetJobPostRequestToReview()
+        public async Task<object> GetJobPostRequestToReview(JobPostSearch queryObject, Pagination pagination)
         {
             // get user and role from httpcontextaccessor
             var userName = _httpContextAccessor.HttpContext!.User.Identity!.Name;
@@ -362,7 +364,7 @@ namespace AsriATS.Application.Services
             var roleId = role!.Id;
 
             // retrieve job post requests
-            var requests = await _jobPostRequestRepository.GetAllToBeReviewedAsync(user!.CompanyId!.Value, roleId);
+            var (requests, totalCount) = await _jobPostRequestRepository.GetAllToBeReviewedAsync(user!.CompanyId!.Value, roleId, queryObject, pagination);
 
             var a = requests.Select(r => new
             {
@@ -380,7 +382,15 @@ namespace AsriATS.Application.Services
                 Comments = r.ProcessIdNavigation.WorkflowActions.Select(wa => wa.Comments).Last()
             }).ToList();
 
-            return a;
+            var totalPages = (int)Math.Ceiling((decimal)(totalCount) / (pagination.PageSize ?? 20));
+
+            var result = new
+            {
+                Data = a,
+                TotalPages = totalPages
+            };
+
+            return result;
         }
 
         // Method for updated the request after need modification approval
@@ -586,14 +596,14 @@ namespace AsriATS.Application.Services
             return jobPostRequestDto;
         }
 
-        public async Task<IEnumerable<object>> GetJobPostRequestForRecruiter()
+        public async Task<object> GetJobPostRequestForRecruiter(JobPostSearch queryObject, Pagination pagination)
         {
             // get user and role from httpcontextaccessor
             var userName = _httpContextAccessor.HttpContext!.User.Identity!.Name;
             var user = await _userManager.FindByNameAsync(userName!);
 
             // retrieve job post requests
-            var requests = await _jobPostRequestRepository.GetAllJobPostRequestsForRecruiter(user!.Id!);
+            var (requests, totalCount) = await _jobPostRequestRepository.GetAllJobPostRequestsForRecruiter(user!.Id!,queryObject,pagination);
 
             var a = requests.Select(r => new
             {
@@ -611,7 +621,51 @@ namespace AsriATS.Application.Services
                 Comments = r.ProcessIdNavigation.WorkflowActions.Select(wa => wa.Comments).Last()
             }).ToList();
 
-            return a;
+            var totalPages = (int)Math.Ceiling((decimal)(totalCount) / (pagination.PageSize ?? 20));
+
+            var result = new
+            {
+                Data = a,
+                TotalPages = totalPages,
+            };
+
+            return result;
+        }
+
+        public async Task<object> GetHistoryJobPostRequest(JobPostSearch queryObject, Pagination pagination)
+        {
+            // get user and role from httpcontextaccessor
+            var userName = _httpContextAccessor.HttpContext!.User.Identity!.Name;
+            var user = await _userManager.FindByNameAsync(userName!);
+
+            // retrieve job post requests
+            var (requests, totalCount) = await _jobPostRequestRepository.GetAllJobPostRequestHistoryHRManager(user.CompanyId,queryObject,pagination);
+
+            var a = requests.Select(r => new
+            {
+                ProcessId = r.ProcessId,
+                Requester = $"{r.ProcessIdNavigation.Requester.FirstName} {r.ProcessIdNavigation.Requester.LastName}",
+                RequestDate = r.ProcessIdNavigation.RequestDate,
+                JobTitle = r.JobTitle,
+                Description = r.Description,
+                Requirements = r.Requirements,
+                Location = r.Location,
+                MinSalary = r.MinSalary,
+                MaxSalary = r.MaxSalary,
+                EmploymentType = r.EmploymentType,
+                Status = r.ProcessIdNavigation.Status,
+                Comments = r.ProcessIdNavigation.WorkflowActions.Select(wa => wa.Comments).Last()
+            }).ToList();
+
+            var totalPages = (int)Math.Ceiling((decimal)(totalCount) / (pagination.PageSize ?? 20)); 
+
+            var result = new
+            {
+                Data = a,
+                TotalPages = totalPages,
+            };
+
+            return result;
         }
     }
 }

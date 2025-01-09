@@ -1,4 +1,6 @@
 using AsriATS.Application.Contracts;
+using AsriATS.Application.DTOs.Helpers;
+using AsriATS.Application.DTOs.JobPost;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -92,9 +94,9 @@ namespace AsriATS.WebAPI.Controllers
         /// <returns>A list of job post request</returns>
         [Authorize(Roles = "HR Manager")]
         [HttpGet("job-post-request")]
-        public async Task<IActionResult> GetAllJobPostRequestToReview()
+        public async Task<IActionResult> GetAllJobPostRequestToReview([FromQuery] JobPostSearch queryObject, [FromQuery] Pagination pagination)
         {
-            var request = await _jobPostRequestService.GetJobPostRequestToReview();
+            var request = await _jobPostRequestService.GetJobPostRequestToReview(queryObject,pagination);
 
             return Ok(request);
         }

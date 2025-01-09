@@ -1,4 +1,6 @@
 ﻿using AsriATS.Application.Contracts;
+using AsriATS.Application.DTOs.Helpers;
+using AsriATS.Application.DTOs.JobPost;
 using AsriATS.Application.DTOs.JobPostRequest;
 using AsriATS.Application.DTOs.Request;
 using Microsoft.AspNetCore.Authorization;
@@ -144,9 +146,9 @@ namespace AsriATS.WebAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetJobPostRequestLists()
+        public async Task<IActionResult> GetJobPostRequestLists([FromQuery] JobPostSearch queryObject, [FromQuery] Pagination pagination)
         {
-            var res = await _jobPostRequestService.GetJobPostRequestToReview();
+            var res = await _jobPostRequestService.GetJobPostRequestToReview(queryObject,pagination);
             return Ok(res);
         }
 
@@ -162,9 +164,17 @@ namespace AsriATS.WebAPI.Controllers
         }
 
         [HttpGet("recruiter")]
-        public async Task<IActionResult> GetJobPostRequestForRecruiter()
+        public async Task<IActionResult> GetJobPostRequestForRecruiter([FromQuery] JobPostSearch queryObject, [FromQuery] Pagination pagination)
         {
-            var res = await _jobPostRequestService.GetJobPostRequestForRecruiter();
+            var res = await _jobPostRequestService.GetJobPostRequestForRecruiter(queryObject,pagination);
+            return Ok(res);
+        }
+
+        [Authorize(Roles = "HR Manager")]
+        [HttpGet("history")]
+        public async Task<IActionResult> GetHistoryJobPostRequest([FromQuery] JobPostSearch queryObject, [FromQuery] Pagination pagination)
+        {
+            var res = await _jobPostRequestService.GetHistoryJobPostRequest(queryObject,pagination);
             return Ok(res);
         }
     }
