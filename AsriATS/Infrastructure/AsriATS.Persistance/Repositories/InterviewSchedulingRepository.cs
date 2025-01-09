@@ -56,5 +56,16 @@ namespace AsriATS.Persistance.Repositories
             _context.InterviewScheduling.Update(entity);
             await _context.SaveChangesAsync();
         }
+
+        public async Task<List<InterviewScheduling>> GetByProcessIdAsync(int processId)
+        {
+            var workflowActions = await _context.InterviewScheduling
+                                                .Where(w => w.ProcessId == processId)
+                                                .Include(w => w.ProcessIdNavigation) // Include only the navigation property
+                                                .OrderByDescending(w => w.ProcessId)
+                                                .ToListAsync();
+
+            return workflowActions;
+        }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using AsriATS.Application.Contracts;
 using AsriATS.Application.DTOs;
 using AsriATS.Application.DTOs.ApplicationJob;
+using AsriATS.Application.DTOs.Helpers;
 using AsriATS.Application.DTOs.Request;
 using AsriATS.Application.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -77,11 +78,11 @@ namespace AsriATS.WebAPI.Controllers
         /// The response includes a list of all job applications with their corresponding statuses.
         /// </remarks>
         /// <returns>Returns a list of job application statuses.</returns>
-        [Authorize(Roles = "Applicant, HR Manager, Recruiter")]
+        [Authorize(Roles = "Applicant,HR Manager,Recruiter")]
         [HttpGet("job-application")]
-        public async Task<IActionResult> GetAllApplication()
+        public async Task<IActionResult> GetAllApplication([FromQuery]Pagination pagination)
         {
-            var request = await _applicationJobService.GetAllApplicationStatuses();
+            var request = await _applicationJobService.GetAllApplicationStatuses(pagination);
 
             return Ok(request);
         }
@@ -253,6 +254,14 @@ namespace AsriATS.WebAPI.Controllers
             }
 
             return Ok(response);
+        }
+
+        [Authorize(Roles = "Applicant,HR Manager,Recruiter")]
+        [HttpGet("application/{processId}")]
+        public async Task<IActionResult> ApplicationDetails(int processId)
+        {
+            var res = await _applicationJobService.GetProcessAsync(processId);
+            return Ok(res);
         }
     }
 }

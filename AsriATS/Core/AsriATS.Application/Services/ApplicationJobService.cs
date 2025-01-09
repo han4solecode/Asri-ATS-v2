@@ -14,6 +14,9 @@ using AsriATS.Application.DTOs.Email;
 using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
 using AsriATS.Application.DTOs.Request;
+using AsriATS.Application.DTOs.WorkflowAction;
+using AsriATS.Application.DTOs.Helpers;
+using AsriATS.Application.DTOs.InterivewScheduling;
 
 namespace AsriATS.Application.Services
 {
@@ -32,8 +35,9 @@ namespace AsriATS.Application.Services
         private readonly IEmailService _emailService;
         private readonly IApplicationJobRepository _applicationJobRepository;
         private readonly IDocumentSupportRepository _documentSupportRepository;
+        private readonly IInterviewSchedulingRepository _interviewSchedulingRepository;
 
-        public ApplicationJobService(IJobPostRequestRepository jobPostRequestRepository, INextStepRuleRepository nextStepRuleRepository, IWorkflowSequenceRepository workflowSequenceRepository, IWorkflowRepository workflowRepository, IProcessRepository processRepository, IWorkflowActionRepository workflowActionRepository, UserManager<AppUser> userManager, IHttpContextAccessor httpContextAccessor, IJobPostRepository jobPostRepository, RoleManager<AppRole> roleManager, IEmailService emailService, IApplicationJobRepository applicationJobRepository, IDocumentSupportRepository documentSupportRepository)
+        public ApplicationJobService(IJobPostRequestRepository jobPostRequestRepository, INextStepRuleRepository nextStepRuleRepository, IWorkflowSequenceRepository workflowSequenceRepository, IWorkflowRepository workflowRepository, IProcessRepository processRepository, IWorkflowActionRepository workflowActionRepository, UserManager<AppUser> userManager, IHttpContextAccessor httpContextAccessor, IJobPostRepository jobPostRepository, RoleManager<AppRole> roleManager, IEmailService emailService, IApplicationJobRepository applicationJobRepository, IDocumentSupportRepository documentSupportRepository, IInterviewSchedulingRepository interviewSchedulingRepository)
         {
             _jobPostRequestRepository = jobPostRequestRepository;
             _nextStepRuleRepository = nextStepRuleRepository;
@@ -48,6 +52,7 @@ namespace AsriATS.Application.Services
             _emailService = emailService;
             _applicationJobRepository = applicationJobRepository;
             _documentSupportRepository = documentSupportRepository;
+            _interviewSchedulingRepository = interviewSchedulingRepository;
         }
 
         public async Task<BaseResponseDto> SubmitApplicationJob(ApplicationJobDto request, List<IFormFile> supportingDocuments = null)
@@ -281,7 +286,7 @@ namespace AsriATS.Application.Services
             };
         }
 
-        public async Task<IEnumerable<object>> GetAllApplicationStatuses()
+        public async Task<object> GetAllApplicationStatuses(Pagination pagination)
         {
             // Get user and roles from HttpContextAccessor
             var userName = _httpContextAccessor.HttpContext!.User.Identity!.Name;
@@ -301,7 +306,7 @@ namespace AsriATS.Application.Services
                 else
                 {
                     // Ensure CompanyId has a value for non-applicant roles
-                    if (!user.CompanyId.HasValue)
+                    if (!user!.CompanyId.HasValue)
                     {
                         throw new InvalidOperationException("User does not have a company associated.");
                     }
@@ -312,18 +317,39 @@ namespace AsriATS.Application.Services
                 }
             }
 
-            // Project the results into a more user-friendly format
+            // Project the results into a user-friendly format
             var applicationStatuses = applications.Select(app => new
             {
                 ApplicationId = app.ApplicationJobId,
                 ApplicantName = $"{app.UserIdNavigation.FirstName} {app.UserIdNavigation.LastName}",
                 JobTitle = app.JobPostNavigation.JobTitle,
                 Status = app.ProcessIdNavigation.Status,
+                ProcessId = app.ProcessIdNavigation.ProcessId,
+                CurrentStep = app.ProcessIdNavigation.WorkflowSequence.StepName,
                 Comments = app.ProcessIdNavigation.WorkflowActions.Select(wa => wa.Comments).LastOrDefault() // Get last comment or null if none
-            }).ToList();
+            });
 
-            return applicationStatuses;
+            // Apply pagination
+            var totalRecords = applicationStatuses.Count();
+            var pageNumber = pagination.PageNumber ?? 1;
+            var pageSize = pagination.PageSize ?? 20;
+            var totalPages = (int)Math.Ceiling((double)totalRecords / pageSize);
+
+            var paginatedData = applicationStatuses
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            return new
+            {
+                TotalRecords = totalRecords,
+                TotalPages = totalPages,
+                CurrentPage = pageNumber,
+                PageSize = pageSize,
+                Data = paginatedData
+            };
         }
+
 
         public async Task<SupportingDocumentResponseDto> GetAllSupportingDocuments()
         {
@@ -585,13 +611,14 @@ namespace AsriATS.Application.Services
             }
 
             // Ensure the application belongs to the current user
-            var application = await _applicationJobRepository.GetFirstOrDefaultAsyncUpdate(aj => aj.ApplicationJobId == requestDto.ApplicationJobId && aj.UserId == user.Id, include: query => query.Include(aj => aj.SupportingDocumentsIdNavigation));
+            var application = await _applicationJobRepository.GetFirstOrDefaultAsyncUpdate(aj => aj.ProcessId == requestDto.ProcessId && aj.UserId == user.Id, include: query => query.Include(aj => aj.SupportingDocumentsIdNavigation));
 
             if (application == null)
             {
                 return new BaseResponseDto
                 {
                     Status = "Error",
+
                     Message = "Application job not found"
                 };
             }
@@ -755,5 +782,74 @@ namespace AsriATS.Application.Services
                 Message = "Application job updated successfully. Reviewers have been notified."
             };
         }
+
+        public async Task<ApplicationDetailDto> GetProcessAsync(int processId)
+        {
+            var process = await _processRepository.GetByIdAsync(processId);
+            if (process == null)
+            {
+                throw new NullReferenceException("Process not found.");
+            }
+
+            var app = await _processRepository.GetByProcessIdAsync(processId);
+            if (app == null)
+            {
+                throw new NullReferenceException("Leave request not found for the given process ID.");
+            }
+
+            var request = _httpContextAccessor.HttpContext.Request;
+            var baseUrl = $"{request.Scheme}://{request.Host}/uploads/";
+
+            var workflowActions = await _workflowActionRepository.GetByProcessIdAsync(process.ProcessId) ?? new List<WorkflowAction>();
+            var supportingDoc = await _documentSupportRepository.GetByApplicationJobIdAsync(app.ApplicationJobId);
+            var interview = await _interviewSchedulingRepository.GetByProcessIdAsync(process.ProcessId);
+
+            var processDetailDto = new ApplicationDetailDto
+            {
+                ApplicationJobId = app.ApplicationJobId,
+                ProcessId = process.ProcessId,
+                Name = app.Name ?? "No name provided",
+                Email = app.Email ?? "No email provided",
+                PhoneNumber = app.PhoneNumber ?? "Unknown",
+                Address = app.Address ?? "No address available",
+                WorkExperience = app.WorkExperience ?? "No Work Experience provided",
+                Education = app.Education ?? "No Education provided",
+                Skills = app.Skills ?? "No skills provided",
+                Status = process.Status ?? "No status available",
+                CurrentStep = process.WorkflowSequence?.StepName ?? "No step available",
+                RequiredRole = process.WorkflowSequence?.Role?.Name ?? "No role available",
+                JobPostName = app.JobPostNavigation.JobTitle ?? "No Job Post Name",
+                UploadedDate = app.UploadedDate,
+                SupportingDocuments = supportingDoc.Select(sd => new SupportingDocumentDto
+                {
+                    SupportingDocumentsId = sd.SupportingDocumentId,
+                    DocumentName = sd.DocumentName,
+                    FilePath = $"{baseUrl}{app.UserId}/" + Uri.EscapeDataString(sd.DocumentName),
+                    UploadedDate = sd.UploadedDate,
+                }).ToList(),
+                WorkflowActions = workflowActions.Select(action => new WorkflowActionDto
+                {
+                    ActionDate = action.ActionDate,
+                    ActionBy = action.Actor?.UserName ?? "Unknown",
+                    Action = action.Action ?? "No action",
+                    Comments = action.Comments ?? "No comments"
+                }).ToList(),
+                InterviewSchedulingDetails = interview.Select(interviews => new InterviewSchedulingDetailsDto
+                {
+                    InterviewSchedulingId = interviews.InterviewSchedulingId,
+                    ApplicationId = interviews.ApplicationId,
+                    ProcessId = interviews.ProcessId,
+                    InterviewTime = interviews.InterviewTime,
+                    InterviewType = interviews.InterviewType,
+                    Interviewer = interviews.Interviewer,
+                    InterviewersComments = interviews.InterviewersComments,
+                    IsConfirmed = interviews.IsConfirmed,
+                    Location = interviews.Location,
+                }).ToList(),
+            };
+
+            return processDetailDto;
+        }
+
     }
 }

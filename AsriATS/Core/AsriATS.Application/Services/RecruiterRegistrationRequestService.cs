@@ -8,6 +8,9 @@ using Microsoft.AspNetCore.Identity;
 using AsriATS.Application.DTOs.Email;
 using Org.BouncyCastle.Asn1.Ocsp;
 using System.Diagnostics;
+using System.ComponentModel.Design;
+using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 
 namespace AsriATS.Application.Services
 {
@@ -18,14 +21,16 @@ namespace AsriATS.Application.Services
         private readonly UserManager<AppUser> _userManager;
         private readonly RoleManager<AppRole> _roleManager;
         private readonly IEmailService _emailService;
+        private readonly IHttpContextAccessor _httpContextAccessor;
         private static readonly Random Random = new Random();
-        public RecruiterRegistrationRequestService(IRecruiterRegistrationRequestRepository recruiterRegistrationRequestRepository, ICompanyRepository companyRepository, UserManager<AppUser> userManager, RoleManager<AppRole> roleManager, IEmailService emailService)
+        public RecruiterRegistrationRequestService(IRecruiterRegistrationRequestRepository recruiterRegistrationRequestRepository, ICompanyRepository companyRepository, UserManager<AppUser> userManager, RoleManager<AppRole> roleManager, IEmailService emailService, IHttpContextAccessor httpContextAccessor)
         {
             _recruiterRegistrationRequestRepository = recruiterRegistrationRequestRepository;
             _companyRepository = companyRepository;
             _userManager = userManager;
             _roleManager = roleManager;
             _emailService = emailService;
+            _httpContextAccessor = httpContextAccessor;
         }
         public async Task<BaseResponseDto> SubmitRecruiterRegistrationRequest(RecruiterRegistrationRequestDto request)
         {
@@ -81,7 +86,9 @@ namespace AsriATS.Application.Services
 
         public async Task<RecruiterRegistrationRequestResponseDto> ReviewRecruiterRegistrationRequest(int id)
         {
-            var recruiterRegistrationRequest = await _recruiterRegistrationRequestRepository.GetByIdAsync(id);
+            var recruiterRegistrationRequest = await _recruiterRegistrationRequestRepository
+                .GetAll().Include(r => r.CompanyIdNavigation).FirstOrDefaultAsync(r => r.RecruiterRegistrationRequestId == id);
+
             if (recruiterRegistrationRequest == null)
             {
                 return new RecruiterRegistrationRequestResponseDto
@@ -101,7 +108,8 @@ namespace AsriATS.Application.Services
                 Dob = recruiterRegistrationRequest.Dob,
                 Sex = recruiterRegistrationRequest.Sex,
                 Address = recruiterRegistrationRequest.Address,
-                CompanyId = recruiterRegistrationRequest.CompanyId,
+                CompanyName = recruiterRegistrationRequest.CompanyIdNavigation.Name ?? "No Company Name",
+                IsApproved = recruiterRegistrationRequest.IsApproved,
             };
             return recruiterRegistrationRequesResponseDto;
         }
@@ -203,9 +211,35 @@ namespace AsriATS.Application.Services
             };
         }
 
-        public async Task<IEnumerable<AllRecruiterRegistrationRequestDto>> GetAllUnreviewedRecruiterRegistrationRequest()
+        public async Task<RecruiterRegistrationListDto> GetAllRecruiterRegistrationRequests()
         {
-            var rrToBeReviewed = await _recruiterRegistrationRequestRepository.GetAllToBeReviewedAsync();
+            // Get the currently logged-in user
+            var userName = _httpContextAccessor.HttpContext?.User.Identity?.Name;
+
+            if (string.IsNullOrEmpty(userName))
+            {
+                throw new UnauthorizedAccessException("User is not authenticated.");
+            }
+
+            // Retrieve the user details from the UserManager
+            var user = await _userManager.FindByNameAsync(userName);
+
+            if (user == null)
+            {
+                throw new UnauthorizedAccessException("User not found.");
+            }
+
+            // Ensure the user has a CompanyId
+            if (!user.CompanyId.HasValue)
+            {
+                throw new InvalidOperationException("User does not have a company associated.");
+            }
+
+            var userCompanyId = user.CompanyId.Value;
+
+            // Fetch recruiter registration requests that are to be reviewed
+            var rrToBeReviewed = await _recruiterRegistrationRequestRepository
+                .GetAllToBeReviewedAsync(r => r.CompanyId == userCompanyId && r.IsApproved == null);
 
             var rrToBeReviewedDto = rrToBeReviewed.Select(rr => new AllRecruiterRegistrationRequestDto
             {
@@ -217,13 +251,35 @@ namespace AsriATS.Application.Services
                 Dob = rr.Dob,
                 Sex = rr.Sex,
                 Address = rr.Address,
-                CompanyId = rr.CompanyId,
-                IsApproved = rr.IsApproved,
+                CompanyName = rr.CompanyIdNavigation.Name ?? "No company Name",
+                IsApproved = rr.IsApproved == null, // Still to be reviewed
             }).ToList();
 
-            return rrToBeReviewedDto;
-        }
+            // Fetch recruiter registration requests that are already reviewed
+            var rrAlreadyReviewed = await _recruiterRegistrationRequestRepository
+                .GetAllToBeReviewedAsync(r => r.CompanyId == userCompanyId && r.IsApproved != null);
 
+            var rrAlreadyReviewedDto = rrAlreadyReviewed.Select(rr => new AllRecruiterRegistrationRequestDto
+            {
+                RecruiterRegistrationRequestId = rr.RecruiterRegistrationRequestId,
+                Email = rr.Email,
+                FirstName = rr.FirstName,
+                LastName = rr.LastName,
+                PhoneNumber = rr.PhoneNumber,
+                Dob = rr.Dob,
+                Sex = rr.Sex,
+                Address = rr.Address,
+                CompanyName = rr.CompanyIdNavigation.Name ?? "No company Name",
+                IsApproved = rr.IsApproved != null, // Already reviewed
+            }).ToList();
+
+            // Return both lists encapsulated in a response DTO
+            return new RecruiterRegistrationListDto
+            {
+                ToBeReviewed = rrToBeReviewedDto,
+                AlreadyReviewed = rrAlreadyReviewedDto
+            };
+        }
 
 
         private static string GeneratePassword(int length = 8)

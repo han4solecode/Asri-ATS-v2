@@ -51,5 +51,11 @@ namespace AsriATS.Persistance.Repositories
         {
             return await _context.Processes.FirstOrDefaultAsync(expression);
         }
+
+        public async Task<ApplicationJob> GetByProcessIdAsync(int processId)
+        {
+            return await _context.ApplicationJobs
+                                 .FirstOrDefaultAsync(lr => lr.ProcessId == processId);
+        }
     }
 }

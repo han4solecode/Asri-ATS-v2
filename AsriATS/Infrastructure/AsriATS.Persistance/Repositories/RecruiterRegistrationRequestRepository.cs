@@ -1,6 +1,7 @@
 ﻿using AsriATS.Application.Persistance;
 using AsriATS.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 
 namespace AsriATS.Persistance.Repositories
 {
@@ -45,11 +46,17 @@ namespace AsriATS.Persistance.Repositories
             await _context.SaveChangesAsync();
         }
 
-        public async Task<IEnumerable<RecruiterRegistrationRequest>> GetAllToBeReviewedAsync()
+        public async Task<IEnumerable<RecruiterRegistrationRequest>> GetAllToBeReviewedAsync(Expression<Func<RecruiterRegistrationRequest, bool>>? filter = null)
         {
-            var recruiterRegistrationRequests = await _context.RecruiterRegistrationRequests.Where(rr => rr.IsApproved == null).ToListAsync();
+            IQueryable<RecruiterRegistrationRequest> query = _context.RecruiterRegistrationRequests
+            .Include(r => r.CompanyIdNavigation); // Ensure related Company is included
 
-            return recruiterRegistrationRequests;
+            if (filter != null)
+            {
+                query = query.Where(filter);
+            }
+
+            return await query.ToListAsync();
         }
 
         public async Task<RecruiterRegistrationRequest?> FindByEmailAsync(string email)
@@ -57,6 +64,11 @@ namespace AsriATS.Persistance.Repositories
             var recruiterRegistrationRequest = await _context.RecruiterRegistrationRequests.FirstOrDefaultAsync(rr => rr.Email == email);
 
             return recruiterRegistrationRequest;
+        }
+
+        public IQueryable<RecruiterRegistrationRequest> GetAll()
+        {
+            return _context.RecruiterRegistrationRequests.AsQueryable();
         }
     }
 }

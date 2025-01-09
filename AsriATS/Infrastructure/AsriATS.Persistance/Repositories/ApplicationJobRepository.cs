@@ -55,11 +55,16 @@ namespace AsriATS.Persistance.Repositories
         {
             // Retrieve all applications for the user's company where the workflow role matches
             var applications = await _context.ApplicationJobs
+                .Include(r => r.ProcessIdNavigation)
+                    .ThenInclude(p => p.WorkflowSequence)
+                    .ThenInclude(wfs => wfs.Role)
+                .Include(r => r.ProcessIdNavigation)
+                    .ThenInclude(p => p.Requester)
                 .Include(app => app.ProcessIdNavigation)
-                .ThenInclude(p => p.WorkflowActions)
+                    .ThenInclude(p => p.WorkflowActions)
                 .Include(app => app.JobPostNavigation)
                 .Where(app => app.JobPostNavigation.CompanyId == companyId &&
-                              app.ProcessIdNavigation.WorkflowSequence.RequiredRole == userRole)
+                              app.ProcessIdNavigation.WorkflowSequence.Role.Name == userRole)
                 .ToListAsync();
 
             return applications;

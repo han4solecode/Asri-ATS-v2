@@ -125,7 +125,7 @@ namespace AsriATS.WebAPI.Controllers
         [HttpGet("recruiter-regist-request")]
         public async Task<IActionResult> GetAllRecruiterRegistrationRequest()
         {
-            var cr = await _recruiterRegistrationRequestService.GetAllUnreviewedRecruiterRegistrationRequest();
+            var cr = await _recruiterRegistrationRequestService.GetAllRecruiterRegistrationRequests();
 
             return Ok(cr);
         }
