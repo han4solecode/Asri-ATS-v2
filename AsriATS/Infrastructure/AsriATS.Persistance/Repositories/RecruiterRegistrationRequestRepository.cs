@@ -48,7 +48,8 @@ namespace AsriATS.Persistance.Repositories
 
         public async Task<IEnumerable<RecruiterRegistrationRequest>> GetAllToBeReviewedAsync(Expression<Func<RecruiterRegistrationRequest, bool>>? filter = null)
         {
-            var query = _context.RecruiterRegistrationRequests.AsQueryable();
+            IQueryable<RecruiterRegistrationRequest> query = _context.RecruiterRegistrationRequests
+            .Include(r => r.CompanyIdNavigation); // Ensure related Company is included
 
             if (filter != null)
             {
@@ -63,6 +64,11 @@ namespace AsriATS.Persistance.Repositories
             var recruiterRegistrationRequest = await _context.RecruiterRegistrationRequests.FirstOrDefaultAsync(rr => rr.Email == email);
 
             return recruiterRegistrationRequest;
+        }
+
+        public IQueryable<RecruiterRegistrationRequest> GetAll()
+        {
+            return _context.RecruiterRegistrationRequests.AsQueryable();
         }
     }
 }

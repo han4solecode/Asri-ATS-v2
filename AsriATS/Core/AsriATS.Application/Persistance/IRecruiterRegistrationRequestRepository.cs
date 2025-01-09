@@ -8,5 +8,6 @@ namespace AsriATS.Application.Persistance
     {
         Task<IEnumerable<RecruiterRegistrationRequest>> GetAllToBeReviewedAsync(Expression<Func<RecruiterRegistrationRequest, bool>>? filter = null);
         Task<RecruiterRegistrationRequest?> FindByEmailAsync(string email);
+        IQueryable<RecruiterRegistrationRequest> GetAll();
     }
 }
