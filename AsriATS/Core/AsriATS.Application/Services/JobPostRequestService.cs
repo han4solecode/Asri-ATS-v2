@@ -576,6 +576,7 @@ namespace AsriATS.Application.Services
             var jobPostRequestDto = new JobPostRequestResponseDto
             {
                 ProcessId = jobPostRequest?.ProcessId ?? 0, // Assuming 0 as a fallback value if null
+                CompanyName = jobPostRequest?.CompanyIdNavigation.Name ?? "",
                 RequiredRole = jobPostRequest?.ProcessIdNavigation?.WorkflowSequence?.Role?.Name ?? "Unknown", // Fallback to "Unknown"
                 Requester = $"{jobPostRequest?.ProcessIdNavigation?.Requester?.FirstName ?? "N/A"} {jobPostRequest?.ProcessIdNavigation?.Requester?.LastName ?? "N/A"}", // Fallback to "N/A" if null
                 CurrentStatus = jobPostRequest?.ProcessIdNavigation?.Status ?? "Unknown", // Fallback to "Unknown"
