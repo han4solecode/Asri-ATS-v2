@@ -122,6 +122,7 @@ namespace AsriATS.Application.Services
                 InterviewType = request.InterviewType,
                 Location = request.Location,
                 ProcessId = process.ProcessId,
+                InterviewerEmails = request.InterviewerEmails
             };
 
             await _interviewSchedulingRepository.CreateAsync(newInterviewSchedule);
@@ -602,6 +603,19 @@ namespace AsriATS.Application.Services
                 InterviwersComments = i.InterviewersComments
             });
 
+            return result;
+        }
+        public async Task<object?> GetInterviewSchedule(int processId)
+        {
+            var interviewSchedule = await _interviewSchedulingRepository.GetByProcessIdAsync(processId);
+
+            var result =  new {
+                InterviewTime = interviewSchedule[0].InterviewTime,
+                Interviewers = interviewSchedule[0].Interviewer,
+                InterviewType = interviewSchedule[0].InterviewType,
+                InterviewerEmails = interviewSchedule[0]?.InterviewerEmails ?? [""],
+                Location = interviewSchedule[0].Location
+            };
             return result;
         }
     }

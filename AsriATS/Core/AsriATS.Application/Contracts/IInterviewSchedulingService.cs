@@ -1,6 +1,7 @@
 ﻿using AsriATS.Application.DTOs.InterivewScheduling;
 using AsriATS.Application.DTOs;
 using AsriATS.Application.DTOs.Request;
+using AsriATS.Domain.Entities;
 
 namespace AsriATS.Application.Contracts
 {
@@ -23,5 +24,6 @@ namespace AsriATS.Application.Contracts
         Task<IEnumerable<object>> GetAllConfirmedInterviewSchedules();
 
         Task<IEnumerable<object>> GetAllCompletedInterview();
+        Task<object ?> GetInterviewSchedule(int processId);
     }
 }

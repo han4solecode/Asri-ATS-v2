@@ -281,5 +281,13 @@ namespace AsriATS.WebAPI.Controllers
 
             return Ok(result);
         }
+
+        [Authorize]
+        [HttpGet("application/{processId}")]
+        public async Task<IActionResult> GetInterviewSchedule(int processId)
+        {
+            var res = await _interviewSchedulingService.GetInterviewSchedule(processId);
+            return Ok(res);
+        }
     }
 }

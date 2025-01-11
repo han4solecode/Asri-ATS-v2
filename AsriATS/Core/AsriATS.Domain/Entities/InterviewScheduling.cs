@@ -13,6 +13,7 @@ namespace AsriATS.Domain.Entities
         public DateTime InterviewTime { get; set; }
         public List<string> Interviewer {  get; set; } = new List<string>();
         public List<string> InterviewersComments { get; set; } = new List<string>();
+        public List<string>? InterviewerEmails { get; set; } = new List<string>();
         public string InterviewType { get; set; } = null!;
         public string Location { get; set; } = null!;
         public bool? IsConfirmed { get; set; } = null;
