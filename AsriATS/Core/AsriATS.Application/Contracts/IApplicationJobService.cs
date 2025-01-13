@@ -14,7 +14,7 @@ namespace AsriATS.Application.Contracts
     public interface IApplicationJobService
     {
         Task<BaseResponseDto> SubmitApplicationJob(ApplicationJobDto request, List<IFormFile> supportingDocuments);
-        Task<object> GetAllApplicationStatuses(Pagination pagination);
+        Task<object> GetApplicationStatusesAsync(ApplicationJobSearchDto searchParams);
         Task<SupportingDocumentResponseDto> GetAllSupportingDocuments();
 
         Task<SupportingDocumentResponseDto> GetSupportingDocumentById(int id);
@@ -24,5 +24,8 @@ namespace AsriATS.Application.Contracts
         Task<BaseResponseDto> ReviewJobApplication(ReviewRequestDto reviewRequest);
         Task<BaseResponseDto> UpdateApplicationJob(UpdateApplicationJobDto requestDto, List<IFormFile>? supportingDocuments = null);
         Task<ApplicationDetailDto> GetProcessAsync(int processId);
+        Task<object> ListAllApplicationStatuses();
+        Task<object> GetRecruiterDashboardMetricsAsync();
+        Task<object> GetApplicationPipelineRecruiterAsync();
     }
 }

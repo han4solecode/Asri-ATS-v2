@@ -55,17 +55,28 @@ namespace AsriATS.Persistance.Repositories
         {
             // Retrieve all applications for the user's company where the workflow role matches
             var applications = await _context.ApplicationJobs
-                .Include(r => r.ProcessIdNavigation)
-                    .ThenInclude(p => p.WorkflowSequence)
-                    .ThenInclude(wfs => wfs.Role)
-                .Include(r => r.ProcessIdNavigation)
-                    .ThenInclude(p => p.Requester)
-                .Include(app => app.ProcessIdNavigation)
-                    .ThenInclude(p => p.WorkflowActions)
-                .Include(app => app.JobPostNavigation)
-                .Where(app => app.JobPostNavigation.CompanyId == companyId &&
-                              app.ProcessIdNavigation.WorkflowSequence.Role.Name == userRole)
-                .ToListAsync();
+               .Include(aj => aj.ProcessIdNavigation)
+                   .ThenInclude(p => p.WorkflowSequence)
+                   .ThenInclude(wfs => wfs.Role)
+               .Include(aj => aj.ProcessIdNavigation)
+                   .ThenInclude(p => p.Requester)
+               .Include(aj => aj.ProcessIdNavigation)
+                   .ThenInclude(p => p.WorkflowActions)
+                   .ThenInclude(wa => wa.WorkflowSequence)
+                   .ThenInclude(wfs => wfs.Role)
+               .Include(aj => aj.JobPostNavigation)
+               .Where(aj =>
+                   aj.JobPostNavigation.CompanyId == companyId &&
+                   (
+                       // Applications needing approval by the user's role
+                       aj.ProcessIdNavigation.WorkflowSequence.Role.Name == userRole ||
+
+                       // Applications already approved by the user's role
+                       aj.ProcessIdNavigation.WorkflowActions.Any(wa =>
+                           wa.WorkflowSequence.Role.Name == userRole 
+                       )
+                   ))
+               .ToListAsync();
 
             return applications;
         }
@@ -127,6 +138,116 @@ namespace AsriATS.Persistance.Repositories
                               InterviewDate = interview.InterviewTime // Nullable InterviewDate from InterviewScheduling
                           })
                          .ToListAsync();
+        }
+
+        public async Task<IEnumerable<ApplicationJob>> ListAllToStatusAsync(int companyId, string userRole)
+        {
+            // Retrieve all applications for the user's company where the workflow role matches
+            var applications = await _context.ApplicationJobs
+                .Include(r => r.ProcessIdNavigation)
+                    .ThenInclude(p => p.WorkflowSequence)
+                    .ThenInclude(wfs => wfs.Role)
+                .Include(r => r.ProcessIdNavigation)
+                    .ThenInclude(p => p.Requester)
+                .Include(app => app.ProcessIdNavigation)
+                    .ThenInclude(p => p.WorkflowActions)
+                .Include(app => app.JobPostNavigation)
+                .Where(app => app.JobPostNavigation.CompanyId == companyId &&
+                              app.ProcessIdNavigation.WorkflowSequence.Role.Name == userRole)
+                .ToListAsync();
+
+            return applications;
+        }
+
+        public async Task<int> CountApplicationsWithOfferStatusByHRAsync(int companyId)
+        {
+            var count = await _context.ApplicationJobs
+                .Include(aj => aj.ProcessIdNavigation)
+                    .ThenInclude(p => p.WorkflowActions) // Include WorkflowActions
+                .Include(aj => aj.JobPostNavigation) // Include JobPost for CompanyId
+                .Where(aj =>
+                    aj.JobPostNavigation.CompanyId == companyId && // Company filter
+                    aj.ProcessIdNavigation.WorkflowActions
+                        .Any(wa =>
+                            wa.Action == "Offer" && // Action type
+                            wa.WorkflowSequence.Role.Name == "HR Manager" // Role filter
+                        )
+                )
+                .CountAsync(); // Count the matching applications
+
+            return count;
+        }
+
+        public async Task<int> CountApplicationsWithSubmitStatusAsync(int companyId)
+        {
+            var count = await _context.ApplicationJobs
+               .Include(aj => aj.ProcessIdNavigation)
+                   .ThenInclude(p => p.WorkflowActions) // Include WorkflowActions
+               .Include(aj => aj.JobPostNavigation) // Include JobPost for CompanyId
+               .Where(aj =>
+                   aj.JobPostNavigation.CompanyId == companyId && // Company filter
+                   aj.ProcessIdNavigation.WorkflowActions
+                       .Any(wa =>
+                           wa.Action == "Submitted" // Action type filter
+                       )
+               )
+               .CountAsync(); // Count the matching applications
+
+            return count;
+        }
+
+        public async Task<double> CalculateAverageTimeToHireAsync(int companyId)
+        {
+            try
+            {
+                // Fetch relevant applications with a "Hired" status
+                var durations = await _context.ApplicationJobs
+                    .Where(aj =>
+                        aj.JobPostNavigation.CompanyId == companyId && // Filter by company
+                        aj.ProcessIdNavigation.Status == "Offer by HR Manager") // Filter by status
+                    .Select(aj => new
+                    {
+                        CreatedDate = aj.JobPostNavigation.CreatedDate,
+                        HiredDate = aj.ProcessIdNavigation.RequestDate
+                    })
+                    .ToListAsync();
+
+                if (durations.Count == 0)
+                {
+                    return 0; // Return 0 if no "Hired" applications are found
+                }
+
+                // Calculate time difference in days for each application
+                var timeDifferences = durations
+                    .Select(d => (d.HiredDate - d.CreatedDate).TotalDays);
+
+                // Calculate the average time to hire
+                return timeDifferences.Average();
+            }
+            catch (Exception ex)
+            {
+                // Log the error (example: using a logging framework like Serilog or NLog)
+                Console.Error.WriteLine($"Error calculating average time to hire: {ex.Message}");
+                throw;
+            }
+        }
+
+        public async Task<Dictionary<string, int>> GetApplicationStatusCountsAsync(int companyId)
+        {
+            // Query to group applications by status and count them
+            var statusCounts = await _context.ApplicationJobs
+                .Include(aj => aj.ProcessIdNavigation)
+                .Include(aj => aj.JobPostNavigation) // Include JobPost for CompanyId
+                .Where(aj => aj.JobPostNavigation.CompanyId == companyId) // Filter by CompanyId
+                .GroupBy(aj => aj.ProcessIdNavigation.Status) // Group by Status
+                .Select(group => new
+                {
+                    Status = group.Key, // Status value
+                    Count = group.Count() // Count of applications for this status
+                })
+                .ToDictionaryAsync(x => x.Status, x => x.Count); // Convert to dictionary
+
+            return statusCounts;
         }
     }
 }

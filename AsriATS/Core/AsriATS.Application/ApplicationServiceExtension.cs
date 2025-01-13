@@ -22,6 +22,7 @@ namespace AsriATS.Application
             services.AddScoped<IApplicationJobService, ApplicationJobService>();
             services.AddScoped<IInterviewSchedulingService, InterviewSchedulingService>();
             services.AddScoped<IReportService, ReportService>();
+            services.AddScoped<IDashboardService, DashboardService>();
         }
     }
 }

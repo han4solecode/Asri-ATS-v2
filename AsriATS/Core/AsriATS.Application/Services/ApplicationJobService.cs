@@ -286,7 +286,7 @@ namespace AsriATS.Application.Services
             };
         }
 
-        public async Task<object> GetAllApplicationStatuses(Pagination pagination)
+        public async Task<object> GetApplicationStatusesAsync(ApplicationJobSearchDto searchParams)
         {
             // Get user and roles from HttpContextAccessor
             var userName = _httpContextAccessor.HttpContext!.User.Identity!.Name;
@@ -299,26 +299,81 @@ namespace AsriATS.Application.Services
             {
                 if (role == "Applicant")
                 {
-                    // Fetch all applications where the user is the applicant
+                    // Fetch applications for the applicant
                     var applicantApplications = await _applicationJobRepository.GetAllByApplicantAsync(r => r.UserId == user!.Id);
                     applications.AddRange(applicantApplications);
                 }
                 else
                 {
-                    // Ensure CompanyId has a value for non-applicant roles
+                    // Ensure CompanyId is set for non-applicant roles
                     if (!user!.CompanyId.HasValue)
                     {
                         throw new InvalidOperationException("User does not have a company associated.");
                     }
 
-                    // Fetch applications linked to the user's company and role
+                    // Fetch applications based on company and role
                     var roleApplications = await _applicationJobRepository.GetAllToStatusAsync(user.CompanyId.Value, role);
                     applications.AddRange(roleApplications);
                 }
             }
 
-            // Project the results into a user-friendly format
-            var applicationStatuses = applications.Select(app => new
+            // Convert to queryable for filtering
+            var query = applications.AsQueryable();
+
+            // Filtering
+            if (searchParams.ApplicationJobId.HasValue)
+                query = query.Where(a => a.ApplicationJobId == searchParams.ApplicationJobId);
+
+            if (!string.IsNullOrEmpty(searchParams.JobTitle))
+                query = query.Where(a => a.JobPostNavigation.JobTitle.ToLower().Contains(searchParams.JobTitle.ToLower()));
+
+            if (!string.IsNullOrEmpty(searchParams.ApplicantName))
+            {
+                query = query.Where(a =>
+                    $"{a.UserIdNavigation.FirstName} {a.UserIdNavigation.LastName}".ToLower()
+                    .Contains(searchParams.ApplicantName.ToLower()));
+            }
+
+            if (!string.IsNullOrEmpty(searchParams.Status))
+                query = query.Where(a => a.ProcessIdNavigation.Status.ToLower().Contains(searchParams.Status.ToLower()));
+
+            if (!string.IsNullOrEmpty(searchParams.Keywords))
+            {
+                var keyword = searchParams.Keywords.ToLower();
+                query = query.Where(a =>
+                    (a.JobPostNavigation.JobTitle != null && a.JobPostNavigation.JobTitle.ToLower().Contains(keyword)) ||
+                    (a.ProcessIdNavigation.Status != null && a.ProcessIdNavigation.Status.ToLower().Contains(keyword)));
+            }
+
+            // Sorting
+            if (!string.IsNullOrEmpty(searchParams.SortBy))
+            {
+                query = searchParams.SortBy.ToLower() switch
+                {
+                    "jobtitle" => searchParams.SortOrder == "desc"
+                        ? query.OrderByDescending(a => a.JobPostNavigation.JobTitle)
+                        : query.OrderBy(a => a.JobPostNavigation.JobTitle),
+                    "status" => searchParams.SortOrder == "desc"
+                        ? query.OrderByDescending(a => a.ProcessIdNavigation.Status)
+                        : query.OrderBy(a => a.ProcessIdNavigation.Status),
+                    _ => query.OrderByDescending(a => a.ApplicationJobId) // Default sort
+                };
+            }
+            else
+            {
+                query = query.OrderByDescending(a => a.ApplicationJobId); // Default sort
+            }
+
+            // Pagination
+            var totalRecords = query.Count();
+            var pageNumber = searchParams.PageNumber ?? 1;
+            var pageSize = searchParams.PageSize ?? 20;
+            var skip = (pageNumber - 1) * pageSize;
+
+            var paginatedApplications = query.Skip(skip).Take(pageSize).ToList();
+
+            // Projection
+            var applicationStatuses = paginatedApplications.Select(app => new
             {
                 ApplicationId = app.ApplicationJobId,
                 ApplicantName = $"{app.UserIdNavigation.FirstName} {app.UserIdNavigation.LastName}",
@@ -326,27 +381,16 @@ namespace AsriATS.Application.Services
                 Status = app.ProcessIdNavigation.Status,
                 ProcessId = app.ProcessIdNavigation.ProcessId,
                 CurrentStep = app.ProcessIdNavigation.WorkflowSequence.StepName,
-                Comments = app.ProcessIdNavigation.WorkflowActions.Select(wa => wa.Comments).LastOrDefault() // Get last comment or null if none
+                Comments = app.ProcessIdNavigation.WorkflowActions.Select(wa => wa.Comments).LastOrDefault() // Get last comment
             });
-
-            // Apply pagination
-            var totalRecords = applicationStatuses.Count();
-            var pageNumber = pagination.PageNumber ?? 1;
-            var pageSize = pagination.PageSize ?? 20;
-            var totalPages = (int)Math.Ceiling((double)totalRecords / pageSize);
-
-            var paginatedData = applicationStatuses
-                .Skip((pageNumber - 1) * pageSize)
-                .Take(pageSize)
-                .ToList();
 
             return new
             {
                 TotalRecords = totalRecords,
-                TotalPages = totalPages,
+                TotalPages = (int)Math.Ceiling((double)totalRecords / pageSize),
                 CurrentPage = pageNumber,
                 PageSize = pageSize,
-                Data = paginatedData
+                Data = applicationStatuses
             };
         }
 
@@ -851,5 +895,117 @@ namespace AsriATS.Application.Services
             return processDetailDto;
         }
 
+        public async Task<object> ListAllApplicationStatuses()
+        {
+            // Get user and roles from HttpContextAccessor
+            var userName = _httpContextAccessor.HttpContext!.User.Identity!.Name;
+            var user = await _userManager.FindByNameAsync(userName!);
+            var userRoles = await _userManager.GetRolesAsync(user!);
+
+            var applications = new List<ApplicationJob>();
+
+            foreach (var role in userRoles)
+            {
+                if (role == "Applicant")
+                {
+                    // Fetch all applications where the user is the applicant
+                    var applicantApplications = await _applicationJobRepository.GetAllByApplicantAsync(r => r.UserId == user!.Id);
+                    applications.AddRange(applicantApplications);
+                }
+                else
+                {
+                    // Ensure CompanyId has a value for non-applicant roles
+                    if (!user!.CompanyId.HasValue)
+                    {
+                        throw new InvalidOperationException("User does not have a company associated.");
+                    }
+
+                    // Fetch applications linked to the user's company and role
+                    var roleApplications = await _applicationJobRepository.ListAllToStatusAsync(user.CompanyId.Value, role);
+                    applications.AddRange(roleApplications);
+                }
+            }
+
+            // Project the results into a user-friendly format
+            var applicationStatuses = applications.Select(app => new
+            {
+                ApplicationId = app.ApplicationJobId,
+                ApplicantName = $"{app.UserIdNavigation.FirstName} {app.UserIdNavigation.LastName}",
+                JobTitle = app.JobPostNavigation.JobTitle,
+                Status = app.ProcessIdNavigation.Status,
+                ProcessId = app.ProcessIdNavigation.ProcessId,
+                CurrentStep = app.ProcessIdNavigation.WorkflowSequence.StepName,
+                Comments = app.ProcessIdNavigation.WorkflowActions.Select(wa => wa.Comments).LastOrDefault() // Get last comment or null if none
+            });
+
+          return applicationStatuses;
+        }
+
+        public async Task<object> GetRecruiterDashboardMetricsAsync()
+        {
+            // Get the current user and roles from HttpContextAccessor
+            var userName = _httpContextAccessor.HttpContext!.User.Identity!.Name;
+            var user = await _userManager.FindByNameAsync(userName!);
+            var userRoles = await _userManager.GetRolesAsync(user!);
+
+            // Ensure the user has a company ID
+            if (!user!.CompanyId.HasValue)
+            {
+                throw new InvalidOperationException("User does not have a company associated.");
+            }
+
+            // Check if the user has the Recruiter role
+            if (!userRoles.Contains("Recruiter"))
+            {
+                throw new UnauthorizedAccessException("User is not authorized to perform this action.");
+            }
+
+            // Retrieve the metrics
+            var companyId = user.CompanyId.Value;
+
+            var submittedCount = await _applicationJobRepository.CountApplicationsWithSubmitStatusAsync(companyId);
+            var offerCount = await _applicationJobRepository.CountApplicationsWithOfferStatusByHRAsync(companyId);
+            var averageTimeToHire = await _applicationJobRepository.CalculateAverageTimeToHireAsync(companyId);
+
+            // Combine the results into a single object
+            return new
+            {
+                SubmittedApplications = submittedCount,
+                JobOffers = offerCount,
+                AverageTimeToHire = averageTimeToHire
+            };
+        }
+
+        public async Task<object> GetApplicationPipelineRecruiterAsync()
+        {
+            // Get the current user and roles from HttpContextAccessor
+            var userName = _httpContextAccessor.HttpContext!.User.Identity!.Name;
+            var user = await _userManager.FindByNameAsync(userName!);
+            var userRoles = await _userManager.GetRolesAsync(user!);
+
+            // Ensure the user has a company ID
+            if (!user!.CompanyId.HasValue)
+            {
+                throw new InvalidOperationException("User does not have a company associated.");
+            }
+
+            // Check if the user has the Recruiter role
+            if (!userRoles.Contains("Recruiter"))
+            {
+                throw new UnauthorizedAccessException("User is not authorized to perform this action.");
+            }
+
+            // Retrieve the metrics
+            var companyId = user.CompanyId.Value;
+
+            var submittedCount = await _applicationJobRepository.GetApplicationStatusCountsAsync(companyId);
+            
+
+            // Combine the results into a single object
+            return new
+            {
+                SubmittedApplications = submittedCount,
+            };
+        }
     }
 }

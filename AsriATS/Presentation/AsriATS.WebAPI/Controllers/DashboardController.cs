@@ -15,14 +15,16 @@ namespace AsriATS.WebAPI.Controllers
         private readonly IRoleService _roleService;
         private readonly IJobPostRequestService _jobPostRequestService;
         private readonly IJobPostTemplateRequestService _jobPostTemplateRequestService;
+        private readonly IDashboardService _dashboardService;
 
-        public DashboardController(ICompanyService companyService, IUserService userService, IRoleService roleService, IJobPostRequestService jobPostRequestService, IJobPostTemplateRequestService jobPostTemplateRequestService)
+        public DashboardController(ICompanyService companyService, IUserService userService, IRoleService roleService, IJobPostRequestService jobPostRequestService, IJobPostTemplateRequestService jobPostTemplateRequestService, IDashboardService dashboardService)
         {
             _companyService = companyService;
             _userService = userService;
             _roleService = roleService;
             _jobPostRequestService = jobPostRequestService;
             _jobPostTemplateRequestService = jobPostTemplateRequestService;
+            _dashboardService = dashboardService;
         }
         
         /// <summary>
@@ -118,6 +120,22 @@ namespace AsriATS.WebAPI.Controllers
             var request = await _jobPostTemplateRequestService.GetAllJobPostTemplateRequestToReview();
 
             return Ok(request);
+        }
+
+        [Authorize(Roles = "Applicant")]
+        [HttpGet("applicant-dashboard")]
+        public async Task<IActionResult> GetApplicantDashboard()
+        {
+            var req = await _dashboardService.GetApplicantDashboard();
+            return Ok(req);
+        }
+
+        [Authorize(Roles = "Recruiter")]
+        [HttpGet("recruiter-dashboard")]
+        public async Task<IActionResult> GetRecruiterDashboard()
+        {
+            var req = await _dashboardService.GetRecruiterDashboard();
+            return Ok(req);
         }
     }
 }

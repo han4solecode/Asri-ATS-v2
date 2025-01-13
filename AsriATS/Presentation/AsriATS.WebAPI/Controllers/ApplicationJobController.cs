@@ -80,9 +80,9 @@ namespace AsriATS.WebAPI.Controllers
         /// <returns>Returns a list of job application statuses.</returns>
         [Authorize(Roles = "Applicant,HR Manager,Recruiter")]
         [HttpGet("job-application")]
-        public async Task<IActionResult> GetAllApplication([FromQuery]Pagination pagination)
+        public async Task<IActionResult> GetAllApplication([FromQuery] ApplicationJobSearchDto searchParams)
         {
-            var request = await _applicationJobService.GetAllApplicationStatuses(pagination);
+            var request = await _applicationJobService.GetApplicationStatusesAsync(searchParams);
 
             return Ok(request);
         }

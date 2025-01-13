@@ -19,5 +19,10 @@ namespace AsriATS.Application.Persistance
         Task<ApplicationJob> GetFirstOrDefaultAsyncUpdate(Expression<Func<ApplicationJob, bool>> predicate, Func<IQueryable<ApplicationJob>, IIncludableQueryable<ApplicationJob, object>> include = null);
         Task<int> TotalApplicationJob();
         Task<List<ApplicationJobStatusDto>> GetApplicationSummaryAsync();
+        Task<IEnumerable<ApplicationJob>> ListAllToStatusAsync(int companyId, string userRole);
+        Task<int> CountApplicationsWithOfferStatusByHRAsync(int companyId);
+        Task<int> CountApplicationsWithSubmitStatusAsync(int companyId);
+        Task<double> CalculateAverageTimeToHireAsync(int companyId);
+        Task<Dictionary<string, int>> GetApplicationStatusCountsAsync(int companyId);
     }
 }
