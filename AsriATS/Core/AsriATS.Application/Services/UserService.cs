@@ -16,6 +16,7 @@ using AsriATS.Application.DTOs.User;
 using AsriATS.Application.Persistance;
 using AsriATS.Application.DTOs.Report;
 using System.Reflection.Metadata;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace AsriATS.Application.Services
 {
@@ -23,15 +24,17 @@ namespace AsriATS.Application.Services
     {
         private readonly UserManager<AppUser> _userManager;
         private readonly RoleManager<AppRole> _roleManager;
+        private readonly ICompanyRepository _companyRepository;
         public readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IDocumentSupportRepository _documentSupportRepository;
 
-        public UserService(UserManager<AppUser> userManager, RoleManager<AppRole> roleManager, IHttpContextAccessor httpContextAccessor, IDocumentSupportRepository documentSupportRepository)
+        public UserService(UserManager<AppUser> userManager, RoleManager<AppRole> roleManager, IHttpContextAccessor httpContextAccessor, IDocumentSupportRepository documentSupportRepository, ICompanyRepository companyRepository)
         {
             _userManager = userManager;
             _roleManager = roleManager;
             _httpContextAccessor = httpContextAccessor;
             _documentSupportRepository = documentSupportRepository;
+            _companyRepository = companyRepository;
         }
 
         // update user based on login user and roles
@@ -228,6 +231,9 @@ namespace AsriATS.Application.Services
 
             // Get the roles associated with the user
             var roles = await _userManager.GetRolesAsync(user);
+            
+            // Get Company Name for User
+            var company = user?.CompanyId != null ? await _companyRepository.GetByIdAsync(user.CompanyId.Value) : null;
 
             // Return the user information along with roles
             return new
@@ -241,7 +247,8 @@ namespace AsriATS.Application.Services
                 Address = user.Address,
                 Dob = user.Dob,
                 Sex = user.Sex,
-                Roles = roles
+                Roles = roles,
+                CompanyName = company?.Name ?? ""
             };
         }
 
