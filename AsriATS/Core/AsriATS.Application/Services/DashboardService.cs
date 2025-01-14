@@ -23,7 +23,6 @@ namespace AsriATS.Application.Services
         public async Task<ApplicantDashboardDto> GetApplicantDashboard()
         {
             var applicationPipeline = await _applicationJobService.ListAllApplicationStatuses();
-            var interview = await _interviewSchedulingService.GetAllUnconfirmedInterviewSchedules();
             var notification = await _applicationJobService.NotificationApplicationStatuses();
             var pagination = new Pagination
             {
@@ -35,7 +34,6 @@ namespace AsriATS.Application.Services
             return new ApplicantDashboardDto
             {
                 ApplicationPipeline = applicationPipeline,
-                InterviewSchedule = interview,
                 Notification = notification,
                 InterviewSchedule = interview.Data
             };
