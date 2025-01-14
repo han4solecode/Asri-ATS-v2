@@ -27,5 +27,6 @@ namespace AsriATS.Application.Contracts
         Task<object> ListAllApplicationStatuses();
         Task<object> GetRecruiterDashboardMetricsAsync();
         Task<object> GetApplicationPipelineRecruiterAsync();
+        Task<object> NotificationApplicationStatuses();
     }
 }
