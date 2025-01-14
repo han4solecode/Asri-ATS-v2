@@ -1031,8 +1031,9 @@ namespace AsriATS.Application.Services
             {
                 if (role == "Applicant")
                 {
-                    // Fetch all applications where the user is the applicant
-                    var applicantApplications = await _applicationJobRepository.GetAllToStatusAsync(role);
+                    // Fetch only applications where the current user is the applicant
+                    var applicantApplications = await _applicationJobRepository
+                        .GetAllToStatusAsync(role, user.Id); // Pass user.Id to filter by applicant
                     applications.AddRange(applicantApplications);
                 }
                 else
