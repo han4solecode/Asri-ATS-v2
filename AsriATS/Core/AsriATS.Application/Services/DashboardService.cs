@@ -23,11 +23,13 @@ namespace AsriATS.Application.Services
         {
             var applicationPipeline = await _applicationJobService.ListAllApplicationStatuses();
             var interview = await _interviewSchedulingService.GetAllUnconfirmedInterviewSchedules();
+            var notification = await _applicationJobService.NotificationApplicationStatuses();
 
             return new ApplicantDashboardDto
             {
                 ApplicationPipeline = applicationPipeline,
-                InterviewSchedule = interview
+                InterviewSchedule = interview,
+                Notification = notification,
             };
         }
 

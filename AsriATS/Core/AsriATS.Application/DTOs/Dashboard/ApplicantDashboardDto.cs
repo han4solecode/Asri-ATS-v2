@@ -10,5 +10,6 @@ namespace AsriATS.Application.DTOs.Dashboard
     {
         public object? ApplicationPipeline { get; set; }
         public IEnumerable<object>? InterviewSchedule { get; set; }
+        public object? Notification { get; set; }
     }
 }

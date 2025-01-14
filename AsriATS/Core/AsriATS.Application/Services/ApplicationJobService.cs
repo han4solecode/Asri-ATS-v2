@@ -1007,5 +1007,67 @@ namespace AsriATS.Application.Services
                 SubmittedApplications = submittedCount,
             };
         }
+
+        public async Task<object> NotificationApplicationStatuses()
+        {
+            // Get the current user's username from the HttpContextAccessor
+            var userName = _httpContextAccessor.HttpContext?.User.Identity?.Name;
+            if (string.IsNullOrEmpty(userName))
+            {
+                throw new InvalidOperationException("User is not authenticated.");
+            }
+
+            // Fetch the user and their roles
+            var user = await _userManager.FindByNameAsync(userName);
+            if (user == null)
+            {
+                throw new InvalidOperationException("User not found.");
+            }
+
+            var userRoles = await _userManager.GetRolesAsync(user);
+            var applications = new List<ApplicationJob>();
+
+            foreach (var role in userRoles)
+            {
+                if (role == "Applicant")
+                {
+                    // Fetch all applications where the user is the applicant
+                    var applicantApplications = await _applicationJobRepository.GetAllToStatusAsync(role);
+                    applications.AddRange(applicantApplications);
+                }
+                else
+                {
+                    // Ensure the user has a valid CompanyId for non-applicant roles
+                    if (!user.CompanyId.HasValue)
+                    {
+                        throw new InvalidOperationException("User does not have a company associated.");
+                    }
+
+                    // Fetch applications linked to the user's company and role
+                    var roleApplications = await _applicationJobRepository.ListAllToStatusAsync(user.CompanyId.Value, role);
+                    applications.AddRange(roleApplications);
+                }
+            }
+
+            // Project the results into a user-friendly format
+            var applicationStatuses = applications.Select(app => new
+            {
+                ApplicationId = app.ApplicationJobId,
+                ApplicantName = app.UserIdNavigation != null
+                ? $"{app.UserIdNavigation.FirstName} {app.UserIdNavigation.LastName}"
+                : "Unknown Applicant",
+                    JobTitle = app.JobPostNavigation?.JobTitle ?? "Unknown Job Title", // Handle null JobPostNavigation
+                    Status = app.ProcessIdNavigation?.Status ?? "Unknown Status", // Handle null ProcessIdNavigation
+                    ProcessId = app.ProcessIdNavigation?.ProcessId ?? 0, // Default ProcessId to 0 if null
+                    CurrentStep = app.ProcessIdNavigation?.WorkflowSequence?.StepName ?? "Unknown Step", // Handle null WorkflowSequence
+                    Comments = app.ProcessIdNavigation?.WorkflowActions
+                .OrderByDescending(wa => wa.ActionDate)
+                .Select(wa => wa.Comments)
+                .FirstOrDefault() // Get the most recent comment, or null if none
+            });
+
+            return applicationStatuses;
+        }
+
     }
 }
