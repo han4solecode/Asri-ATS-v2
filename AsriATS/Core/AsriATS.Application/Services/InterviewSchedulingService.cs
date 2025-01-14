@@ -1,6 +1,8 @@
 ﻿using AsriATS.Application.Contracts;
 using AsriATS.Application.DTOs;
+using AsriATS.Application.DTOs.Dashboard;
 using AsriATS.Application.DTOs.Email;
+using AsriATS.Application.DTOs.Helpers;
 using AsriATS.Application.DTOs.InterivewScheduling;
 using AsriATS.Application.DTOs.Request;
 using AsriATS.Application.Persistance;
@@ -522,25 +524,25 @@ namespace AsriATS.Application.Services
             }
         }
 
-        public async Task<IEnumerable<object>> GetAllUnconfirmedInterviewSchedules()
+        public async Task<InterviewResponseDashboardDto> GetAllUnconfirmedInterviewSchedules(Pagination? pagination)
         {
             var userName = _httpContextAccessor.HttpContext!.User.Identity!.Name;
             var user = await _userManager.FindByNameAsync(userName!);
             var userRoles = await _userManager.GetRolesAsync(user!);
             var userRole = userRoles.Single();
 
-            IEnumerable<InterviewScheduling> interviewingSchedules;
+            (IEnumerable<InterviewScheduling> Schedules, int totalCount) interviewingSchedules = (Enumerable.Empty<InterviewScheduling>(), 0);
 
             if (userRole == "Applicant")
             {
-                interviewingSchedules = await _interviewSchedulingRepository.GetAllInterviewSchedulesAsync(i => i.ApplicationIdNavigation.UserId == user!.Id && i.IsConfirmed != true);
+                interviewingSchedules = await _interviewSchedulingRepository.GetAllInterviewSchedulesAsync(i => i.ApplicationIdNavigation.UserId == user!.Id && i.IsConfirmed != true, pagination);
             }
             else
             {
-                interviewingSchedules = await _interviewSchedulingRepository.GetAllInterviewSchedulesAsync(i => i.ApplicationIdNavigation.JobPostNavigation.CompanyId == user!.CompanyId && i.IsConfirmed != true);
+                interviewingSchedules = await _interviewSchedulingRepository.GetAllInterviewSchedulesAsync(i => i.ApplicationIdNavigation.JobPostNavigation.CompanyId == user!.CompanyId && i.IsConfirmed != true, pagination);
             }
 
-            var result = interviewingSchedules.Select(i => new
+            var result = interviewingSchedules.Schedules.Select(i => new
             {
                 ApplicationId = i.ApplicationId,
                 ProcessId = i.ProcessId,
@@ -551,28 +553,34 @@ namespace AsriATS.Application.Services
                 Interviewers = i.Interviewer,
             }).ToList();
 
-            return result;
+            var totalPages = (int)Math.Ceiling((decimal)(interviewingSchedules.totalCount) / (pagination.PageSize ?? 20));
+
+            return new InterviewResponseDashboardDto
+            {
+                TotalPages = totalPages,
+                Data = result
+            };
         }
 
-        public async Task<IEnumerable<object>> GetAllConfirmedInterviewSchedules()
+        public async Task<object> GetAllConfirmedInterviewSchedules(Pagination pagination)
         {
             var userName = _httpContextAccessor.HttpContext!.User.Identity!.Name;
             var user = await _userManager.FindByNameAsync(userName!);
             var userRoles = await _userManager.GetRolesAsync(user!);
             var userRole = userRoles.Single();
 
-            IEnumerable<InterviewScheduling> interviewingSchedules;
+            (IEnumerable<InterviewScheduling> Schedules, int totalCount) interviewingSchedules = (Enumerable.Empty<InterviewScheduling>(), 0);
 
             if (userRole == "Applicant")
             {
-                interviewingSchedules = await _interviewSchedulingRepository.GetAllInterviewSchedulesAsync(i => i.ApplicationIdNavigation.UserId == user!.Id && i.IsConfirmed == true);
+                interviewingSchedules = await _interviewSchedulingRepository.GetAllInterviewSchedulesAsync(i => i.ApplicationIdNavigation.UserId == user!.Id && i.IsConfirmed == true, pagination);
             }
             else
             {
-                interviewingSchedules = await _interviewSchedulingRepository.GetAllInterviewSchedulesAsync(i => i.ApplicationIdNavigation.JobPostNavigation.CompanyId == user!.CompanyId && i.IsConfirmed == true);
+                interviewingSchedules = await _interviewSchedulingRepository.GetAllInterviewSchedulesAsync(i => i.ApplicationIdNavigation.JobPostNavigation.CompanyId == user!.CompanyId && i.IsConfirmed == true, pagination);
             }
 
-            var result = interviewingSchedules.Select(i => new
+            var result = interviewingSchedules.Schedules.Select(i => new
             {
                 ApplicationId = i.ApplicationId,
                 ProcessId = i.ProcessId,
@@ -583,27 +591,51 @@ namespace AsriATS.Application.Services
                 Interviewers = i.Interviewer,
             }).ToList();
 
-            return result;
+            var totalPages = (int)Math.Ceiling((decimal)(interviewingSchedules.totalCount) / (pagination.PageSize ?? 20));
+
+            return new
+            {
+                TotalPages = totalPages,
+                Data = result
+            };
         }
 
-        public async Task<IEnumerable<object>> GetAllCompletedInterview()
+        public async Task<object> GetAllCompletedInterview(Pagination pagination)
         {
             var userName = _httpContextAccessor.HttpContext!.User.Identity!.Name;
             var user = await _userManager.FindByNameAsync(userName!);
+            var userRoles = await _userManager.GetRolesAsync(user!);
+            var userRole = userRoles.Single();
 
-            var completedInterview = await _interviewSchedulingRepository.GetAllInterviewSchedulesAsync(i => i.ApplicationIdNavigation.JobPostNavigation.CompanyId == user!.CompanyId && i.InterviewersComments.Count != 0);
+            (IEnumerable<InterviewScheduling> Schedules, int totalCount) interviewingSchedules = (Enumerable.Empty<InterviewScheduling>(), 0);
 
-            var result = completedInterview.Select(i => new {
-                ProcessId = i.ProcessId,
+            if (userRole == "Applicant")
+            {
+                interviewingSchedules = await _interviewSchedulingRepository.GetAllInterviewSchedulesAsync(i => i.ApplicationIdNavigation.UserId == user!.Id && i.InterviewersComments.Count != 0 == true, pagination);
+            }
+            else
+            {
+                interviewingSchedules = await _interviewSchedulingRepository.GetAllInterviewSchedulesAsync(i => i.ApplicationIdNavigation.JobPostNavigation.CompanyId == user!.CompanyId && i.InterviewersComments.Count != 0, pagination);
+            }
+
+            var result = interviewingSchedules.Schedules.Select(i => new
+            {
                 ApplicationId = i.ApplicationId,
+                ProcessId = i.ProcessId,
                 ApplicantName = $"{i.ApplicationIdNavigation.UserIdNavigation.FirstName} {i.ApplicationIdNavigation.UserIdNavigation.LastName}",
                 JobTitle = i.ApplicationIdNavigation.JobPostNavigation.JobTitle,
                 InterviewTime = i.InterviewTime,
+                Location = i.Location,
                 Interviewers = i.Interviewer,
-                InterviwersComments = i.InterviewersComments
-            });
+            }).ToList();
 
-            return result;
+            var totalPages = (int)Math.Ceiling((decimal)(interviewingSchedules.totalCount) / (pagination.PageSize ?? 20));
+
+            return new
+            {
+                TotalPages = totalPages,
+                Data = result
+            };
         }
         public async Task<object?> GetInterviewSchedule(int processId)
         {

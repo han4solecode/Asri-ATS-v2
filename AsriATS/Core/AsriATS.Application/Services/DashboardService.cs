@@ -1,5 +1,6 @@
 ﻿using AsriATS.Application.Contracts;
 using AsriATS.Application.DTOs.Dashboard;
+using AsriATS.Application.DTOs.Helpers;
 using AsriATS.Application.Persistance;
 using System;
 using System.Collections.Generic;
@@ -22,12 +23,17 @@ namespace AsriATS.Application.Services
         public async Task<ApplicantDashboardDto> GetApplicantDashboard()
         {
             var applicationPipeline = await _applicationJobService.ListAllApplicationStatuses();
-            var interview = await _interviewSchedulingService.GetAllUnconfirmedInterviewSchedules();
+            var pagination = new Pagination
+            {
+                PageNumber = null,
+                PageSize = 10
+            };
+            var interview = await _interviewSchedulingService.GetAllUnconfirmedInterviewSchedules(pagination);
 
             return new ApplicantDashboardDto
             {
                 ApplicationPipeline = applicationPipeline,
-                InterviewSchedule = interview
+                InterviewSchedule = interview.Data
             };
         }
 

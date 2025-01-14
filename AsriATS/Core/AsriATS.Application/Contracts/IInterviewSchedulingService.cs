@@ -2,6 +2,8 @@
 using AsriATS.Application.DTOs;
 using AsriATS.Application.DTOs.Request;
 using AsriATS.Domain.Entities;
+using AsriATS.Application.DTOs.Helpers;
+using AsriATS.Application.DTOs.Dashboard;
 
 namespace AsriATS.Application.Contracts
 {
@@ -19,11 +21,11 @@ namespace AsriATS.Application.Contracts
 
         Task<BaseResponseDto> ReviewInterviewResult(ReviewRequestDto reviewRequest);
 
-        Task<IEnumerable<object>> GetAllUnconfirmedInterviewSchedules();
+        Task<InterviewResponseDashboardDto> GetAllUnconfirmedInterviewSchedules(Pagination? pagination);
 
-        Task<IEnumerable<object>> GetAllConfirmedInterviewSchedules();
+        Task<object> GetAllConfirmedInterviewSchedules(Pagination? pagination);
 
-        Task<IEnumerable<object>> GetAllCompletedInterview();
+        Task<object> GetAllCompletedInterview(Pagination? pagination);
         Task<object ?> GetInterviewSchedule(int processId);
     }
 }

@@ -1,4 +1,5 @@
 ﻿using AsriATS.Application.Contracts;
+using AsriATS.Application.DTOs.Helpers;
 using AsriATS.Application.DTOs.InterivewScheduling;
 using AsriATS.Application.DTOs.Request;
 using AsriATS.Application.Services;
@@ -232,9 +233,9 @@ namespace AsriATS.WebAPI.Controllers
         /// <returns>Returns all interview schedules that have not been confirmed.</returns>
         [Authorize]
         [HttpGet("unconfirmed-interview-schedule")]
-        public async Task<IActionResult> GetUnconfirmedInterviewSchedulesAllAsync()
+        public async Task<IActionResult> GetUnconfirmedInterviewSchedulesAllAsync([FromQuery] Pagination pagination)
         {
-            var result = await _interviewSchedulingService.GetAllUnconfirmedInterviewSchedules();
+            var result = await _interviewSchedulingService.GetAllUnconfirmedInterviewSchedules(pagination);
             return Ok(result);
         }
         /// <summary>
@@ -252,9 +253,9 @@ namespace AsriATS.WebAPI.Controllers
         /// <returns>Returns all interview schedules that have been confirmed.</returns>
         [Authorize]
         [HttpGet("confirmed-interview-schedule")]
-        public async Task<IActionResult> GetConfirmedInterviewSchedulesAllAsync()
+        public async Task<IActionResult> GetConfirmedInterviewSchedulesAllAsync([FromQuery] Pagination pagination)
         {
-            var result = await _interviewSchedulingService.GetAllConfirmedInterviewSchedules();
+            var result = await _interviewSchedulingService.GetAllConfirmedInterviewSchedules(pagination);
             return Ok(result);
         }
         /// <summary>
@@ -273,11 +274,11 @@ namespace AsriATS.WebAPI.Controllers
         /// The response includes a JSON object containing all interview schedules that have been completed.
         /// </remarks>
         /// <returns>Returns all interview schedules that have been completed.</returns>
-        [Authorize(Roles = "HR Manager")]
+        [Authorize(Roles = "Applicant,HR Manager,Recruiter")]
         [HttpGet("completed-interview")]
-        public async Task<IActionResult> GetAllCompletedInterview()
+        public async Task<IActionResult> GetAllCompletedInterview([FromQuery] Pagination pagination)
         {
-            var result = await _interviewSchedulingService.GetAllCompletedInterview();
+            var result = await _interviewSchedulingService.GetAllCompletedInterview(pagination);
 
             return Ok(result);
         }

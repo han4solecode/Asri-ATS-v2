@@ -1,4 +1,5 @@
-﻿using AsriATS.Application.Persistance;
+﻿using AsriATS.Application.DTOs.Helpers;
+using AsriATS.Application.Persistance;
 using AsriATS.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
@@ -33,15 +34,35 @@ namespace AsriATS.Persistance.Repositories
             return interviewSchedules;
         }
 
-        public async Task<IEnumerable<InterviewScheduling>> GetAllInterviewSchedulesAsync(Expression<Func<InterviewScheduling, bool>> expression)
+        public async Task<(IEnumerable<InterviewScheduling>, int totalCount)> GetAllInterviewSchedulesAsync(Expression<Func<InterviewScheduling, bool>> expression, Pagination? pagination)
         {
-            return await _context.InterviewScheduling
-                .Include(i => i.ApplicationIdNavigation)
-                .ThenInclude(aj => aj.JobPostNavigation)
-                .Include( i => i.ApplicationIdNavigation)
-                .ThenInclude(aj => aj.UserIdNavigation)
-                .Where(expression) // Filter
-                .ToListAsync();
+            var query = _context.InterviewScheduling.AsQueryable();
+            var pageSize = pagination.PageSize ?? 10;  // Default page size to 10 if not provided
+            var pageNumber = pagination.PageNumber ?? 1;  // Default page number to 1 if not provided
+
+            // Ensure pageSize and pageNumber are valid
+            pageSize = Math.Max(1, pageSize);  // Ensure page size is at least 1
+            pageNumber = Math.Max(1, pageNumber);  // Ensure page number is at least 1
+
+            var skipNumber = (pageNumber - 1) * pageSize;
+
+            query = query.Include(i => i.ApplicationIdNavigation).ThenInclude(aj => aj.JobPostNavigation)
+                          .Include(i => i.ApplicationIdNavigation).ThenInclude(aj => aj.UserIdNavigation);
+
+            if (expression != null) {
+                query = query.Where(expression);
+            }
+            
+
+            query = query.OrderByDescending(i => i.InterviewTime);
+
+            int totalCount = await query.CountAsync();
+
+            query = query.Skip(skipNumber).Take(pageSize);
+
+            var interviewSchedules = await query.ToListAsync();
+
+            return (interviewSchedules, totalCount);
         }
 
         public async Task<InterviewScheduling?> GetByIdAsync(int id)
