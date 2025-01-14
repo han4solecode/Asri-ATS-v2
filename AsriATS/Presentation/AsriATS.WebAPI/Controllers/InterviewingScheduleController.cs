@@ -61,7 +61,7 @@ namespace AsriATS.WebAPI.Controllers
                 return BadRequest(new { message = result.Message });
             }
 
-            return Ok(new { message = result.Message });
+            return Ok(result);
         }
         /// <summary>
         /// Updates the interview schedule for an applicant.
