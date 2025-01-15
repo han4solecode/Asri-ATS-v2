@@ -266,5 +266,10 @@ namespace AsriATS.Persistance.Repositories
                .ToListAsync();
         }
 
+        public async Task<bool> HasApplicantAlreadyAppliedAsync(string userId, int jobPostId)
+        {
+            return await _context.ApplicationJobs
+                .AnyAsync(a => a.UserId == userId && a.JobPostId == jobPostId);
+        }
     }
 }

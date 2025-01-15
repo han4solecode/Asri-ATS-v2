@@ -25,5 +25,6 @@ namespace AsriATS.Application.Persistance
         Task<double> CalculateAverageTimeToHireAsync(int companyId);
         Task<Dictionary<string, int>> GetApplicationStatusCountsAsync(int companyId);
         Task<IEnumerable<ApplicationJob>> GetAllToStatusAsync(string userRole, string userId);
+        Task<bool> HasApplicantAlreadyAppliedAsync(string userId, int jobPostId);
     }
 }

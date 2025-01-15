@@ -81,6 +81,18 @@ namespace AsriATS.Application.Services
                 };
             }
 
+            // Check if the applicant has already applied to the job post
+            var existingApplication = await _applicationJobRepository.HasApplicantAlreadyAppliedAsync(user.Id, request.JobPostId);
+            if (existingApplication == true)
+            {
+                return new BaseResponseDto
+                {
+                    Status = "Error",
+                    Message = "User already apply to this job!"
+                };
+            }
+            
+
             // Validate the process for job application workflow
             var workflow = await _workflowRepository.GetFirstOrDefaultAsync(w => w.WorkflowName == "Application Job Request");
             if (workflow == null)
