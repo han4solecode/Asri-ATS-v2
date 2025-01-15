@@ -11,5 +11,6 @@ namespace AsriATS.Application.Contracts
     {
         public Task<ApplicantDashboardDto> GetApplicantDashboard();
         Task<RecruiterDashboardDto> GetRecruiterDashboard();
+        Task<HRDashboardDto> GetHRManagerDashboard();
     }
 }

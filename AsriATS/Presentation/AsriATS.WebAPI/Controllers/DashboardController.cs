@@ -137,5 +137,13 @@ namespace AsriATS.WebAPI.Controllers
             var req = await _dashboardService.GetRecruiterDashboard();
             return Ok(req);
         }
+
+        [Authorize(Roles = "HR Manager")]
+        [HttpGet("HRManager-dashboard")]
+        public async Task<IActionResult> GetHRDashboard()
+        {
+            var req = await _dashboardService.GetHRManagerDashboard();
+            return Ok(req);
+        }
     }
 }

@@ -14,11 +14,15 @@ namespace AsriATS.Application.Services
     {
         private readonly IApplicationJobService _applicationJobService;
         private readonly IInterviewSchedulingService _interviewSchedulingService;
+        private readonly IJobPostRequestService _jobPostRequestService;
+        private readonly IRecruiterRegistrationRequestService _recruiterRegistrationRequestService;
 
-        public DashboardService(IApplicationJobService applicationJobService, IInterviewSchedulingService interviewSchedulingService)
+        public DashboardService(IApplicationJobService applicationJobService, IInterviewSchedulingService interviewSchedulingService, IJobPostRequestService jobPostRequestService, IRecruiterRegistrationRequestService recruiterRegistrationRequestService)
         {
             _applicationJobService = applicationJobService;
             _interviewSchedulingService = interviewSchedulingService;
+            _jobPostRequestService = jobPostRequestService;
+            _recruiterRegistrationRequestService = recruiterRegistrationRequestService;
         }
         public async Task<ApplicantDashboardDto> GetApplicantDashboard()
         {
@@ -50,6 +54,22 @@ namespace AsriATS.Application.Services
                 ApplicationPipeline = pipeline,
                 AnalyticSnapshot = application,
                 TaskReminders = task,
+            };
+        }
+
+        public async Task<HRDashboardDto> GetHRManagerDashboard()
+        {
+            var jobPostRequestPagination = new Pagination { PageNumber = 1, PageSize = 5 };
+            var jobpostRequests = await _jobPostRequestService.GetJobPostRequestToReview(null, jobPostRequestPagination);
+            var recruiterRequests = await _recruiterRegistrationRequestService.GetAllRecruiterRegistrationRequests();
+
+            recruiterRequests.ToBeReviewed.OrderByDescending(rr => rr.RecruiterRegistrationRequestId);
+            recruiterRequests.ToBeReviewed.Take(5);
+            
+            return new HRDashboardDto
+            {
+                JobPostRequests = jobpostRequests,
+                RecruiterRequests = recruiterRequests.ToBeReviewed,
             };
         }
     }

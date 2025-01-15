@@ -53,24 +53,25 @@ namespace AsriATS.Persistance.Repositories
 
             query = query.Include(r => r.ProcessIdNavigation).ThenInclude(p => p.Requester)
                          .Include(r => r.ProcessIdNavigation).ThenInclude(p => p.WorkflowActions);
-
-            if (!string.IsNullOrEmpty(queryObject.Keywords))
-            {
-                var keyword = queryObject.Keywords.ToLower();
-                int.TryParse(queryObject.Keywords, out int keywordAsInt); // Try to parse keyword as integer
-
-                query = query.Where(j =>
-                    (j.JobTitle != null && j.JobTitle.ToLower().Contains(keyword)) ||
-                    (j.Description != null && j.Description.ToLower().Contains(keyword)) ||
-                    (j.Requirements != null && j.Requirements.ToLower().Contains(keyword)) ||
-                    (j.EmploymentType != null && j.EmploymentType.ToLower().Contains(keyword)) ||
-                    (j.Location != null && j.Location.ToLower().Contains(keyword)) ||
-                    (keywordAsInt > 0 && (j.MinSalary == keywordAsInt || j.MaxSalary == keywordAsInt)) // Match numeric salary
-                );
-            }
+            
+           
 
             if (queryObject != null)
             {
+                if (!string.IsNullOrEmpty(queryObject.Keywords))
+                {
+                    var keyword = queryObject.Keywords.ToLower();
+                    int.TryParse(queryObject.Keywords, out int keywordAsInt); // Try to parse keyword as integer
+
+                    query = query.Where(j =>
+                        (j.JobTitle != null && j.JobTitle.ToLower().Contains(keyword)) ||
+                        (j.Description != null && j.Description.ToLower().Contains(keyword)) ||
+                        (j.Requirements != null && j.Requirements.ToLower().Contains(keyword)) ||
+                        (j.EmploymentType != null && j.EmploymentType.ToLower().Contains(keyword)) ||
+                        (j.Location != null && j.Location.ToLower().Contains(keyword)) ||
+                        (keywordAsInt > 0 && (j.MinSalary == keywordAsInt || j.MaxSalary == keywordAsInt)) // Match numeric salary
+                    );
+                }
                 if (!string.IsNullOrEmpty(queryObject.JobTitle))
                     query = query.Where(j => j.JobTitle.ToLower().Contains(queryObject.JobTitle.ToLower()));
 
