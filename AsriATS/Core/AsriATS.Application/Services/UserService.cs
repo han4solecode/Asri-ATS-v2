@@ -404,7 +404,9 @@ namespace AsriATS.Application.Services
 
         public async Task<IEnumerable<object>> GetAllUserInfoAsync()
         {
-            var userInfos = await _userManager.Users.Include(u => u.CompanyIdNavigation).Select(u => new
+            var users = await _userManager.Users.Include(u => u.CompanyIdNavigation).ToListAsync();
+
+            var userInfos = await Task.WhenAll(users.Select(async u => new
             {
                 UserId = u.Id,
                 UserName = u.UserName,
@@ -415,8 +417,9 @@ namespace AsriATS.Application.Services
                 Address = u.Address,
                 Dob = u.Dob,
                 Sex = u.Sex,
-                Company = u.CompanyIdNavigation!.Name
-            }).ToListAsync();
+                Company = u.CompanyIdNavigation?.Name ?? "No Company", // Fallback for null CompanyIdNavigation
+                Roles = (await _userManager.GetRolesAsync(u)) ?? new List<string>(), // Fallback for null roles
+            }));
 
             return userInfos;
         }
