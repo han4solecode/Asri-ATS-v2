@@ -81,6 +81,18 @@ namespace AsriATS.Application.Services
                 };
             }
 
+            // Check if the applicant has already applied to the job post
+            var existingApplication = await _applicationJobRepository.HasApplicantAlreadyAppliedAsync(user.Id, request.JobPostId);
+            if (existingApplication == true)
+            {
+                return new BaseResponseDto
+                {
+                    Status = "Error",
+                    Message = "User already apply to this job!"
+                };
+            }
+            
+
             // Validate the process for job application workflow
             var workflow = await _workflowRepository.GetFirstOrDefaultAsync(w => w.WorkflowName == "Application Job Request");
             if (workflow == null)
@@ -1031,8 +1043,9 @@ namespace AsriATS.Application.Services
             {
                 if (role == "Applicant")
                 {
-                    // Fetch all applications where the user is the applicant
-                    var applicantApplications = await _applicationJobRepository.GetAllToStatusAsync(role);
+                    // Fetch only applications where the current user is the applicant
+                    var applicantApplications = await _applicationJobRepository
+                        .GetAllToStatusAsync(role, user.Id); // Pass user.Id to filter by applicant
                     applications.AddRange(applicantApplications);
                 }
                 else

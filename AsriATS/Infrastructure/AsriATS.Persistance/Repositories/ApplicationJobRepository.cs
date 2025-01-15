@@ -250,20 +250,26 @@ namespace AsriATS.Persistance.Repositories
             return statusCounts;
         }
 
-        public async Task<IEnumerable<ApplicationJob>> GetAllToStatusAsync(string userRole)
+        public async Task<IEnumerable<ApplicationJob>> GetAllToStatusAsync(string userRole, string userId)
         {
             return await _context.ApplicationJobs
-                .Include(r => r.ProcessIdNavigation)
-                    .ThenInclude(p => p.WorkflowSequence)
-                    .ThenInclude(wfs => wfs.Role)
-                .Include(r => r.ProcessIdNavigation)
-                    .ThenInclude(p => p.Requester)
-                .Include(r => r.ProcessIdNavigation)
-                    .ThenInclude(p => p.WorkflowActions)
-                .Include(r => r.JobPostNavigation) // Include JobPostNavigation
-                .Where(r => r.ProcessIdNavigation.WorkflowSequence.Role.Name == userRole)
-                .ToListAsync();
+               .Include(r => r.ProcessIdNavigation)
+                   .ThenInclude(p => p.WorkflowSequence)
+                   .ThenInclude(wfs => wfs.Role)
+               .Include(r => r.ProcessIdNavigation)
+                   .ThenInclude(p => p.Requester)
+               .Include(r => r.ProcessIdNavigation)
+                   .ThenInclude(p => p.WorkflowActions)
+               .Include(r => r.JobPostNavigation) // Include JobPostNavigation
+               .Where(r => r.ProcessIdNavigation.WorkflowSequence.Role.Name == userRole &&
+                           r.ProcessIdNavigation.RequesterId == userId) // Filter by userId
+               .ToListAsync();
         }
 
+        public async Task<bool> HasApplicantAlreadyAppliedAsync(string userId, int jobPostId)
+        {
+            return await _context.ApplicationJobs
+                .AnyAsync(a => a.UserId == userId && a.JobPostId == jobPostId);
+        }
     }
 }
