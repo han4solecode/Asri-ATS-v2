@@ -406,20 +406,27 @@ namespace AsriATS.Application.Services
         {
             var users = await _userManager.Users.Include(u => u.CompanyIdNavigation).ToListAsync();
 
-            var userInfos = await Task.WhenAll(users.Select(async u => new
+            var userInfos = new List<object>();
+
+            foreach (var u in users)
             {
-                UserId = u.Id,
-                UserName = u.UserName,
-                Email = u.Email,
-                FirstName = u.FirstName,
-                LastName = u.LastName,
-                PhoneNumber = u.PhoneNumber,
-                Address = u.Address,
-                Dob = u.Dob,
-                Sex = u.Sex,
-                Company = u.CompanyIdNavigation?.Name ?? "No Company", // Fallback for null CompanyIdNavigation
-                Roles = (await _userManager.GetRolesAsync(u)) ?? new List<string>(), // Fallback for null roles
-            }));
+                var roles = await _userManager.GetRolesAsync(u); // Fetch roles sequentially
+
+                userInfos.Add(new
+                {
+                    UserId = u.Id,
+                    UserName = u.UserName,
+                    Email = u.Email,
+                    FirstName = u.FirstName,
+                    LastName = u.LastName,
+                    PhoneNumber = u.PhoneNumber,
+                    Address = u.Address,
+                    Dob = u.Dob,
+                    Sex = u.Sex,
+                    Company = u.CompanyIdNavigation?.Name ?? "No Company",
+                    Roles = roles ?? new List<string>(),
+                });
+            }
 
             return userInfos;
         }
