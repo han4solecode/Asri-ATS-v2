@@ -253,5 +253,14 @@ namespace AsriATS.WebAPI.Controllers
 
             return Ok(res);
         }
+
+        [Authorize(Roles = "Administrator")]
+        [HttpGet("change-requests")]
+        public async Task<IActionResult> GetAllRoleChangeRequests()
+        {
+            var res = await _roleService.GetAllRoleChangeRequest();
+
+            return Ok(res);
+        }
     }
 }
