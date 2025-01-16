@@ -20,6 +20,6 @@ namespace AsriATS.Application.Contracts
 
         Task<BaseResponseDto> ReviewRoleChangeRequest(RoleChangeReviewDto roleChangeRequest);
 
-        Task<IEnumerable<RoleChangeRequest>> GetAllRoleChangeRequest();
+        Task<IEnumerable<RoleChangeRequestDto>> GetAllRoleChangeRequest();
     }
 }

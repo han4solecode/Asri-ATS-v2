@@ -288,11 +288,21 @@ namespace AsriATS.Application.Services
             }
         }
 
-        public async Task<IEnumerable<RoleChangeRequest>> GetAllRoleChangeRequest()
+        public async Task<IEnumerable<RoleChangeRequestDto>> GetAllRoleChangeRequest()
         {
             var roleChangeRequests = await _roleChangeRequestRepository.GetAllToBeReviewedAsync();
 
-            return roleChangeRequests;
+            var roleChangeRequestDtos = roleChangeRequests.Select(r => new RoleChangeRequestDto
+            {
+                RoleChangeRequestId = r.RoleChangeRequestId,
+                UserId = r.UserId,
+                UserFullName = $"{r.UserIdNavigation.FirstName} {r.UserIdNavigation.LastName}",
+                CurrentRole = r.CurrentRole,
+                RequestedRole = r.RequestedRole,
+                CompanyName = r.UserIdNavigation.CompanyIdNavigation?.Name
+            });
+
+            return roleChangeRequestDtos;
         }
     }
 }
