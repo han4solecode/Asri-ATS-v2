@@ -10,5 +10,6 @@ namespace AsriATS.Application.DTOs.Dashboard
     {
         public object? JobPostRequests { get; set; }
         public IEnumerable<object>? RecruiterRequests { get; set; }
+        public IEnumerable<object>? RecruitmentFunnel { get; set; }
     }
 }

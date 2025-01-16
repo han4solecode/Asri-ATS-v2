@@ -1,6 +1,9 @@
 ﻿using AsriATS.Application.Contracts;
+using AsriATS.Application.DTOs.Helpers;
+using AsriATS.Application.DTOs.JobPost;
 using AsriATS.Application.DTOs.JobPostRequest;
 using AsriATS.Application.DTOs.JobPostTemplateRequest;
+using AsriATS.Application.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -94,6 +97,22 @@ namespace AsriATS.WebAPI.Controllers
                 return BadRequest(res.Message);
             }
 
+            return Ok(res);
+        }
+
+        [Authorize(Roles = "Applicant,HR Manager,Recruiter")]
+        [HttpGet]
+        public async Task<IActionResult> GetAllJobPostTemplateRequests([FromQuery] JobPostSearch jobPostSearch, [FromQuery] Pagination pagination)
+        {
+            var res = await _jobPostTemplateRequestService.GetAllJobPostTemplateRequest(jobPostSearch, pagination);
+            return Ok(res);
+        }
+
+        [Authorize(Roles = "Applicant,HR Manager,Recruiter")]
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetJobPostTemplateRequest(int id)
+        {
+            var res = await _jobPostTemplateRequestService.GetJobPostTemplateRequest(id);
             return Ok(res);
         }
     }

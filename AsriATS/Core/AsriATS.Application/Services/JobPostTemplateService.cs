@@ -1,9 +1,12 @@
 ﻿using AsriATS.Application.Contracts;
+using AsriATS.Application.DTOs.Helpers;
+using AsriATS.Application.DTOs.JobPost;
 using AsriATS.Application.DTOs.JobPostTemplateRequest;
 using AsriATS.Application.Persistance;
 using AsriATS.Domain.Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using System.Linq.Expressions;
 using System.Security.Claims;
 
 namespace AsriATS.Application.Services
@@ -22,13 +25,15 @@ namespace AsriATS.Application.Services
             _userManager = userManager;
             _httpContextAccessor = httpContextAccessor;
         }
-        public async Task<IEnumerable<object>> GetAllJobPostTemplate()
+        public async Task<object> GetAllJobPostTemplate(JobPostSearch jobPostSearch, Pagination pagination)
         {
             var userName = _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.Name);
             var user = await _userManager.FindByNameAsync(userName!);
-            var jobTemplatePosts = await _jobPostTemplateRepository.GetAllAsync(j => j.CompanyId == user!.CompanyId);
-            var result = jobTemplatePosts.Select(j => new
+
+            var (jobTemplatePosts, totalCount) = await _jobPostTemplateRepository.GetAllAsync(j => j.CompanyId == user!.CompanyId,jobPostSearch, pagination);
+            var jobpostTemplates = jobTemplatePosts.Select(j => new
             {
+                JobPostTemplateId = j.JobPostTemplateId,
                 JobTitle = j.JobTitle,
                 CompanyName = j.CompanyIdNavigation.Name,
                 Description = j.Description,
@@ -36,8 +41,16 @@ namespace AsriATS.Application.Services
                 Location = j.Location,
                 MinSalary = j.MinSalary,
                 MaxSalary = j.MaxSalary,
-                EmployementType = j.EmploymentType
+                EmploymentType = j.EmploymentType
             }).ToList();
+
+            var totalPages = (int)Math.Ceiling((decimal)(totalCount) / (pagination.PageSize ?? 20));
+
+            var result = new
+            {
+                Data = jobpostTemplates,
+                TotalPages = totalPages,
+            };
 
             return result;
         }
@@ -79,6 +92,7 @@ namespace AsriATS.Application.Services
 
             var jobPostTemplateDto = new JobPostTemplateRequestResponseDto
             {
+                JobTemplateId=jobPostTemplateRequest.JobPostTemplateId,
                 JobTitle = jobPostTemplateRequest.JobTitle,
                 CompanyName = jobPostTemplateRequest.CompanyIdNavigation.Name,
                 Description = jobPostTemplateRequest.Description,

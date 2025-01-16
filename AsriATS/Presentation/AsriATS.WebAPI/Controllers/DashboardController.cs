@@ -117,7 +117,7 @@ namespace AsriATS.WebAPI.Controllers
         [HttpGet("job-post-template-request")]
         public async Task<IActionResult> GetAllJobPostTemplateRequestToReview()
         {
-            var request = await _jobPostTemplateRequestService.GetAllJobPostTemplateRequestToReview();
+            var request = await _jobPostTemplateRequestService.GetAllJobPostTemplateRequest(null,null);
 
             return Ok(request);
         }

@@ -3,6 +3,8 @@ namespace AsriATS.Application.DTOs.JobPostTemplateRequest
 {
     public class JobPostTemplateRequestResponseDto : BaseResponseDto
     {
+        public int? JobTemplateRequestId { get; set; }
+        public int? JobTemplateId { get; set; }
         public string? JobTitle { get; set; }
 
         public string? CompanyName { get; set; }
@@ -18,6 +20,7 @@ namespace AsriATS.Application.DTOs.JobPostTemplateRequest
         public decimal? MaxSalary { get; set; }
 
         public string? EmploymentType { get; set; }
+        public bool? IsApproved { get; set; }
 
     }
 }

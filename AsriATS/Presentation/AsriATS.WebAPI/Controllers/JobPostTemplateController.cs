@@ -1,4 +1,6 @@
 ﻿using AsriATS.Application.Contracts;
+using AsriATS.Application.DTOs.Helpers;
+using AsriATS.Application.DTOs.JobPost;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -30,9 +32,9 @@ namespace AsriATS.WebAPI.Controllers
         /// <returns>Returns all job post templates for the user's company.</returns>
         [Authorize(Roles = "Recruiter")]
         [HttpGet("all")]
-        public async Task<IActionResult> GetAllJobPostTemplates()
+        public async Task<IActionResult> GetAllJobPostTemplates([FromQuery] JobPostSearch jobPostSearch, [FromQuery] Pagination pagination )
         {
-            var result = await _jobPostTemplateService.GetAllJobPostTemplate();
+            var result = await _jobPostTemplateService.GetAllJobPostTemplate(jobPostSearch,pagination);
             return Ok(result);
         }
         /// <summary>

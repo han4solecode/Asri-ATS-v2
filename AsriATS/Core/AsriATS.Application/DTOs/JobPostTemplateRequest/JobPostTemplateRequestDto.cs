@@ -11,8 +11,6 @@ namespace AsriATS.Application.DTOs.JobPostTemplateRequest
     {
         public string JobTitle { get; set; } = null!;
 
-        public int CompanyId { get; set; }
-
         public string Description { get; set; } = null!;
 
         public string Requirements { get; set; } = null!;

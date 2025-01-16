@@ -114,6 +114,35 @@ namespace AsriATS.Application.Services
             }
         }
 
+        public async Task<IEnumerable<object>> GenerateRecruitmentFunnelAsync()
+        {
+            var userName = _httpContextAccessor.HttpContext!.User.Identity!.Name;
+            var user = await _userManager.FindByNameAsync(userName!);
+
+            //GetAll Recruitment Steps
+            var allStages = await _workflowSequenceRepository.GetAllAsync(ws => ws.Workflow.WorkflowName == "Application Job Request");
+            //GetAll Steps that Applicants did
+            var recruitmentFunnel = await _workflowActionRepository.GetRecruitmentFlunnel(user!.CompanyId);
+
+            var results = allStages
+                .GroupJoin(recruitmentFunnel,
+                    stage => stage.StepName,
+                    funnel => funnel.StageName,
+                    (stage, funnel) => new
+                    {
+                        stage.StepName,
+                        Count = funnel.Select(f => f.Count).FirstOrDefault()
+                    })
+                .Select(r => new
+                {
+                    CompanyName = recruitmentFunnel.FirstOrDefault()?.CompanyName ?? "Unknown",
+                    StageName = r.StepName,
+                    Count = r.Count
+                })
+                .ToList();
+            return results;
+        }
+
         public async Task<byte[]> GenerateRecruitmentFunnelReportAsync()
         {
             var userName = _httpContextAccessor.HttpContext!.User.Identity!.Name;

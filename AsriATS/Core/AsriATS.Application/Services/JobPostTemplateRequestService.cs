@@ -8,6 +8,10 @@ using AsriATS.Application.DTOs.JobPostTemplateRequest;
 using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
 using AsriATS.Application.DTOs.Email;
+using System.Linq.Expressions;
+using AsriATS.Application.DTOs.JobPost;
+using AsriATS.Application.DTOs.Helpers;
+using Org.BouncyCastle.Asn1.Ocsp;
 
 namespace AsriATS.Application.Services
 {
@@ -32,15 +36,15 @@ namespace AsriATS.Application.Services
 
         public async Task<BaseResponseDto> SubmitJobTemplateRequest(JobPostTemplateRequestDto request)
         {
-            var company = await _companyRepository.GetByIdAsync(request.CompanyId);
-            if (company == null)
-            {
-                return new RegisterResponseDto
-                {
-                    Status = "Error",
-                    Message = "Company is not registered!"
-                };
-            }
+            //var company = await _companyRepository.GetByIdAsync(request.CompanyId);
+            //if (company == null)
+            //{
+            //    return new RegisterResponseDto
+            //    {
+            //        Status = "Error",
+            //        Message = "Company is not registered!"
+            //    };
+            //}
 
             // Get the current logged-in user
             var userName = _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.Name);
@@ -56,19 +60,19 @@ namespace AsriATS.Application.Services
                 };
             }
 
-            if (user.CompanyId != request.CompanyId)
-            {
-                return new BaseResponseDto
-                {
-                    Status = "Error",
-                    Message = "You are not authorized to submit job post template for this company."
-                };
-            }
+            //if (user.CompanyId != request.CompanyId)
+            //{
+            //    return new BaseResponseDto
+            //    {
+            //        Status = "Error",
+            //        Message = "You are not authorized to submit job post template for this company."
+            //    };
+            //}
 
             var newJobTemplateRequest = new JobPostTemplateRequest
             {
                 JobTitle = request.JobTitle,
-                CompanyId = request.CompanyId,
+                CompanyId = user.CompanyId ?? 1,
                 Description = request.Description,
                 Requirements = request.Requirements,
                 Location = request.Location,
@@ -87,11 +91,95 @@ namespace AsriATS.Application.Services
             };
         }
 
-        public async Task<IEnumerable<JobPostTemplateRequest>> GetAllJobPostTemplateRequestToReview()
+        public async Task<object> GetAllJobPostTemplateRequest(JobPostSearch? jobPostSearch, Pagination? pagination)
         {
-            var jobPostTemplateRequestToReview = await _jobTemplateRequestRepository.GetAllToBeReviewed();
+            //Get User based on user name
+            var userName = _httpContextAccessor.HttpContext!.User.Identity!.Name;
+            var user = await _userManager.FindByNameAsync(userName!);
 
-            return jobPostTemplateRequestToReview;
+            //Get User Roles based on role
+            var userRoles = await _userManager.GetRolesAsync(user!);
+            var userRole = userRoles.Single();
+
+            Expression<Func<JobPostTemplateRequest, bool>>? expression = null;
+
+            if (userRole == "Recruiter")
+            {
+                if(jobPostSearch.JobPostRequestStatus == "All Types")
+                {
+                    expression = (j => j.RequesterId == user!.Id);
+                }
+                //search pending job post template requests 
+                else if (jobPostSearch?.JobPostRequestStatus == "Review HR Manager")
+                {
+                    expression = (j => j.RequesterId == user!.Id && j.IsApproved == null);
+                }
+
+                //search Approved job post template requests 
+                else if (jobPostSearch.JobPostRequestStatus == "Accepted")
+                {
+                    expression = (j => j.RequesterId == user!.Id && j.IsApproved == true);
+
+                }
+
+                //search Rejected job post template requests 
+                else if (jobPostSearch.JobPostRequestStatus == "Rejected")
+                {
+                    expression = (j => j.RequesterId == user!.Id && j.IsApproved == false);
+                }
+            }
+
+            else if (userRole == "HR Manager")
+            {
+                if (jobPostSearch.JobPostRequestStatus == "All Types")
+                {
+                    expression = (j => j.CompanyId == user!.CompanyId && j.IsApproved != null);
+                }
+                //search to be reviewed job post template requests 
+                else if (jobPostSearch?.JobPostRequestStatus == "Review HR Manager")
+                {
+                    expression = (j => j.CompanyId == user!.CompanyId && j.IsApproved == null);
+                }
+
+                //search Approved job post template requests 
+                else if (jobPostSearch.JobPostRequestStatus == "Accepted")
+                {
+                    expression = (j => j.CompanyId == user!.CompanyId && j.IsApproved == true);
+
+                }
+
+                //search Rejected job post template requests 
+                else if (jobPostSearch.JobPostRequestStatus == "Rejected")
+                {
+                    expression = (j => j.CompanyId == user!.CompanyId && j.IsApproved == false);
+                }
+            }
+
+            var (jobPostTemplateRequests, totalCount) = await _jobTemplateRequestRepository.GetAllJobPostTemplateRequest(expression, jobPostSearch, pagination);
+
+            var a = jobPostTemplateRequests.Select(j => new
+            {
+                JobPostTemplateRequestId = j.JobTemplateRequestId,
+                Requester = $"{j.RequesterIdNavigation.FirstName} {j.RequesterIdNavigation.LastName}",
+                JobTitle = j.JobTitle,
+                Description = j.Description,
+                Requirements = j.Requirements,
+                Location = j.Location,
+                MinSalary = j.MinSalary,
+                MaxSalary = j.MaxSalary,
+                EmploymentType = j.EmploymentType,
+                Status = jobPostSearch.JobPostRequestStatus == "Accepted" ? "Accepted" : jobPostSearch.JobPostRequestStatus == "Rejected" ? "Rejected" : "Review by HR Manager",
+            }).ToList();
+
+            var totalPages = (int)Math.Ceiling((decimal)(totalCount) / (pagination.PageSize ?? 20));
+
+            var result = new
+            {
+                Data = a,
+                TotalPages = totalPages,
+            };
+
+            return result;
         }
 
         public async Task<BaseResponseDto> ReviewJobPostTemplateRequest(JobPostTemplateReviewDto jobPostTemplateReview)
@@ -224,6 +312,7 @@ namespace AsriATS.Application.Services
 
             var jobPostTemplateRequestDto = new JobPostTemplateRequestResponseDto
             {
+                JobTemplateRequestId = jobPostTemplateRequest.JobTemplateRequestId,
                 JobTitle = jobPostTemplateRequest.JobTitle,
                 CompanyName = jobPostTemplateRequest.CompanyIdNavigation.Name,
                 Description = jobPostTemplateRequest.Description,
@@ -232,6 +321,7 @@ namespace AsriATS.Application.Services
                 MinSalary = jobPostTemplateRequest.MinSalary,
                 MaxSalary = jobPostTemplateRequest.MaxSalary,
                 EmploymentType = jobPostTemplateRequest.EmploymentType,
+                IsApproved = jobPostTemplateRequest.IsApproved,
                 Status = "Success",
                 Message = "Job post template request get successfuly"
             };

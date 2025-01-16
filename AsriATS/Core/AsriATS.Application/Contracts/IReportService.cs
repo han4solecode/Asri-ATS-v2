@@ -16,5 +16,6 @@ namespace AsriATS.Application.Contracts
         Task<IEnumerable<DemographicOverviewDto>> GetDemographicSummaryAsync(string address);
         Task<byte[]> GenerateComplianceApprovalMetricsPdfAsync();
         Task<List<ComplianceApprovalMetricsDto>> GetJobPostApprovalMetricsByCompanyAsync();
+        Task<IEnumerable<object>> GenerateRecruitmentFunnelAsync();
     }
 }

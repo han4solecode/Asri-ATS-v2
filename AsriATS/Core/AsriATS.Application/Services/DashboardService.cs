@@ -16,13 +16,15 @@ namespace AsriATS.Application.Services
         private readonly IInterviewSchedulingService _interviewSchedulingService;
         private readonly IJobPostRequestService _jobPostRequestService;
         private readonly IRecruiterRegistrationRequestService _recruiterRegistrationRequestService;
+        private readonly IReportService _reportService;
 
-        public DashboardService(IApplicationJobService applicationJobService, IInterviewSchedulingService interviewSchedulingService, IJobPostRequestService jobPostRequestService, IRecruiterRegistrationRequestService recruiterRegistrationRequestService)
+        public DashboardService(IApplicationJobService applicationJobService, IInterviewSchedulingService interviewSchedulingService, IJobPostRequestService jobPostRequestService, IRecruiterRegistrationRequestService recruiterRegistrationRequestService, IReportService reportService)
         {
             _applicationJobService = applicationJobService;
             _interviewSchedulingService = interviewSchedulingService;
             _jobPostRequestService = jobPostRequestService;
             _recruiterRegistrationRequestService = recruiterRegistrationRequestService;
+            _reportService = reportService;
         }
         public async Task<ApplicantDashboardDto> GetApplicantDashboard()
         {
@@ -62,6 +64,7 @@ namespace AsriATS.Application.Services
             var jobPostRequestPagination = new Pagination { PageNumber = 1, PageSize = 5 };
             var jobpostRequests = await _jobPostRequestService.GetJobPostRequestToReview(null, jobPostRequestPagination);
             var recruiterRequests = await _recruiterRegistrationRequestService.GetAllRecruiterRegistrationRequests();
+            var recruitmentFunnel = await _reportService.GenerateRecruitmentFunnelAsync();
 
             recruiterRequests.ToBeReviewed.OrderByDescending(rr => rr.RecruiterRegistrationRequestId);
             recruiterRequests.ToBeReviewed.Take(5);
@@ -70,6 +73,7 @@ namespace AsriATS.Application.Services
             {
                 JobPostRequests = jobpostRequests,
                 RecruiterRequests = recruiterRequests.ToBeReviewed,
+                RecruitmentFunnel = recruitmentFunnel
             };
         }
     }
