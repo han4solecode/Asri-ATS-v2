@@ -32,8 +32,9 @@ namespace AsriATS.WebAPI.Controllers
         [HttpGet("generate-overall-report")]
         public async Task<IActionResult> GenerateOverallReport()
         {
+            var Filename = "OverallReport.pdf";
             var pdfBytes = await _reportService.GenerateOverallRecruitmentMetricsAsync();
-            return File(pdfBytes, "application/pdf", "OverallReport.pdf");
+            return File(pdfBytes, "application/pdf", Filename);
         }
 
         /// <summary>
@@ -53,8 +54,9 @@ namespace AsriATS.WebAPI.Controllers
         [HttpGet("generate-demographic-report")]
         public async Task<IActionResult> GenerateDemographicReport(string address)
         {
+            var Filename = "DemographicReport.pdf";
             var pdfBytes = await _reportService.GenerateDemographicReportAsync(address);
-            return File(pdfBytes, "application/pdf", "DemographicReport.pdf");
+            return File(pdfBytes, "application/pdf", Filename);
         }
 
         /// <summary>
