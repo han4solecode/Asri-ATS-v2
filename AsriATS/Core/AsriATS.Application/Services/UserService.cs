@@ -404,19 +404,29 @@ namespace AsriATS.Application.Services
 
         public async Task<IEnumerable<object>> GetAllUserInfoAsync()
         {
-            var userInfos = await _userManager.Users.Include(u => u.CompanyIdNavigation).Select(u => new
+            var users = await _userManager.Users.Include(u => u.CompanyIdNavigation).ToListAsync();
+
+            var userInfos = new List<object>();
+
+            foreach (var u in users)
             {
-                UserId = u.Id,
-                UserName = u.UserName,
-                Email = u.Email,
-                FirstName = u.FirstName,
-                LastName = u.LastName,
-                PhoneNumber = u.PhoneNumber,
-                Address = u.Address,
-                Dob = u.Dob,
-                Sex = u.Sex,
-                Company = u.CompanyIdNavigation!.Name
-            }).ToListAsync();
+                var roles = await _userManager.GetRolesAsync(u); // Fetch roles sequentially
+
+                userInfos.Add(new
+                {
+                    UserId = u.Id,
+                    UserName = u.UserName,
+                    Email = u.Email,
+                    FirstName = u.FirstName,
+                    LastName = u.LastName,
+                    PhoneNumber = u.PhoneNumber,
+                    Address = u.Address,
+                    Dob = u.Dob,
+                    Sex = u.Sex,
+                    Company = u.CompanyIdNavigation?.Name ?? "No Company",
+                    Roles = roles ?? new List<string>(),
+                });
+            }
 
             return userInfos;
         }
