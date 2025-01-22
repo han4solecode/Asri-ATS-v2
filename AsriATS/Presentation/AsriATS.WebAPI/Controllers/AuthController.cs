@@ -53,7 +53,7 @@ namespace AsriATS.WebAPI.Controllers
             var res = await _authService.RegisterApplicantAsync(register);
             if (res.Status == "Error")
             {
-                return BadRequest(res.Message);
+                return BadRequest(res);
             }
             return Ok(res);
         }
