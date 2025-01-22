@@ -34,7 +34,11 @@ namespace AsriATS.Persistance.Repositories
 
         public async Task<IEnumerable<RoleChangeRequest>> GetAllToBeReviewedAsync()
         {
-            var roleChangeRequests = await _context.RoleChangeRequests.Where(x => x.IsApproved == null).ToListAsync();
+            var roleChangeRequests = await _context.RoleChangeRequests
+                .Where(x => x.IsApproved == null)
+                .Include(r => r.UserIdNavigation) // Include user details
+                .ThenInclude(u => u.CompanyIdNavigation) // Include company details
+                .ToListAsync();
 
             return roleChangeRequests;
         }
