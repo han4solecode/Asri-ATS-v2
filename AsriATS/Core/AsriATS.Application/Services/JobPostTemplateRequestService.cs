@@ -168,7 +168,7 @@ namespace AsriATS.Application.Services
                 MinSalary = j.MinSalary,
                 MaxSalary = j.MaxSalary,
                 EmploymentType = j.EmploymentType,
-                Status = jobPostSearch.JobPostRequestStatus == "Accepted" ? "Accepted" : jobPostSearch.JobPostRequestStatus == "Rejected" ? "Rejected" : "Review by HR Manager",
+                Status = j.IsApproved == true ? "Accepted" : j.IsApproved == false ? "Rejected" : "Review by HR Manager",
             }).ToList();
 
             var totalPages = (int)Math.Ceiling((decimal)(totalCount) / (pagination.PageSize ?? 20));
