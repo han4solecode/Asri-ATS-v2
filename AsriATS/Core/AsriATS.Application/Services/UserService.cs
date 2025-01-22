@@ -368,7 +368,9 @@ namespace AsriATS.Application.Services
             }
 
             // Get the current user's details to retrieve their CompanyId
-            var currentUserObject = await _userManager.FindByNameAsync(currentUser);
+            var currentUserObject = await _userManager.Users
+                .Include(u => u.CompanyIdNavigation)  // Include the Company entity here
+                .FirstOrDefaultAsync(u => u.UserName == currentUser);
 
             if (currentUserObject == null)
             {
@@ -383,21 +385,30 @@ namespace AsriATS.Application.Services
             // Fetch all users in the same company
             var usersInSameCompany = await _userManager.Users
                 .Where(u => u.CompanyId == currentUserObject.CompanyId)
+                .Include(u => u.CompanyIdNavigation)  // Ensure Company data is loaded for all users
                 .ToListAsync();
 
-            var userResponseList = usersInSameCompany.Select(user => new UserResponseDto
+            var userResponseList = new List<UserResponseDto>();
+
+            foreach (var user in usersInSameCompany)
             {
-                userId = user.Id,
-                UserName = user.UserName,
-                Email = user.Email,
-                FirstName = user.FirstName,
-                LastName = user.LastName,
-                PhoneNumber = user.PhoneNumber,
-                Address = user.Address,
-                Dob = user.Dob,
-                Sex = user.Sex,
-                CompanyId = user.CompanyId
-            }).ToList();
+                var roles = await _userManager.GetRolesAsync(user); // Fetch roles for the user
+
+                userResponseList.Add(new UserResponseDto
+                {
+                    userId = user.Id,
+                    UserName = user.UserName,
+                    Email = user.Email,
+                    FirstName = user.FirstName,
+                    LastName = user.LastName,
+                    PhoneNumber = user.PhoneNumber,
+                    Address = user.Address,
+                    Dob = user.Dob,
+                    Sex = user.Sex,
+                    Company = user.CompanyIdNavigation?.Name ?? "No Company",
+                    Roles = roles.ToList() // Add roles to the DTO
+                });
+            }
 
             return userResponseList;
         }

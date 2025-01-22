@@ -17,6 +17,7 @@ namespace AsriATS.Application.DTOs.User
         public string Address {  get; set; }
         public string Sex {  get; set; }
         public DateOnly Dob { get; set; }
-        public int? CompanyId {  get; set; }
+        public List<string> Roles { get; set; }
+        public string? Company {  get; set; }
     }
 }

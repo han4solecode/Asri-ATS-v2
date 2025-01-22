@@ -51,7 +51,7 @@ namespace AsriATS.WebAPI.Controllers
         /// </remarks>
         /// <param name="address">The address or location filter for the demographic report.</param>
         /// <returns>Returns a PDF file with demographic data.</returns>
-        [HttpGet("generate-demographic-report")]
+        [HttpGet("generate-demographic-report/{address}")]
         public async Task<IActionResult> GenerateDemographicReport(string address)
         {
             var Filename = "DemographicReport.pdf";
